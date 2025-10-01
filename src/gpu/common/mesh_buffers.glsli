@@ -1,0 +1,33 @@
+layout(set = 2, binding = 0, std430) restrict readonly buffer MeshDescBuffer {
+	int num_vertices;
+	int num_edges;
+	int num_faces;
+	mat4 model_to_world;
+} B_mesh_desc;
+
+
+layout(set = 2, binding = 1, std430) restrict readonly buffer VertexBuffer {
+	vec3 position[];
+} B_vertex;
+
+
+layout(set = 2, binding = 2, std430) restrict readonly buffer EdgeToVertexBuffer {
+	int vertex_idxs[][2];
+} B_edge_to_vertex;
+
+layout(set = 2, binding = 3, std430) restrict readonly buffer EdgeToFaceBuffer {
+	int face_idxs[][2];
+} B_edge_to_face;
+
+
+layout(set = 2, binding = 4, std430) restrict readonly buffer FaceToVertexBuffer {
+	int idxs[][3];
+} B_face_to_vertex;
+
+layout(set = 2, binding = 5, std430) restrict readonly buffer FaceNormalBuffer {
+	vec3 normal[];
+} B_face_normal;
+
+layout(set = 2, binding = 6, std430) restrict buffer FaceBackfacingBuffer {
+	bool backfacing[];
+} B_face_backfacing;

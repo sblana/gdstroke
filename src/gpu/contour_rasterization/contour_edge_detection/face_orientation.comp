@@ -1,0 +1,19 @@
+#version 450
+#extension GL_ARB_shading_language_include : enable
+
+layout(local_size_x = 64) in;
+
+#include <common/scene_buffers.glsli>
+#include <common/mesh_buffers.glsli>
+
+
+void main() {
+	uint face_idx = gl_GlobalInvocationID.x;
+	if (face_idx < B_mesh_desc.num_vertices) {
+		vec3 view_space_normal = mat3x3(U_scene_data.cur.view_matrix) * mat3x3(B_mesh_desc.model_to_world) * B_face_normal.normal[face_idx];
+		vec3 vert_0_view_pos   = vec3(mat4x4(U_scene_data.cur.view_matrix) * mat4x4(B_mesh_desc.model_to_world) * vec4(B_vertex.position[B_face_to_vertex.idxs[face_idx][0]], 1.0));
+		// see doi.org/10.1561/0600000075 Appendix C.2.1: Front-facing
+		bool is_backfacing = dot(view_space_normal, -vert_0_view_pos) <= 0.0;
+		B_face_backfacing.backfacing[face_idx] = is_backfacing;
+	}
+}
