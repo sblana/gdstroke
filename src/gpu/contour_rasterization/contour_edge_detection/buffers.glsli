@@ -1,0 +1,11 @@
+#include <common/scene_buffers.glsli>
+#include <common/mesh_buffers.glsli>
+#include <common/contour_buffers.glsli>
+
+layout(set = 1, binding = 0, std430) RESTRICT buffer EdgeIsContourBuffer {
+	bool is_contour[];
+} B_edge_is_contour;
+
+layout(set = 1, binding = 1, std430) RESTRICT buffer EdgeToContourEdgeBuffer {
+	int idx[];
+} B_edge_to_contour_edge;

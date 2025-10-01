@@ -1,0 +1,15 @@
+#version 450
+#extension GL_ARB_shading_language_include : enable
+
+layout(local_size_x = 64) in;
+
+#include "buffers.glsli"
+
+
+void main() {
+	const uint edge_idx = gl_GlobalInvocationID.x;
+	if (B_edge_is_contour.is_contour[edge_idx]) {
+		const int contour_edge_idx = B_edge_to_contour_edge.idx[edge_idx];
+		B_contour_edge_to_edge.idx[contour_edge_idx] = int(edge_idx);
+	}
+}

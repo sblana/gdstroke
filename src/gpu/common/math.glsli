@@ -1,0 +1,4 @@
+int idiv_floor ( int n,  int d) { return n / d -  int((n % d) != 0 && (n^d) < 0); }
+int idiv_ceil  ( int n,  int d) { return n / d +  int((n % d) != 0 && (n^d) > 0); }
+uint udiv_floor(uint n, uint d) { return n / d; } // just for the sake of consistency
+uint udiv_ceil (uint n, uint d) { return n / d + uint((n % d) != 0); }
