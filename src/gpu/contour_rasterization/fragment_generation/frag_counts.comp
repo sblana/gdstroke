@@ -1,0 +1,17 @@
+#version 450
+#extension GL_ARB_shading_language_include : enable
+
+layout(local_size_x = 64) in;
+
+#include "buffers.glsli"
+#include "raster.glsli"
+
+
+void main() {
+	const int contour_edge_idx = int(gl_GlobalInvocationID.x);
+	const int edge_idx = B_contour_edge_to_edge.idx[contour_edge_idx];
+	vec4 verts_clipped_ndc[2] = pre_raster_edge(edge_idx);
+	ivec2 diff = abs(ivec2(ndc_pos_to_screen_pos(verts_clipped_ndc[1])) - ivec2(ndc_pos_to_screen_pos(verts_clipped_ndc[0])));
+	int num_fragments = max(diff.x, diff.y) + 1;
+	B_contour_edge_to_contour_fragment.data[contour_edge_idx] = ContourEdgeToContourFragmentData(num_fragments, 0);
+}

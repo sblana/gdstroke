@@ -1,3 +1,6 @@
+#ifndef CONTOUR_BUFFERS_GLSLI
+#define CONTOUR_BUFFERS_GLSLI
+
 #include <common/sanity.glsli>
 
 #define MAX_NUM_CONTOUR_FRAGMENTS (1 << 20)
@@ -65,3 +68,5 @@ layout(set = 3, binding = 11, std430) RESTRICT buffer ContourPixelOrientationBuf
 layout(set = 3, binding = 12, std430) RESTRICT buffer ContourPixelNormalDepthBuffer {
 	vec4 normal_depth[MAX_NUM_CONTOUR_FRAGMENTS];
 } B_contour_pixel_normal_depth;
+
+#endif // !CONTOUR_BUFFERS_GLSLI

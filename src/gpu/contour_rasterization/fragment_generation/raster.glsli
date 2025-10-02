@@ -1,0 +1,31 @@
+#include "buffers.glsli"
+
+vec3 model_pos_to_view_pos(vec3 model_pos) {
+	return vec3(U_scene_data.cur.view_matrix * B_mesh_desc.model_to_world * vec4(model_pos, 1.0));
+}
+
+vec4 view_pos_to_ndc_pos(vec3 view_pos) {
+	vec4 clip_pos = U_scene_data.cur.projection_matrix * vec4(view_pos, 1.0);
+	return vec4(clip_pos.xyz / clip_pos.w, clip_pos.w);
+}
+
+vec2 ndc_pos_to_screen_pos(vec4 ndc_pos) {
+	return vec2(ndc_pos.x, -ndc_pos.y) * 0.5 + 0.5 * U_scene_data.cur.viewport_size;
+}
+
+vec4[2] pre_raster_edge(int edge_idx) {
+	bool reverse_vertex_order = B_face_backfacing.backfacing[B_edge_to_face.face_idxs[edge_idx][0]];
+	vec3 first_vert_view_pos = model_pos_to_view_pos(B_vertex.position[B_edge_to_vertex.vertex_idxs[edge_idx][0]]);
+	vec3 secnd_vert_view_pos = model_pos_to_view_pos(B_vertex.position[B_edge_to_vertex.vertex_idxs[edge_idx][1]]);
+
+	vec4 first_vert_ndc_pos = view_pos_to_ndc_pos(first_vert_view_pos);
+	vec4 secnd_vert_ndc_pos = view_pos_to_ndc_pos(secnd_vert_view_pos);
+
+	// TODO: clipping/discarding
+
+	vec4 result[2];
+	result[uint( reverse_vertex_order)] = first_vert_ndc_pos;
+	result[uint(!reverse_vertex_order)] = secnd_vert_ndc_pos;
+
+	return result;
+}

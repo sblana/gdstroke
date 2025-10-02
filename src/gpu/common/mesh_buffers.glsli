@@ -1,3 +1,6 @@
+#ifndef MESH_BUFFERS_GLSLI
+#define MESH_BUFFERS_GLSLI
+
 #include <common/sanity.glsli>
 
 layout(set = 2, binding = 0, std430) RESTRICT readonly buffer MeshDescBuffer {
@@ -33,3 +36,5 @@ layout(set = 2, binding = 5, std430) RESTRICT readonly buffer FaceNormalBuffer {
 layout(set = 2, binding = 6, std430) RESTRICT buffer FaceBackfacingBuffer {
 	bool backfacing[];
 } B_face_backfacing;
+
+#endif // !MESH_BUFFERS_GLSLI
