@@ -1,0 +1,56 @@
+#version 450
+#extension GL_ARB_shading_language_include : enable
+
+// NOTE: just one big huge fat workgroup
+layout(local_size_x = 512) in;
+
+#include <common/math.glsli>
+#include "buffers.glsli"
+
+
+shared int block_offsets[gl_WorkGroupSize.x + 1];
+shared int total_sum;
+
+// TODO: make this into a couple macros or something
+void main() {
+	uint num_blocks = gl_WorkGroupSize.x;
+	const uint cedges_per_block = udiv_ceil(uint(B_contour_desc.num_contour_edges), num_blocks);
+	num_blocks = udiv_ceil(uint(B_contour_desc.num_contour_edges), cedges_per_block);
+
+	const bool is_participating_stage_0 = gl_LocalInvocationID.x < num_blocks;
+	const bool is_participating_stage_1 = gl_LocalInvocationID.x == 0;
+	const bool is_participating_stage_2 = gl_LocalInvocationID.x < num_blocks;
+
+	if (is_participating_stage_0) {
+		const uint block_idx = gl_LocalInvocationID.x;
+		const int start_cedge_idx = int(cedges_per_block * block_idx);
+		const int final_cedge_idx = int(min(start_cedge_idx + cedges_per_block, B_contour_desc.num_contour_edges)) - 1;
+		int block_sum = 0;
+		for (int cedge_idx = start_cedge_idx; cedge_idx <= final_cedge_idx; ++cedge_idx) {
+			B_contour_edge_to_contour_fragment.data[cedge_idx].first_fragment_idx = block_sum;
+			block_sum += int(B_contour_edge_to_contour_fragment.data[cedge_idx].num_fragments);
+		}
+		block_offsets[block_idx] = block_sum;
+	}
+	barrier();
+	if (is_participating_stage_1) {
+		total_sum = 0;
+		for (int block_idx = 0; block_idx < num_blocks; ++block_idx) {
+			const int this_block_sum = block_offsets[block_idx];
+			block_offsets[block_idx] = total_sum;
+			total_sum += this_block_sum;
+		}
+		B_contour_desc.num_contour_fragments = total_sum;
+	}
+	barrier();
+	if (is_participating_stage_2) {
+		const uint block_idx = gl_LocalInvocationID.x;
+		const int start_cedge_idx = int(cedges_per_block * block_idx);
+		const int final_cedge_idx = int(min(start_cedge_idx + cedges_per_block, B_contour_desc.num_contour_edges)) - 1;
+		const int block_offset = block_offsets[block_idx];
+		for (int cedge_idx = start_cedge_idx; cedge_idx <= final_cedge_idx; ++cedge_idx) {
+			B_contour_edge_to_contour_fragment.data[cedge_idx].first_fragment_idx += block_offset;
+		}
+	}
+	barrier();
+}
