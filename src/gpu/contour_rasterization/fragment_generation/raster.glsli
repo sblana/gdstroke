@@ -29,3 +29,23 @@ vec4[2] pre_raster_edge(int edge_idx) {
 
 	return result;
 }
+
+vec4 perspective_interpolate_edge(vec4 verts_ndc[2], float weight) {
+	float w_reciprocal = mix(1.0 / verts_ndc[0].w, 1.0 / verts_ndc[1].w, weight);
+	vec3 ndc = mix(verts_ndc[0].xyz, verts_ndc[1].xyz, weight);
+	return vec4(ndc, w_reciprocal);
+}
+
+bool line_determine_axis_dominance(ivec2 start_point, ivec2 end_point) {
+	const ivec2 diff = end_point - start_point;
+	const bool is_y_dominant = diff.x < diff.y;
+	return is_y_dominant;
+}
+
+int calc_local_y_along_bresline(ivec2 diff, int i_along_x) {
+	return (2 * diff[1] * i_along_x + diff[0]) / (2 * diff[0]);
+}
+int calc_local_x_along_bresline(ivec2 diff, int i_along_y) {
+	return (2 * diff[0] * i_along_y + diff[1]) / (2 * diff[1]);
+}
+
