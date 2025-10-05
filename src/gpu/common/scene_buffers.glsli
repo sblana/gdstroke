@@ -1,7 +1,7 @@
 #ifndef SCENE_BUFFERS_GLSLI
 #define SCENE_BUFFERS_GLSLI
 
-#include <common/scene_data.glsli>
+#include "common/scene_data.glsli"
 
 layout(set = 0, binding = 0, std140) restrict readonly uniform SceneDataUniform {
 	SceneData cur;

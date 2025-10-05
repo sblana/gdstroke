@@ -9,20 +9,22 @@ class GdstrokeEffect : public CompositorEffect {
 	GDCLASS(GdstrokeEffect, CompositorEffect)
 
 	enum Shader : int32_t {
-		SHADER_ = 0,
+		SHADER_TEST_BUFFER_SIZES = 0,
 		SHADER_MAX,
 	};
+
+private:
+	bool _ready;
+	RID _compiled_shaders[Shader::SHADER_MAX];
+	RID _pipelines[Shader::SHADER_MAX];
+	RID config_uniform;
 
 protected:
 	static void _bind_methods();
 
 public:
-	GdstrokeEffect() = default;
+	GdstrokeEffect();
 	~GdstrokeEffect() override = default;
 
 	void _render_callback(int32_t p_effect_callback_type, RenderData *p_render_data) override;
-
-private:
-	RID compiled_shaders[Shader::SHADER_MAX];
-	RID pipelines[Shader::SHADER_MAX];
 };

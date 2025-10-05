@@ -1,6 +1,19 @@
-[gd_scene load_steps=2 format=3 uid="uid://dh0oj81pufivs"]
+[gd_scene load_steps=5 format=3 uid="uid://dh0oj81pufivs"]
 
-[ext_resource type="Script" path="res://example.gd" id="1_jdh55"]
+[ext_resource type="Script" uid="uid://b47blyjijv38w" path="res://example.gd" id="1_jdh55"]
+
+[sub_resource type="Environment" id="Environment_2jas5"]
+
+[sub_resource type="GdstrokeEffect" id="GdstrokeEffect_2jas5"]
+
+[sub_resource type="Compositor" id="Compositor_n51mc"]
+compositor_effects = Array[CompositorEffect]([SubResource("GdstrokeEffect_2jas5")])
 
 [node name="Node" type="Node"]
 script = ExtResource("1_jdh55")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_2jas5")
+compositor = SubResource("Compositor_n51mc")
+
+[node name="Camera3D" type="Camera3D" parent="."]
