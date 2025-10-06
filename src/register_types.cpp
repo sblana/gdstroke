@@ -6,6 +6,7 @@
 #include <godot_cpp/godot.hpp>
 
 #include "gdstroke_effect.hpp"
+#include "gdstroke_server.hpp"
 
 using namespace godot;
 
@@ -15,6 +16,8 @@ void initialize_gdextension_types(ModuleInitializationLevel p_level)
 		return;
 	}
 	GDREGISTER_CLASS(GdstrokeEffect);
+	GDREGISTER_CLASS(GdstrokeServer);
+	GdstrokeServer::create_singleton();
 }
 
 void uninitialize_gdextension_types(ModuleInitializationLevel p_level) {
