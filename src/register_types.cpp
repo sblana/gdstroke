@@ -7,17 +7,18 @@
 
 #include "gdstroke_effect.hpp"
 #include "gdstroke_server.hpp"
+#include "gdstroke_shader_interface.hpp"
 
 using namespace godot;
 
-void initialize_gdextension_types(ModuleInitializationLevel p_level)
-{
+void initialize_gdextension_types(ModuleInitializationLevel p_level) {
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
 		return;
 	}
 	GDREGISTER_CLASS(GdstrokeEffect);
 	GDREGISTER_CLASS(GdstrokeServer);
 	GdstrokeServer::create_singleton();
+	GDREGISTER_CLASS(GdstrokeShaderInterface);
 }
 
 void uninitialize_gdextension_types(ModuleInitializationLevel p_level) {

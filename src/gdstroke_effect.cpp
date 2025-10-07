@@ -7,6 +7,8 @@
 #include <godot_cpp/classes/rendering_device.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
 
+#include "gdstroke_server.hpp"
+
 #include "gen/test_buffer_sizes.spv.h"
 
 
@@ -17,12 +19,15 @@ void GdstrokeEffect::_bind_methods() {}
 GdstrokeEffect::GdstrokeEffect() {
 	this->set_effect_callback_type(EffectCallbackType::EFFECT_CALLBACK_TYPE_POST_OPAQUE);
 	this->_ready = false;
+	this->scene_interface_set = {};
 }
 
 void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData *p_render_data) {
 	RenderingDevice *rd = RenderingServer::get_singleton()->get_rendering_device();
 
 	if (!this->_ready) {
+		if (GdstrokeServer::get_singleton()->get_contour_instance() == nullptr)
+			return;
 		_ready = true;
 		PackedByteArray spirv_data = PackedByteArray();
 		for (int i = 0; i < SHADER_SPV_test_buffer_sizes_LENGTH; ++i) {
@@ -34,30 +39,23 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 
 		this->_pipelines[Shader::SHADER_TEST_BUFFER_SIZES] = rd->compute_pipeline_create(this->_compiled_shaders[Shader::SHADER_TEST_BUFFER_SIZES]);
 
-		config_uniform = rd->uniform_buffer_create(sizeof(float) * 4);
+		this->scene_interface_set.create_resources(rd, p_render_data);
+		this->mesh_interface_set.create_resources(rd, p_render_data);
 	}
 
-	Ref<RDUniform> uniform;
-	TypedArray<Ref<RDUniform>> set0_uniforms;
-	{
-		// SceneDataUniform
-		uniform = Ref(memnew(RDUniform));
-		uniform->set_binding(0);
-		uniform->set_uniform_type(RenderingDevice::UniformType::UNIFORM_TYPE_UNIFORM_BUFFER);
-		uniform->add_id(p_render_data->get_render_scene_data()->get_uniform_buffer());
-		set0_uniforms.append(uniform);
+	this->scene_interface_set.update_resources(rd, p_render_data);
+	this->scene_interface_set.make_bindings();
+	ERR_FAIL_COND(!this->scene_interface_set.get_uniform_set_rid(this->_compiled_shaders[Shader::SHADER_TEST_BUFFER_SIZES]).is_valid());
 
-		// ConfigUniform
-		uniform = Ref(memnew(RDUniform));
-		uniform->set_binding(1);
-		uniform->set_uniform_type(RenderingDevice::UniformType::UNIFORM_TYPE_UNIFORM_BUFFER);
-		uniform->add_id(this->config_uniform);
-		set0_uniforms.append(uniform);
-	}
+	this->mesh_interface_set.update_resources(rd, p_render_data);
+	this->mesh_interface_set.make_bindings();
+	ERR_FAIL_COND(!this->mesh_interface_set.get_uniform_set_rid(this->_compiled_shaders[Shader::SHADER_TEST_BUFFER_SIZES]).is_valid());
+
 
 	int64_t list = rd->compute_list_begin();
 	rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_TEST_BUFFER_SIZES]);
-	rd->compute_list_bind_uniform_set(list, UniformSetCacheRD::get_cache(this->_compiled_shaders[Shader::SHADER_TEST_BUFFER_SIZES], 0, set0_uniforms), 0);
+	this->scene_interface_set.bind_to_compute_list(rd, list, this->_compiled_shaders[Shader::SHADER_TEST_BUFFER_SIZES]);
+	this->mesh_interface_set.bind_to_compute_list(rd, list, this->_compiled_shaders[Shader::SHADER_TEST_BUFFER_SIZES]);
 	rd->compute_list_dispatch(list, 1, 1, 1);
 	rd->compute_list_end();
 }
