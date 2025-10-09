@@ -22,3 +22,5 @@ mesh = SubResource("BoxMesh_2jas5")
 script = ExtResource("1_2jas5")
 
 [node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(0.70710665, 0.3535534, -0.6123724, -1.0908405e-08, 0.8660254, 0.49999997, 0.7071068, -0.35355344, 0.61237246, -4.4494896, 3.5, 4.4494896)
+fov = 46.2

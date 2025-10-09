@@ -3,7 +3,7 @@
 
 layout(local_size_x = 64) in;
 
-#include "buffers.glsli"
+#include "common/buffers.glsli"
 
 
 void main() {
@@ -13,9 +13,10 @@ void main() {
 		const bool face_0_backfacing = B_face_backfacing.backfacing[B_edge_to_face.face_idxs[edge_idx][0]];
 		const bool face_1_backfacing = B_face_backfacing.backfacing[B_edge_to_face.face_idxs[edge_idx][1]];
 		const bool is_contour_edge = (
+			(B_edge_is_concave.concave[edge_idx]     ) &&
 			( face_0_backfacing && !face_1_backfacing) ||
 			(!face_0_backfacing &&  face_1_backfacing)
 		);
-		B_edge_is_contour.is_contour[edge_idx] = is_contour_edge;
+		B_edge_is_contour.contour[edge_idx] = is_contour_edge;
 	}
 }

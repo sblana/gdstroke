@@ -3,6 +3,7 @@
 #include <godot_cpp/classes/render_scene_data.hpp>
 #include <godot_cpp/classes/rd_uniform.hpp>
 
+#include "rd_util.hpp"
 #include "vec_util.hpp"
 #include "gdstroke_server.hpp"
 
@@ -15,9 +16,9 @@ Error GdstrokeShaderInterface::SceneInterfaceSet::create_resources(RenderingDevi
 	ERR_FAIL_COND_V(p_render_data == nullptr, Error::FAILED);
 	ERR_FAIL_COND_V(!p_render_data->get_render_scene_data()->get_uniform_buffer().is_valid(), Error::FAILED);
 	resources = {};
-	resources.resize(Resource::RESOURCE_MAX);
-	resources[Resource::RESOURCE_SCENE_DATA_UNIFORM] = p_render_data->get_render_scene_data()->get_uniform_buffer();
-	resources[Resource::RESOURCE_CONFIG_UNIFORM] = p_rd->uniform_buffer_create(sizeof(float) * 4);
+	resources.resize(Binding::BINDING_MAX);
+	resources[Binding::BINDING_SCENE_DATA_UNIFORM] = p_render_data->get_render_scene_data()->get_uniform_buffer();
+	resources[Binding::BINDING_CONFIG_UNIFORM] = p_rd->uniform_buffer_create(sizeof(float) * 4);
 	return Error::OK;
 }
 
@@ -25,30 +26,20 @@ Error GdstrokeShaderInterface::SceneInterfaceSet::update_resources(RenderingDevi
 	ERR_FAIL_COND_V(resources.size() == 0, Error::FAILED);
 	ERR_FAIL_COND_V(p_render_data == nullptr, Error::FAILED);
 	ERR_FAIL_COND_V(!p_render_data->get_render_scene_data()->get_uniform_buffer().is_valid(), Error::FAILED);
-	ERR_FAIL_COND_V(!((RID)resources[Resource::RESOURCE_SCENE_DATA_UNIFORM]).is_valid(), Error::FAILED);
-	resources[Resource::RESOURCE_SCENE_DATA_UNIFORM] = p_render_data->get_render_scene_data()->get_uniform_buffer();
+	ERR_FAIL_COND_V(!((RID)resources[Binding::BINDING_SCENE_DATA_UNIFORM]).is_valid(), Error::FAILED);
+	resources[Binding::BINDING_SCENE_DATA_UNIFORM] = p_render_data->get_render_scene_data()->get_uniform_buffer();
 	return Error::OK;
 }
 
 void GdstrokeShaderInterface::SceneInterfaceSet::make_bindings() {
 	bindings = {};
-	Ref<RDUniform> uniform;
-	uniform = Ref(memnew(RDUniform));
-	uniform->set_binding(Binding::BINDING_SCENE_DATA_UNIFORM);
-	uniform->set_uniform_type(RenderingDevice::UniformType::UNIFORM_TYPE_UNIFORM_BUFFER);
-	uniform->add_id(resources[Resource::RESOURCE_SCENE_DATA_UNIFORM]);
-	bindings.append(uniform);
-
-	uniform = Ref(memnew(RDUniform));
-	uniform->set_binding(Binding::BINDING_CONFIG_UNIFORM);
-	uniform->set_uniform_type(RenderingDevice::UniformType::UNIFORM_TYPE_UNIFORM_BUFFER);
-	uniform->add_id(resources[Resource::RESOURCE_CONFIG_UNIFORM]);
-	bindings.append(uniform);
+	bindings.append(new_uniform(Binding::BINDING_SCENE_DATA_UNIFORM, RenderingDevice::UniformType::UNIFORM_TYPE_UNIFORM_BUFFER, resources[Binding::BINDING_SCENE_DATA_UNIFORM]));
+	bindings.append(new_uniform(Binding::BINDING_CONFIG_UNIFORM,     RenderingDevice::UniformType::UNIFORM_TYPE_UNIFORM_BUFFER, resources[Binding::BINDING_CONFIG_UNIFORM    ]));
 }
 
 Error GdstrokeShaderInterface::MeshInterfaceSet::create_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
 	resources = {};
-	resources.resize(Resource::RESOURCE_MAX);
+	resources.resize(Binding::BINDING_MAX);
 
 	GdstrokeServer::ContourMesh const &contour_mesh = GdstrokeServer::get_singleton()->get_contour_mesh();
 	Transform3D contour_instance_transform = GdstrokeServer::get_singleton()->get_contour_instance()->get_global_transform().inverse();
@@ -62,7 +53,7 @@ Error GdstrokeShaderInterface::MeshInterfaceSet::create_resources(RenderingDevic
 		ctor_vec3_f(contour_instance_transform.get_basis()[0]),
 		ctor_vec3_f(contour_instance_transform.get_basis()[1]),
 		ctor_vec3_f(contour_instance_transform.get_basis()[2]),
-		ctor_vec3_f(contour_instance_transform.get_origin()),
+		ctor_vec3_f(contour_instance_transform.get_origin(), 1.0),
 	}).to_byte_array());
 
 	// todo: maybe some functions to make serialization less ass
@@ -108,14 +99,16 @@ Error GdstrokeShaderInterface::MeshInterfaceSet::create_resources(RenderingDevic
 		}).to_byte_array());
 	}
 
-	resources[Resource::RESOURCE_MESH_DESC_BUFFER]       = p_rd->storage_buffer_create(mesh_desc_buffer_data.size(),       mesh_desc_buffer_data);
-	resources[Resource::RESOURCE_VERTEX_BUFFER]          = p_rd->storage_buffer_create(vertex_buffer_data.size(),          vertex_buffer_data);
-	resources[Resource::RESOURCE_EDGE_TO_VERTEX_BUFFER]  = p_rd->storage_buffer_create(edge_to_vertex_buffer_data.size(),  edge_to_vertex_buffer_data);
-	resources[Resource::RESOURCE_EDGE_TO_FACE_BUFFER]    = p_rd->storage_buffer_create(edge_to_face_buffer_data.size(),    edge_to_face_buffer_data);
-	resources[Resource::RESOURCE_EDGE_IS_CONCAVE_BUFFER] = p_rd->storage_buffer_create(edge_is_concave_buffer_data.size(), edge_is_concave_buffer_data);
-	resources[Resource::RESOURCE_FACE_TO_VERTEX_BUFFER]  = p_rd->storage_buffer_create(face_to_vertex_buffer_data.size(),  face_to_vertex_buffer_data);
-	resources[Resource::RESOURCE_FACE_NORMAL_BUFFER]     = p_rd->storage_buffer_create(face_normal_buffer_data.size(),     face_normal_buffer_data);
-	resources[Resource::RESOURCE_FACE_BACKFACING_BUFFER] = p_rd->storage_buffer_create(contour_mesh.face_to_vertex_buffer.size() * 4);
+	resources[Binding::BINDING_MESH_DESC_BUFFER           ] = p_rd->storage_buffer_create(mesh_desc_buffer_data.size(),            mesh_desc_buffer_data);
+	resources[Binding::BINDING_VERTEX_BUFFER              ] = p_rd->storage_buffer_create(vertex_buffer_data.size(),               vertex_buffer_data);
+	resources[Binding::BINDING_EDGE_TO_VERTEX_BUFFER      ] = p_rd->storage_buffer_create(edge_to_vertex_buffer_data.size(),       edge_to_vertex_buffer_data);
+	resources[Binding::BINDING_EDGE_TO_FACE_BUFFER        ] = p_rd->storage_buffer_create(edge_to_face_buffer_data.size(),         edge_to_face_buffer_data);
+	resources[Binding::BINDING_EDGE_IS_CONCAVE_BUFFER     ] = p_rd->storage_buffer_create(edge_is_concave_buffer_data.size(),      edge_is_concave_buffer_data);
+	resources[Binding::BINDING_EDGE_IS_CONTOUR_BUFFER     ] = p_rd->storage_buffer_create(contour_mesh.edge_to_vertex_buffer.size() * sizeof(int32_t));
+	resources[Binding::BINDING_EDGE_TO_CONTOUR_EDGE_BUFFER] = p_rd->storage_buffer_create(contour_mesh.edge_to_vertex_buffer.size() * sizeof(int32_t));
+	resources[Binding::BINDING_FACE_TO_VERTEX_BUFFER      ] = p_rd->storage_buffer_create(face_to_vertex_buffer_data.size(),       face_to_vertex_buffer_data);
+	resources[Binding::BINDING_FACE_NORMAL_BUFFER         ] = p_rd->storage_buffer_create(face_normal_buffer_data.size(),          face_normal_buffer_data);
+	resources[Binding::BINDING_FACE_BACKFACING_BUFFER     ] = p_rd->storage_buffer_create(contour_mesh.face_to_vertex_buffer.size() * sizeof(int32_t));
 
 	return Error::OK;
 }
@@ -126,12 +119,34 @@ Error GdstrokeShaderInterface::MeshInterfaceSet::update_resources(RenderingDevic
 
 void GdstrokeShaderInterface::MeshInterfaceSet::make_bindings() {
 	bindings = {};
-	Ref<RDUniform> uniform;
-	for (int i = 0; i < Binding::BINDING_MAX; ++i) {
-		uniform = Ref(memnew(RDUniform));
-		uniform->set_binding(i);
-		uniform->set_uniform_type(RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER);
-		uniform->add_id(resources[i]);
-		bindings.append(uniform);
-	}
+	ERR_FAIL_COND(resources.size() != Binding::BINDING_MAX);
+	bindings.append(new_uniform(Binding::BINDING_MESH_DESC_BUFFER,            RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_MESH_DESC_BUFFER           ]));
+	bindings.append(new_uniform(Binding::BINDING_VERTEX_BUFFER,               RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_VERTEX_BUFFER              ]));
+	bindings.append(new_uniform(Binding::BINDING_EDGE_TO_VERTEX_BUFFER,       RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_EDGE_TO_VERTEX_BUFFER      ]));
+	bindings.append(new_uniform(Binding::BINDING_EDGE_TO_FACE_BUFFER,         RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_EDGE_TO_FACE_BUFFER        ]));
+	bindings.append(new_uniform(Binding::BINDING_EDGE_IS_CONCAVE_BUFFER,      RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_EDGE_IS_CONCAVE_BUFFER     ]));
+	bindings.append(new_uniform(Binding::BINDING_EDGE_IS_CONTOUR_BUFFER,      RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_EDGE_IS_CONTOUR_BUFFER     ]));
+	bindings.append(new_uniform(Binding::BINDING_EDGE_TO_CONTOUR_EDGE_BUFFER, RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_EDGE_TO_CONTOUR_EDGE_BUFFER]));
+	bindings.append(new_uniform(Binding::BINDING_FACE_TO_VERTEX_BUFFER,       RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_FACE_TO_VERTEX_BUFFER      ]));
+	bindings.append(new_uniform(Binding::BINDING_FACE_NORMAL_BUFFER,          RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_FACE_NORMAL_BUFFER         ]));
+	bindings.append(new_uniform(Binding::BINDING_FACE_BACKFACING_BUFFER,      RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_FACE_BACKFACING_BUFFER     ]));
+}
+
+Error GdstrokeShaderInterface::ContourInterfaceSet::create_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
+	resources = {};
+	resources.resize(Binding::BINDING_MAX);
+	resources[Binding::BINDING_CONTOUR_DESC_BUFFER]         = p_rd->storage_buffer_create(sizeof(int32_t) * 6);
+	resources[Binding::BINDING_CONTOUR_EDGE_TO_EDGE_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * GdstrokeServer::get_singleton()->get_contour_mesh().edge_to_vertex_buffer.size());
+	return Error::OK;
+}
+
+Error GdstrokeShaderInterface::ContourInterfaceSet::update_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
+	return Error::OK;
+}
+
+void GdstrokeShaderInterface::ContourInterfaceSet::make_bindings() {
+	bindings = {};
+	ERR_FAIL_COND(resources.size() != Binding::BINDING_MAX);
+	bindings.append(new_uniform(Binding::BINDING_CONTOUR_DESC_BUFFER,         RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_CONTOUR_DESC_BUFFER        ]));
+	bindings.append(new_uniform(Binding::BINDING_CONTOUR_EDGE_TO_EDGE_BUFFER, RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_CONTOUR_EDGE_TO_EDGE_BUFFER]));
 }

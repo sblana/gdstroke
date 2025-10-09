@@ -10,7 +10,11 @@ class GdstrokeEffect : public CompositorEffect {
 	GDCLASS(GdstrokeEffect, CompositorEffect)
 
 	enum Shader : int32_t {
-		SHADER_TEST_BUFFER_SIZES = 0,
+		SHADER_DUMMY = 0,
+		SHADER_CR_CED_FACE_ORIENTATION,
+		SHADER_CR_CED_DETECTION,
+		SHADER_CR_CED_ALLOCATION,
+		SHADER_CR_CED_SCATTER,
 		SHADER_MAX,
 	};
 
@@ -20,6 +24,7 @@ private:
 	RID _pipelines[Shader::SHADER_MAX];
 	GdstrokeShaderInterface::SceneInterfaceSet scene_interface_set;
 	GdstrokeShaderInterface::MeshInterfaceSet mesh_interface_set;
+	GdstrokeShaderInterface::ContourInterfaceSet contour_interface_set;
 
 protected:
 	static void _bind_methods();

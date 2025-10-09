@@ -36,12 +36,6 @@ public:
 			BINDING_MAX,
 		};
 
-		enum Resource : uint32_t {
-			RESOURCE_SCENE_DATA_UNIFORM = 0,
-			RESOURCE_CONFIG_UNIFORM,
-			RESOURCE_MAX,
-		};
-
 		virtual Error create_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
 		virtual Error update_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
 		virtual void make_bindings() override;
@@ -55,28 +49,31 @@ public:
 			BINDING_EDGE_TO_VERTEX_BUFFER,
 			BINDING_EDGE_TO_FACE_BUFFER,
 			BINDING_EDGE_IS_CONCAVE_BUFFER,
+			BINDING_EDGE_IS_CONTOUR_BUFFER,
+			BINDING_EDGE_TO_CONTOUR_EDGE_BUFFER,
 			BINDING_FACE_TO_VERTEX_BUFFER,
 			BINDING_FACE_NORMAL_BUFFER,
 			BINDING_FACE_BACKFACING_BUFFER,
 			BINDING_MAX,
 		};
 
-		enum Resource : uint32_t {
-			RESOURCE_MESH_DESC_BUFFER = 0,
-			RESOURCE_VERTEX_BUFFER,
-			RESOURCE_EDGE_TO_VERTEX_BUFFER,
-			RESOURCE_EDGE_TO_FACE_BUFFER,
-			RESOURCE_EDGE_IS_CONCAVE_BUFFER,
-			RESOURCE_FACE_TO_VERTEX_BUFFER,
-			RESOURCE_FACE_NORMAL_BUFFER,
-			RESOURCE_FACE_BACKFACING_BUFFER,
-			RESOURCE_MAX,
+		virtual Error create_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
+		virtual Error update_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
+		virtual void make_bindings() override;
+		inline virtual uint32_t get_slot() const override { return 2; }
+	};
+
+	struct ContourInterfaceSet : InterfaceSet {
+		enum Binding : uint32_t {
+			BINDING_CONTOUR_DESC_BUFFER = 0,
+			BINDING_CONTOUR_EDGE_TO_EDGE_BUFFER,
+			BINDING_MAX,
 		};
 
 		virtual Error create_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
 		virtual Error update_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
 		virtual void make_bindings() override;
-		inline virtual uint32_t get_slot() const override { return 2; }
+		inline virtual uint32_t get_slot() const override { return 3; }
 	};
 
 private:

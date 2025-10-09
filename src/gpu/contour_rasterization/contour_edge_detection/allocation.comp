@@ -4,8 +4,8 @@
 // NOTE: just one big huge fat workgroup
 layout(local_size_x = 512) in;
 
-#include <common/math.glsli>
-#include "buffers.glsli"
+#include "common/buffers.glsli"
+#include "common/math.glsli"
 
 
 shared int block_offsets[gl_WorkGroupSize.x + 1];
@@ -27,7 +27,7 @@ void main() {
 		int block_sum = 0;
 		for (int edge_idx = start_edge_idx; edge_idx <= final_edge_idx; ++edge_idx) {
 			B_edge_to_contour_edge.idx[edge_idx] = block_sum;
-			block_sum += int(B_edge_is_contour.is_contour[edge_idx]);
+			block_sum += int(B_edge_is_contour.contour[edge_idx]);
 		}
 		block_offsets[block_idx] = block_sum;
 	}

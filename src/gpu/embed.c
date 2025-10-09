@@ -1,3 +1,15 @@
+#ifdef DEFINE_EMBEDDED_DATA_TYPE
+	#ifndef EMBEDDED_DATA_TYPE_DEFINED
+		#define EMBEDDED_DATA_TYPE_DEFINED
+
+		struct EmbeddedData {
+			uint32_t length;
+			uint8_t data[];
+		};
+
+	#endif
+#else
+
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
@@ -23,14 +35,31 @@ char *read_entire_file(char const *filename, int *out_length) {
 // embed <input file> <output file> <variable name>
 int main(int argc, char **argv) {
 	assert(argc == 4);
+	char const *   input_file = argv[1];
+	char const *  output_file = argv[2];
+	char const *variable_name = argv[3];
 	int input_size;
-	char *input_data = read_entire_file(argv[1], &input_size);
-	FILE *fp = fopen(argv[2], "wb");
+	char *input_data = read_entire_file(input_file, &input_size);
+	FILE *fp = fopen(output_file, "wb");
 	assert(fp);
-	fprintf(fp, "int %s_LENGTH = %d;\n", argv[3], input_size);
-	fprintf(fp, "char const *%s = \"", argv[3]);
+
+	fprintf(fp, "#ifndef EMBEDDED_DATA_TYPE_DEFINED\n");
+	fprintf(fp, "\t#define EMBEDDED_DATA_TYPE_DEFINED\n");
+	fprintf(fp, "\n");
+	fprintf(fp, "\tstruct EmbeddedData {\n");
+	fprintf(fp, "\t\tuint32_t length;\n");
+	fprintf(fp, "\t\tuint8_t data[];\n");
+	fprintf(fp, "\t};\n");
+	fprintf(fp, "#endif\n");
+	fprintf(fp, "\n");
+	fprintf(fp, "struct EmbeddedData %s = {\n", variable_name);
+	fprintf(fp, "\t/*.length*/ %d,\n", input_size);
+	fprintf(fp, "\t/*.data*/ {");
 	for (int i = 0; i < input_size; ++i) {
-		fprintf(fp, "\\x%02hhx", input_data[i]);
+		fprintf(fp, "%s0x%02hhx,", ( (i % 32) ? (" ") : ("\n\t\t") ), input_data[i]);
 	}
-	fprintf(fp, "\";\n");
+	fprintf(fp, "\n\t}\n};");
+
+	fclose(fp);
 }
+#endif
