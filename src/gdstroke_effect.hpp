@@ -11,10 +11,15 @@ class GdstrokeEffect : public CompositorEffect {
 
 	enum Shader : int32_t {
 		SHADER_DUMMY = 0,
+		SHADER_DUMMY_COMMANDER,
 		SHADER_CR_CED_FACE_ORIENTATION,
 		SHADER_CR_CED_DETECTION,
 		SHADER_CR_CED_ALLOCATION,
 		SHADER_CR_CED_SCATTER,
+		SHADER_CR_FG_FIRST_COMMANDER,
+		SHADER_CR_FG_FRAG_COUNTS,
+		SHADER_CR_FG_ALLOCATION,
+		SHADER_CR_FG_SCATTER,
 		SHADER_MAX,
 	};
 
@@ -23,8 +28,14 @@ private:
 	RID _compiled_shaders[Shader::SHADER_MAX];
 	RID _pipelines[Shader::SHADER_MAX];
 	GdstrokeShaderInterface::SceneInterfaceSet scene_interface_set;
+	GdstrokeShaderInterface::CommandInterfaceSet command_interface_set;
 	GdstrokeShaderInterface::MeshInterfaceSet mesh_interface_set;
 	GdstrokeShaderInterface::ContourInterfaceSet contour_interface_set;
+
+	using DispatchIndirectCommands = GdstrokeShaderInterface::CommandInterfaceSet::DispatchIndirectCommands;
+
+	void bind_sets(RenderingDevice *p_rd, int64_t p_compute_list) const;
+	void bind_sets_commander(RenderingDevice *p_rd, int64_t p_compute_list) const;
 
 protected:
 	static void _bind_methods();

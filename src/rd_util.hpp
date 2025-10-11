@@ -34,3 +34,11 @@ constexpr  int64_t idiv_floor( int64_t n,  int64_t d) { return n / d -  int64_t(
 constexpr  int64_t idiv_ceil ( int64_t n,  int64_t d) { return n / d +  int64_t((n % d) != 0 && (n^d) > 0); }
 constexpr uint64_t udiv_floor(uint64_t n, uint64_t d) { return n / d; } // just for the sake of consistency
 constexpr uint64_t udiv_ceil (uint64_t n, uint64_t d) { return n / d + uint64_t((n % d) != 0); }
+
+
+struct DispatchIndirectCommand {
+	uint32_t workgroups_x;
+	uint32_t workgroups_y;
+	uint32_t workgroups_z;
+	uint32_t pad;
+};

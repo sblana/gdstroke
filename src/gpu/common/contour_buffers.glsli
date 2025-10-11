@@ -21,14 +21,14 @@ layout(set = 3, binding = 1, std430) RESTRICT buffer ContourEdgeToEdgeBuffer {
 	/* length of array is equal to B_mesh_desc.num_edges */;
 } B_contour_edge_to_edge;
 
-// struct ContourEdgeToContourFragmentData {
-// 	int num_fragments;
-// 	int first_fragment_idx;
-// };
+struct ContourEdgeToContourFragmentData {
+	int num_fragments;
+	int first_fragment_idx;
+};
 
-// layout(set = 3, binding = 2, std430) RESTRICT buffer ContourEdgeToContourFragmentBuffer {
-// 	ContourEdgeToContourFragmentData data[];
-// } B_contour_edge_to_contour_fragment;
+layout(set = 3, binding = 2, std430) RESTRICT buffer ContourEdgeToContourFragmentBuffer {
+	ContourEdgeToContourFragmentData data[];
+} B_contour_edge_to_contour_fragment;
 
 
 // layout(set = 3, binding = 3, std430) RESTRICT buffer ContourFragmentToContourEdgeBuffer {

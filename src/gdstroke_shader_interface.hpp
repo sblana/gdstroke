@@ -42,6 +42,26 @@ public:
 		inline virtual uint32_t get_slot() const override { return 0; }
 	};
 
+	struct CommandInterfaceSet : InterfaceSet {
+		enum Binding : uint32_t {
+			BINDING_DISPATCH_INDIRECT_COMMANDS_BUFFER = 0,
+			BINDING_MAX,
+		};
+
+		enum DispatchIndirectCommands : uint32_t {
+			DISPATCH_INDIRECT_COMMANDS_CONTOUR_EDGES = 0,
+			DISPATCH_INDIRECT_COMMANDS_MAX,
+		};
+
+		RID get_dispatch_indirect_commands_buffer() const;
+		void dispatch_indirect(RenderingDevice *p_rd, int64_t p_compute_list, DispatchIndirectCommands cmd) const;
+
+		virtual Error create_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
+		virtual Error update_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
+		virtual void make_bindings() override;
+		inline virtual uint32_t get_slot() const override { return 1; }
+	};
+
 	struct MeshInterfaceSet : InterfaceSet {
 		enum Binding : uint32_t {
 			BINDING_MESH_DESC_BUFFER = 0,
@@ -67,6 +87,7 @@ public:
 		enum Binding : uint32_t {
 			BINDING_CONTOUR_DESC_BUFFER = 0,
 			BINDING_CONTOUR_EDGE_TO_EDGE_BUFFER,
+			BINDING_CONTOUR_EDGE_TO_CONTOUR_FRAGMENT_BUFFER,
 			BINDING_MAX,
 		};
 

@@ -1,3 +1,0 @@
-#include "common/scene_buffers.glsli"
-#include "common/mesh_buffers.glsli"
-#include "common/contour_buffers.glsli"

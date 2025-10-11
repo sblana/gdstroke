@@ -37,6 +37,34 @@ void GdstrokeShaderInterface::SceneInterfaceSet::make_bindings() {
 	bindings.append(new_uniform(Binding::BINDING_CONFIG_UNIFORM,     RenderingDevice::UniformType::UNIFORM_TYPE_UNIFORM_BUFFER, resources[Binding::BINDING_CONFIG_UNIFORM    ]));
 }
 
+
+RID GdstrokeShaderInterface::CommandInterfaceSet::get_dispatch_indirect_commands_buffer() const {
+	ERR_FAIL_COND_V(resources.size() == 0, RID());
+	return resources[Binding::BINDING_DISPATCH_INDIRECT_COMMANDS_BUFFER];
+}
+
+void GdstrokeShaderInterface::CommandInterfaceSet::dispatch_indirect(RenderingDevice *p_rd, int64_t p_compute_list, DispatchIndirectCommands cmd) const {
+	p_rd->compute_list_dispatch_indirect(p_compute_list, get_dispatch_indirect_commands_buffer(), cmd * sizeof(DispatchIndirectCommand));
+}
+
+Error GdstrokeShaderInterface::CommandInterfaceSet::create_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
+	resources = {};
+	resources.resize(Binding::BINDING_MAX);
+	resources[Binding::BINDING_DISPATCH_INDIRECT_COMMANDS_BUFFER] = p_rd->storage_buffer_create(sizeof(DispatchIndirectCommand) * DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_MAX, {}, RenderingDevice::StorageBufferUsage::STORAGE_BUFFER_USAGE_DISPATCH_INDIRECT);
+	return Error::OK;
+}
+
+Error GdstrokeShaderInterface::CommandInterfaceSet::update_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
+	return Error::OK;
+}
+
+void GdstrokeShaderInterface::CommandInterfaceSet::make_bindings() {
+	bindings = {};
+	ERR_FAIL_COND(resources.size() != Binding::BINDING_MAX);
+	bindings.append(new_uniform(Binding::BINDING_DISPATCH_INDIRECT_COMMANDS_BUFFER, RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_DISPATCH_INDIRECT_COMMANDS_BUFFER]));
+}
+
+
 Error GdstrokeShaderInterface::MeshInterfaceSet::create_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
 	resources = {};
 	resources.resize(Binding::BINDING_MAX);
@@ -132,11 +160,15 @@ void GdstrokeShaderInterface::MeshInterfaceSet::make_bindings() {
 	bindings.append(new_uniform(Binding::BINDING_FACE_BACKFACING_BUFFER,      RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_FACE_BACKFACING_BUFFER     ]));
 }
 
+
 Error GdstrokeShaderInterface::ContourInterfaceSet::create_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
+	uint32_t num_edges = GdstrokeServer::get_singleton()->get_contour_mesh().edge_to_vertex_buffer.size();
+
 	resources = {};
 	resources.resize(Binding::BINDING_MAX);
-	resources[Binding::BINDING_CONTOUR_DESC_BUFFER]         = p_rd->storage_buffer_create(sizeof(int32_t) * 6);
-	resources[Binding::BINDING_CONTOUR_EDGE_TO_EDGE_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * GdstrokeServer::get_singleton()->get_contour_mesh().edge_to_vertex_buffer.size());
+	resources[Binding::BINDING_CONTOUR_DESC_BUFFER                    ] = p_rd->storage_buffer_create(sizeof(int32_t) * 6);
+	resources[Binding::BINDING_CONTOUR_EDGE_TO_EDGE_BUFFER            ] = p_rd->storage_buffer_create(sizeof(int32_t) * 1 * num_edges);
+	resources[Binding::BINDING_CONTOUR_EDGE_TO_CONTOUR_FRAGMENT_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 2 * num_edges);
 	return Error::OK;
 }
 
@@ -147,6 +179,7 @@ Error GdstrokeShaderInterface::ContourInterfaceSet::update_resources(RenderingDe
 void GdstrokeShaderInterface::ContourInterfaceSet::make_bindings() {
 	bindings = {};
 	ERR_FAIL_COND(resources.size() != Binding::BINDING_MAX);
-	bindings.append(new_uniform(Binding::BINDING_CONTOUR_DESC_BUFFER,         RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_CONTOUR_DESC_BUFFER        ]));
-	bindings.append(new_uniform(Binding::BINDING_CONTOUR_EDGE_TO_EDGE_BUFFER, RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_CONTOUR_EDGE_TO_EDGE_BUFFER]));
+	bindings.append(new_uniform(Binding::BINDING_CONTOUR_DESC_BUFFER,                     RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_CONTOUR_DESC_BUFFER                    ]));
+	bindings.append(new_uniform(Binding::BINDING_CONTOUR_EDGE_TO_EDGE_BUFFER,             RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_CONTOUR_EDGE_TO_EDGE_BUFFER            ]));
+	bindings.append(new_uniform(Binding::BINDING_CONTOUR_EDGE_TO_CONTOUR_FRAGMENT_BUFFER, RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_CONTOUR_EDGE_TO_CONTOUR_FRAGMENT_BUFFER]));
 }

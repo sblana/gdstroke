@@ -2,6 +2,7 @@
 #extension GL_ARB_shading_language_include : enable
 
 #include "common/buffers.glsli"
+#include "common/command_buffers.glsli"
 
 layout(local_size_x = 1) in;
 

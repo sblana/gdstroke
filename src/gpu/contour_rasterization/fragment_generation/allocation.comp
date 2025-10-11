@@ -4,8 +4,8 @@
 // NOTE: just one big huge fat workgroup
 layout(local_size_x = 512) in;
 
-#include <common/math.glsli>
-#include "buffers.glsli"
+#include "common/buffers.glsli"
+#include "common/math.glsli"
 
 
 shared int block_offsets[gl_WorkGroupSize.x + 1];
