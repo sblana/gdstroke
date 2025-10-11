@@ -11,8 +11,10 @@ struct DispatchIndirectCommand {
 };
 
 
-#define E_DispatchIndirectCommand_CONTOUR_EDGES (0)
-#define E_DispatchIndirectCommand_MAX (1)
+#define E_DispatchIndirectCommand_INVOCATION_TO_CONTOUR_EDGES     (0)
+#define E_DispatchIndirectCommand_WORKGROUP_TO_CONTOUR_EDGES      (1)
+#define E_DispatchIndirectCommand_INVOCATION_TO_CONTOUR_FRAGMENTS (2)
+#define E_DispatchIndirectCommand_MAX                             (3)
 
 layout(set = 1, binding = 0, std430) RESTRICT buffer DispatchIndirectCommandsBuffer {
 	DispatchIndirectCommand cmds[E_DispatchIndirectCommand_MAX];

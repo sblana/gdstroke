@@ -31,21 +31,17 @@ layout(set = 3, binding = 2, std430) RESTRICT buffer ContourEdgeToContourFragmen
 } B_contour_edge_to_contour_fragment;
 
 
-// layout(set = 3, binding = 3, std430) RESTRICT buffer ContourFragmentToContourEdgeBuffer {
-// 	int idx[MAX_NUM_CONTOUR_FRAGMENTS];
-// } B_contour_fragment_to_contour_edge;
+layout(set = 3, binding = 3, std430) RESTRICT buffer ContourFragmentPixelCoordBuffer {
+	ivec2 pixel_coord[MAX_NUM_CONTOUR_FRAGMENTS];
+} B_contour_fragment_pixel_coord;
 
-// layout(set = 3, binding = 4, std430) RESTRICT buffer ContourFragmentPixelCoordBuffer {
-// 	ivec2 pixel_coord[MAX_NUM_CONTOUR_FRAGMENTS];
-// } B_contour_fragment_pixel_coord;
+layout(set = 3, binding = 4, std430) RESTRICT buffer ContourFragmentOrientationBuffer {
+	vec2 orientation[MAX_NUM_CONTOUR_FRAGMENTS];
+} B_contour_fragment_orientation;
 
-// layout(set = 3, binding = 5, std430) RESTRICT buffer ContourFragmentOrientationBuffer {
-// 	vec2 orientation[MAX_NUM_CONTOUR_FRAGMENTS];
-// } B_contour_fragment_orientation;
-
-// layout(set = 3, binding = 6, std430) RESTRICT buffer ContourFragmentNormalDepthBuffer {
-// 	vec4 normal_depth[MAX_NUM_CONTOUR_FRAGMENTS];
-// } B_contour_fragment_normal_depth;
+layout(set = 3, binding = 5, std430) RESTRICT buffer ContourFragmentNormalDepthBuffer {
+	vec4 normal_depth[MAX_NUM_CONTOUR_FRAGMENTS];
+} B_contour_fragment_normal_depth;
 
 // layout(set = 3, binding = 7, r32f) RESTRICT readonly uniform image2D DepthTexture;
 

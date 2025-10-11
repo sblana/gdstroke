@@ -49,7 +49,9 @@ public:
 		};
 
 		enum DispatchIndirectCommands : uint32_t {
-			DISPATCH_INDIRECT_COMMANDS_CONTOUR_EDGES = 0,
+			DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_EDGES = 0,
+			DISPATCH_INDIRECT_COMMANDS_WORKGROUP_TO_CONTOUR_EDGES,
+			DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_FRAGMENTS,
 			DISPATCH_INDIRECT_COMMANDS_MAX,
 		};
 
@@ -88,13 +90,30 @@ public:
 			BINDING_CONTOUR_DESC_BUFFER = 0,
 			BINDING_CONTOUR_EDGE_TO_EDGE_BUFFER,
 			BINDING_CONTOUR_EDGE_TO_CONTOUR_FRAGMENT_BUFFER,
+			BINDING_CONTOUR_CONTOUR_FRAGMENT_PIXEL_COORD_BUFFER,
+			BINDING_CONTOUR_CONTOUR_FRAGMENT_ORIENTATION_BUFFER,
+			BINDING_CONTOUR_CONTOUR_FRAGMENT_NORMAL_DEPTH_BUFFER,
+			BINDING_MAX,
+		};
+
+		static constexpr uint32_t max_num_contour_fragments = 1u << 20u;
+
+		virtual Error create_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
+		virtual Error update_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
+		virtual void make_bindings() override;
+		inline virtual uint32_t get_slot() const override { return 3; }
+	};
+
+	struct DebugInterfaceSet : InterfaceSet {
+		enum Binding : uint32_t {
+			BINDING_CONTOUR_SCREEN_COLOR_IMAGE = 0,
 			BINDING_MAX,
 		};
 
 		virtual Error create_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
 		virtual Error update_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
 		virtual void make_bindings() override;
-		inline virtual uint32_t get_slot() const override { return 3; }
+		inline virtual uint32_t get_slot() const override { return 15; }
 	};
 
 private:

@@ -1,0 +1,6 @@
+#ifndef TEST_BUFFERS_GLSLI
+#define TEST_BUFFERS_GLSLI
+
+layout(set = 15, binding = 0, rgba32f) restrict uniform image2D U_screen_color_image;
+
+#endif // ! TEST_BUFFERS_GLSLI

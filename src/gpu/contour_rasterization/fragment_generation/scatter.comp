@@ -3,8 +3,8 @@
 
 layout(local_size_x = 64) in;
 
-#include <common/math.glsli>
-#include "buffers.glsli"
+#include "common/buffers.glsli"
+#include "common/math.glsli"
 #include "raster.glsli"
 
 
@@ -16,17 +16,19 @@ void main() {
 
 	const bool is_first_face_frontfacing = !B_face_backfacing.backfacing[B_edge_to_face.face_idxs[edge_idx][0]];
 	const int front_face_idx = B_edge_to_face.face_idxs[edge_idx][int(is_first_face_frontfacing)];
-	const vec3 front_face_view_normal = mat3x3(U_scene_data.cur.view_matrix) * mat3x3(B_mesh_desc.model_to_world) * B_face_normal.normal[front_face_idx];
+	const vec3 front_face_view_normal = model_norm_to_view_norm(B_face_normal.normal[front_face_idx].xyz);
 
 	const vec2 contour_orientation = normalize(verts_clipped_screen[1] - verts_clipped_screen[0]);
 
 	const bool is_y_dominant = line_determine_axis_dominance(ivec2(verts_clipped_screen[0]), ivec2(verts_clipped_screen[1]));
 	const bool is_first_point_smallest = (
 		int(verts_clipped_screen[0][int(is_y_dominant)]) <
-		int(verts_clipped_screen[1][int(!is_y_dominant)])
+		int(verts_clipped_screen[1][int(is_y_dominant)])
 	);
 	const ivec2 smallest_point = ivec2(verts_clipped_screen[int(!is_first_point_smallest)]);
 	const ivec2 diff = ivec2(verts_clipped_screen[int(is_first_point_smallest)]) - ivec2(verts_clipped_screen[int(!is_first_point_smallest)]);
+	const bool is_non_dominant_axis_negative = diff[int(!is_y_dominant)] < 0;
+	const ivec2 abs_diff = abs(diff);
 
 	const uint first_fragment_global_idx = B_contour_edge_to_contour_fragment.data[contour_edge_idx].first_fragment_idx;
 	const uint num_fragments = B_contour_edge_to_contour_fragment.data[contour_edge_idx].num_fragments;
@@ -45,19 +47,29 @@ void main() {
 			ivec2 pixel_coord = ivec2(0,0);
 			if (!is_y_dominant) {
 				pixel_coord.x = smallest_point.x + frag_idx;
-				pixel_coord.y = smallest_point.y + calc_local_y_along_bresline(diff, frag_idx);
+				if (!is_non_dominant_axis_negative) {
+					pixel_coord.y = smallest_point.y + calc_local_y_along_bresline(abs_diff, frag_idx);
+				}
+				else {
+					pixel_coord.y = smallest_point.y -calc_local_y_along_bresline(abs_diff, frag_idx);
+				}
 			}
 			else {
 				pixel_coord.y = smallest_point.y + frag_idx;
-				pixel_coord.x = smallest_point.x + calc_local_x_along_bresline(diff, frag_idx);
+				if (!is_non_dominant_axis_negative) {
+					pixel_coord.x = smallest_point.x + calc_local_x_along_bresline(abs_diff, frag_idx);
+				}
+				else {
+					pixel_coord.x = smallest_point.x - calc_local_x_along_bresline(abs_diff, frag_idx);
+				}
 			}
 			const float interpolation_weight = (frag_idx + 0.5) / float(num_fragments);
 			const vec4 interpolated_ndc = perspective_interpolate_edge(verts_clipped_ndc, interpolation_weight);
 			const float godot_depth = -interpolated_ndc.z / 2.0 + 0.5 + U_config.depth_bias;
-			B_contour_fragment_normal_depth.normal_depth[first_fragment_global_idx + frag_idx].w = godot_depth;
-			B_contour_fragment_normal_depth.normal_depth[first_fragment_global_idx + frag_idx].xyz = front_face_view_normal;
-			B_contour_fragment_orientation.orientation[first_fragment_global_idx + frag_idx] = contour_orientation;
 			B_contour_fragment_pixel_coord.pixel_coord[first_fragment_global_idx + frag_idx] = pixel_coord;
+			B_contour_fragment_orientation.orientation[first_fragment_global_idx + frag_idx] = contour_orientation;
+			B_contour_fragment_normal_depth.normal_depth[first_fragment_global_idx + frag_idx].xyz = front_face_view_normal;
+			B_contour_fragment_normal_depth.normal_depth[first_fragment_global_idx + frag_idx].w = godot_depth;
 		}
 	}
 }
