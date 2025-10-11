@@ -1,6 +1,7 @@
 [gd_scene load_steps=6 format=3 uid="uid://dh0oj81pufivs"]
 
 [ext_resource type="Script" uid="uid://beish714ac71p" path="res://mesh_instance_3d.gd" id="1_2jas5"]
+[ext_resource type="ArrayMesh" uid="uid://bsq0jyb1px54k" path="res://suzanne.obj" id="1_n51mc"]
 
 [sub_resource type="Environment" id="Environment_2jas5"]
 
@@ -9,8 +10,6 @@
 [sub_resource type="Compositor" id="Compositor_n51mc"]
 compositor_effects = Array[CompositorEffect]([SubResource("GdstrokeEffect_2jas5")])
 
-[sub_resource type="BoxMesh" id="BoxMesh_2jas5"]
-
 [node name="Node" type="Node"]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
@@ -18,7 +17,7 @@ environment = SubResource("Environment_2jas5")
 compositor = SubResource("Compositor_n51mc")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-mesh = SubResource("BoxMesh_2jas5")
+mesh = ExtResource("1_n51mc")
 script = ExtResource("1_2jas5")
 
 [node name="Camera3D" type="Camera3D" parent="."]
