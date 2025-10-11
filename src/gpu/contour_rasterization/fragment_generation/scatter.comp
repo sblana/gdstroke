@@ -65,7 +65,7 @@ void main() {
 			}
 			const float interpolation_weight = (frag_idx + 0.5) / float(num_fragments);
 			const vec4 interpolated_ndc = perspective_interpolate_edge(verts_clipped_ndc, interpolation_weight);
-			const float godot_depth = -interpolated_ndc.z / 2.0 + 0.5 + U_config.depth_bias;
+			const float godot_depth = interpolated_ndc.z;
 			B_contour_fragment_pixel_coord.pixel_coord[first_fragment_global_idx + frag_idx] = pixel_coord;
 			B_contour_fragment_orientation.orientation[first_fragment_global_idx + frag_idx] = contour_orientation;
 			B_contour_fragment_normal_depth.normal_depth[first_fragment_global_idx + frag_idx].xyz = front_face_view_normal;

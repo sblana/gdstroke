@@ -1,0 +1,45 @@
+#version 450
+#extension GL_ARB_shading_language_include : enable
+
+layout(local_size_x = 64) in;
+
+#include "common/buffers.glsli"
+#include "common/math.glsli"
+
+
+void main() {
+	const uint fragment_idx = gl_GlobalInvocationID.x;
+	if (fragment_idx < B_contour_desc.num_contour_fragments) {
+		float raw_depth = B_contour_fragment_normal_depth.normal_depth[fragment_idx].w;
+
+		uint num_times_tried = 0;
+		uint num_times_success = 0;
+		float average_sample_depth = 0.0;
+		for (int iy = -1; iy <= 1; ++iy) {
+			for (int ix = -1; ix <= 1; ++ix) {
+				ivec2 sample_point = B_contour_fragment_pixel_coord.pixel_coord[fragment_idx] + ivec2(ix, iy);
+				if (!is_within_screen(sample_point, uvec2(U_scene_data.cur.viewport_size))) {
+					continue;
+				}
+				float sample_raw_depth = texelFetch(U_screen_depth_texture, sample_point, 0).r;
+				num_times_tried += 1;
+				if (raw_depth > sample_raw_depth) {
+					num_times_success += 1;
+				}
+
+				average_sample_depth += sample_raw_depth;
+			}
+		}
+
+		average_sample_depth /= num_times_tried;
+
+		const bool passes_individual = num_times_success >= 2u;
+		const bool passes_average    = raw_depth > average_sample_depth;
+
+		bool is_pseudo_visible = passes_individual;
+		if (U_config.use_soft_depth_test_modification > 0)
+			is_pseudo_visible = is_pseudo_visible || passes_average;
+
+		B_contour_fragment_pseudo_visible.pseudo_visible[fragment_idx] = is_pseudo_visible;
+	}
+}

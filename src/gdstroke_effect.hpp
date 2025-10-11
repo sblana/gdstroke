@@ -22,6 +22,7 @@ class GdstrokeEffect : public CompositorEffect {
 		SHADER_CR_FG_ALLOCATION,
 		SHADER_CR_FG_SCATTER,
 		SHADER_CR_CPG_FIRST_COMMANDER,
+		SHADER_CR_CPG_SOFT_DEPTH_TEST,
 		SHADER_DEBUG_DISPLAY_CONTOUR_FRAGMENTS,
 		SHADER_MAX,
 	};
@@ -32,10 +33,10 @@ private:
 	bool _debug_enabled = true;
 	RID _compiled_shaders[Shader::SHADER_MAX];
 	RID _pipelines[Shader::SHADER_MAX];
-	GdstrokeShaderInterface::SceneInterfaceSet scene_interface_set;
-	GdstrokeShaderInterface::CommandInterfaceSet command_interface_set;
-	GdstrokeShaderInterface::MeshInterfaceSet mesh_interface_set;
-	GdstrokeShaderInterface::ContourInterfaceSet contour_interface_set;
+	GdstrokeShaderInterface::SceneInterfaceSet scene_interface_set = {};
+	GdstrokeShaderInterface::CommandInterfaceSet command_interface_set = {};
+	GdstrokeShaderInterface::MeshInterfaceSet mesh_interface_set = {};
+	GdstrokeShaderInterface::ContourInterfaceSet contour_interface_set = {};
 
 	GdstrokeShaderInterface::DebugInterfaceSet debug_interface_set;
 
@@ -53,6 +54,11 @@ protected:
 public:
 	GdstrokeEffect();
 	~GdstrokeEffect() override = default;
-
+	
 	void _render_callback(int32_t p_effect_callback_type, RenderData *p_render_data) override;
+
+	float get_config_depth_bias() const;
+	void  set_config_depth_bias(float p_value);
+	bool get_config_use_soft_depth_test_modification() const;
+	void set_config_use_soft_depth_test_modification(bool p_value);
 };

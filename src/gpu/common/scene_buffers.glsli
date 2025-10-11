@@ -2,17 +2,18 @@
 #define SCENE_BUFFERS_GLSLI
 
 #include "common/scene_data.glsli"
+#include "common/sanity.glsli"
 
-layout(set = 0, binding = 0, std140) restrict readonly uniform SceneDataUniform {
+layout(set = 0, binding = 0, std140) RESTRICT readonly uniform SceneDataUniform {
 	SceneData cur;
 	SceneData prv;
 } U_scene_data;
 
-layout(set = 0, binding = 1, std140) restrict readonly uniform ConfigUniform {
+layout(set = 0, binding = 1, std140) RESTRICT readonly uniform ConfigUniform {
 	float depth_bias;
+	uint use_soft_depth_test_modification;
 	float pad0;
 	float pad1;
-	float pad2;
 } U_config;
 
 #endif // !SCENE_BUFFERS_GLSLI

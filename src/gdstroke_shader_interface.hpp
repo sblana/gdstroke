@@ -4,6 +4,7 @@
 #include <godot_cpp/classes/render_data.hpp>
 #include <godot_cpp/classes/uniform_set_cache_rd.hpp>
 #include <godot_cpp/classes/rendering_device.hpp>
+#include <godot_cpp/classes/rd_uniform.hpp>
 
 using namespace godot;
 
@@ -35,6 +36,13 @@ public:
 			BINDING_CONFIG_UNIFORM,
 			BINDING_MAX,
 		};
+
+		struct ConfigData {
+			float depth_bias = 0.0;
+			uint32_t use_soft_depth_test_modification = false;
+		};
+		
+		ConfigData config_data = {};
 
 		virtual Error create_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
 		virtual Error update_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
@@ -90,13 +98,17 @@ public:
 			BINDING_CONTOUR_DESC_BUFFER = 0,
 			BINDING_CONTOUR_EDGE_TO_EDGE_BUFFER,
 			BINDING_CONTOUR_EDGE_TO_CONTOUR_FRAGMENT_BUFFER,
-			BINDING_CONTOUR_CONTOUR_FRAGMENT_PIXEL_COORD_BUFFER,
-			BINDING_CONTOUR_CONTOUR_FRAGMENT_ORIENTATION_BUFFER,
-			BINDING_CONTOUR_CONTOUR_FRAGMENT_NORMAL_DEPTH_BUFFER,
+			BINDING_CONTOUR_FRAGMENT_PIXEL_COORD_BUFFER,
+			BINDING_CONTOUR_FRAGMENT_ORIENTATION_BUFFER,
+			BINDING_CONTOUR_FRAGMENT_NORMAL_DEPTH_BUFFER,
+			BINDING_CONTOUR_FRAGMENT_PSEUDO_VISIBLE_BUFFER,
+			BINDING_SCREEN_DEPTH_TEXTURE,
 			BINDING_MAX,
 		};
 
 		static constexpr uint32_t max_num_contour_fragments = 1u << 20u;
+
+		RID nearest_sampler;
 
 		virtual Error create_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
 		virtual Error update_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;

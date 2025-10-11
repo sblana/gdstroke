@@ -1,4 +1,18 @@
-int idiv_floor ( int n,  int d) { return n / d -  int((n % d) != 0 && (n^d) < 0); }
-int idiv_ceil  ( int n,  int d) { return n / d +  int((n % d) != 0 && (n^d) > 0); }
+ int idiv_floor( int n,  int d) { return n / d -  int((n % d) != 0 && (n^d) < 0); }
+ int idiv_ceil ( int n,  int d) { return n / d +  int((n % d) != 0 && (n^d) > 0); }
 uint udiv_floor(uint n, uint d) { return n / d; } // just for the sake of consistency
 uint udiv_ceil (uint n, uint d) { return n / d + uint((n % d) != 0); }
+
+// upper limit is exclusive
+bool is_within_aabb(in ivec2 i_point, in ivec2 i_aabb_min, in uvec2 i_aabb_size) {
+	bool passed = (
+		i_point == max(i_point, i_aabb_min) &&
+		i_point == min(i_point, i_aabb_min + i_aabb_size - 1)
+	);
+	return passed;
+}
+
+// upper limit is exclusive
+bool is_within_screen(in ivec2 i_point, in uvec2 i_screen_size) {
+	return is_within_aabb(i_point, ivec2(0, 0), i_screen_size);
+}

@@ -27,6 +27,7 @@
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\contour_rasterization\fragment_generation\scatter.comp         -o %compileshadersTEMPDIR%cr__fg__scatter.spv
 
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\contour_rasterization\contour_pixel_generation\first_commander.comp -o %compileshadersTEMPDIR%cr__cpg__first_commander.spv
+	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\contour_rasterization\contour_pixel_generation\soft_depth_test.comp -o %compileshadersTEMPDIR%cr__cpg__soft_depth_test.spv
 
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\debug\display_contour_fragments.comp -o %compileshadersTEMPDIR%debug__display_contour_fragments.spv
 
@@ -47,6 +48,7 @@ gcc embed.c -o %compileshadersEMBED%
 	%compileshadersEMBED% %compileshadersTEMPDIR%cr__fg__scatter.spv         %compileshadersOUTPUTDIR%cr__fg__scatter.spv.h         SHADER_SPV_cr__fg__scatter
 
 	%compileshadersEMBED% %compileshadersTEMPDIR%cr__cpg__first_commander.spv %compileshadersOUTPUTDIR%cr__cpg__first_commander.spv.h SHADER_SPV_cr__cpg__first_commander
+	%compileshadersEMBED% %compileshadersTEMPDIR%cr__cpg__soft_depth_test.spv %compileshadersOUTPUTDIR%cr__cpg__soft_depth_test.spv.h SHADER_SPV_cr__cpg__soft_depth_test
 
 	%compileshadersEMBED% %compileshadersTEMPDIR%debug__display_contour_fragments.spv %compileshadersOUTPUTDIR%debug__display_contour_fragments.spv.h SHADER_SPV_debug__display_contour_fragments
 

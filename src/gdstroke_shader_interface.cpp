@@ -3,6 +3,7 @@
 #include <godot_cpp/classes/render_scene_buffers_rd.hpp>
 #include <godot_cpp/classes/render_scene_data.hpp>
 #include <godot_cpp/classes/rd_uniform.hpp>
+#include <godot_cpp/classes/rd_sampler_state.hpp>
 
 #include "rd_util.hpp"
 #include "vec_util.hpp"
@@ -27,8 +28,14 @@ Error GdstrokeShaderInterface::SceneInterfaceSet::update_resources(RenderingDevi
 	ERR_FAIL_COND_V(resources.size() == 0, Error::FAILED);
 	ERR_FAIL_COND_V(p_render_data == nullptr, Error::FAILED);
 	ERR_FAIL_COND_V(!p_render_data->get_render_scene_data()->get_uniform_buffer().is_valid(), Error::FAILED);
-	ERR_FAIL_COND_V(!((RID)resources[Binding::BINDING_SCENE_DATA_UNIFORM]).is_valid(), Error::FAILED);
 	resources[Binding::BINDING_SCENE_DATA_UNIFORM] = p_render_data->get_render_scene_data()->get_uniform_buffer();
+
+	PackedByteArray config_data_bytes = {};
+	config_data_bytes.resize(sizeof(ConfigData));
+	config_data_bytes.encode_float(0, config_data.depth_bias);
+	config_data_bytes.encode_u32(4, config_data.use_soft_depth_test_modification);
+
+	p_rd->buffer_update((RID const&)resources[Binding::BINDING_CONFIG_UNIFORM], 0, sizeof(ConfigData), config_data_bytes);
 	return Error::OK;
 }
 
@@ -164,33 +171,51 @@ void GdstrokeShaderInterface::MeshInterfaceSet::make_bindings() {
 
 
 Error GdstrokeShaderInterface::ContourInterfaceSet::create_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
+	ERR_FAIL_COND_V(p_render_data == nullptr, Error::FAILED);
+	Ref<RenderSceneBuffersRD> render_scene_buffers = (Ref<RenderSceneBuffersRD>)p_render_data->get_render_scene_buffers();
 	uint32_t num_edges = GdstrokeServer::get_singleton()->get_contour_mesh().edge_to_vertex_buffer.size();
 
 	resources = {};
 	resources.resize(Binding::BINDING_MAX);
-	resources[Binding::BINDING_CONTOUR_DESC_BUFFER                         ] = p_rd->storage_buffer_create(sizeof(int32_t) * 6);
-	resources[Binding::BINDING_CONTOUR_EDGE_TO_EDGE_BUFFER                 ] = p_rd->storage_buffer_create(sizeof(int32_t) * 1  * num_edges);
-	resources[Binding::BINDING_CONTOUR_EDGE_TO_CONTOUR_FRAGMENT_BUFFER     ] = p_rd->storage_buffer_create(sizeof(int32_t) * 2  * num_edges);
+	resources[Binding::BINDING_CONTOUR_DESC_BUFFER                    ] = p_rd->storage_buffer_create(sizeof(int32_t) * 6);
+	resources[Binding::BINDING_CONTOUR_EDGE_TO_EDGE_BUFFER            ] = p_rd->storage_buffer_create(sizeof(int32_t) * 1 * num_edges);
+	resources[Binding::BINDING_CONTOUR_EDGE_TO_CONTOUR_FRAGMENT_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 2 * num_edges);
 
-	resources[Binding::BINDING_CONTOUR_CONTOUR_FRAGMENT_PIXEL_COORD_BUFFER ] = p_rd->storage_buffer_create(sizeof(int32_t) * 2  * max_num_contour_fragments);
-	resources[Binding::BINDING_CONTOUR_CONTOUR_FRAGMENT_ORIENTATION_BUFFER ] = p_rd->storage_buffer_create(sizeof(float)   * 2  * max_num_contour_fragments);
-	resources[Binding::BINDING_CONTOUR_CONTOUR_FRAGMENT_NORMAL_DEPTH_BUFFER] = p_rd->storage_buffer_create(sizeof(float)   * 4  * max_num_contour_fragments);
+	resources[Binding::BINDING_CONTOUR_FRAGMENT_PIXEL_COORD_BUFFER   ] = p_rd->storage_buffer_create(sizeof(int32_t)  * 2 * max_num_contour_fragments);
+	resources[Binding::BINDING_CONTOUR_FRAGMENT_ORIENTATION_BUFFER   ] = p_rd->storage_buffer_create(sizeof(float)    * 2 * max_num_contour_fragments);
+	resources[Binding::BINDING_CONTOUR_FRAGMENT_NORMAL_DEPTH_BUFFER  ] = p_rd->storage_buffer_create(sizeof(float)    * 4 * max_num_contour_fragments);
+	resources[Binding::BINDING_CONTOUR_FRAGMENT_PSEUDO_VISIBLE_BUFFER] = p_rd->storage_buffer_create(sizeof(uint32_t) * 1 * max_num_contour_fragments);
+
+	resources[Binding::BINDING_SCREEN_DEPTH_TEXTURE] = render_scene_buffers->get_depth_texture();
+
+	Ref<RDSamplerState> nearest_sampler_state = Ref(memnew(RDSamplerState));
+	nearest_sampler = p_rd->sampler_create(nearest_sampler_state);
 	return Error::OK;
 }
 
 Error GdstrokeShaderInterface::ContourInterfaceSet::update_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
+	ERR_FAIL_COND_V(resources.size() == 0, Error::FAILED);
+	ERR_FAIL_COND_V(p_render_data == nullptr, Error::FAILED);
+	Ref<RenderSceneBuffersRD> render_scene_buffers = (Ref<RenderSceneBuffersRD>)p_render_data->get_render_scene_buffers();
+	resources[Binding::BINDING_SCREEN_DEPTH_TEXTURE] = render_scene_buffers->get_depth_texture();
 	return Error::OK;
 }
 
 void GdstrokeShaderInterface::ContourInterfaceSet::make_bindings() {
 	bindings = {};
 	ERR_FAIL_COND(resources.size() != Binding::BINDING_MAX);
-	bindings.append(new_uniform(Binding::BINDING_CONTOUR_DESC_BUFFER,                          RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_CONTOUR_DESC_BUFFER                         ]));
-	bindings.append(new_uniform(Binding::BINDING_CONTOUR_EDGE_TO_EDGE_BUFFER,                  RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_CONTOUR_EDGE_TO_EDGE_BUFFER                 ]));
-	bindings.append(new_uniform(Binding::BINDING_CONTOUR_EDGE_TO_CONTOUR_FRAGMENT_BUFFER,      RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_CONTOUR_EDGE_TO_CONTOUR_FRAGMENT_BUFFER     ]));
-	bindings.append(new_uniform(Binding::BINDING_CONTOUR_CONTOUR_FRAGMENT_PIXEL_COORD_BUFFER,  RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_CONTOUR_CONTOUR_FRAGMENT_PIXEL_COORD_BUFFER ]));
-	bindings.append(new_uniform(Binding::BINDING_CONTOUR_CONTOUR_FRAGMENT_ORIENTATION_BUFFER,  RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_CONTOUR_CONTOUR_FRAGMENT_ORIENTATION_BUFFER ]));
-	bindings.append(new_uniform(Binding::BINDING_CONTOUR_CONTOUR_FRAGMENT_NORMAL_DEPTH_BUFFER, RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_CONTOUR_CONTOUR_FRAGMENT_NORMAL_DEPTH_BUFFER]));
+
+	bindings.append(new_uniform(Binding::BINDING_CONTOUR_DESC_BUFFER,                     RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_CONTOUR_DESC_BUFFER                    ]));
+	bindings.append(new_uniform(Binding::BINDING_CONTOUR_EDGE_TO_EDGE_BUFFER,             RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_CONTOUR_EDGE_TO_EDGE_BUFFER            ]));
+	bindings.append(new_uniform(Binding::BINDING_CONTOUR_EDGE_TO_CONTOUR_FRAGMENT_BUFFER, RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_CONTOUR_EDGE_TO_CONTOUR_FRAGMENT_BUFFER]));
+
+	bindings.append(new_uniform(Binding::BINDING_CONTOUR_FRAGMENT_PIXEL_COORD_BUFFER,    RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_CONTOUR_FRAGMENT_PIXEL_COORD_BUFFER   ]));
+	bindings.append(new_uniform(Binding::BINDING_CONTOUR_FRAGMENT_ORIENTATION_BUFFER,    RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_CONTOUR_FRAGMENT_ORIENTATION_BUFFER   ]));
+	bindings.append(new_uniform(Binding::BINDING_CONTOUR_FRAGMENT_NORMAL_DEPTH_BUFFER,   RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_CONTOUR_FRAGMENT_NORMAL_DEPTH_BUFFER  ]));
+	bindings.append(new_uniform(Binding::BINDING_CONTOUR_FRAGMENT_PSEUDO_VISIBLE_BUFFER, RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_CONTOUR_FRAGMENT_PSEUDO_VISIBLE_BUFFER]));
+
+	ERR_FAIL_COND(!nearest_sampler.is_valid());
+	bindings.append(new_uniform(Binding::BINDING_SCREEN_DEPTH_TEXTURE, RenderingDevice::UniformType::UNIFORM_TYPE_SAMPLER_WITH_TEXTURE, nearest_sampler, resources[Binding::BINDING_SCREEN_DEPTH_TEXTURE]));
 }
 
 

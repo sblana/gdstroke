@@ -5,19 +5,18 @@ layout(local_size_x = 64) in;
 
 #include "common/buffers.glsli"
 #include "common/debug_buffers.glsli"
+#include "common/math.glsli"
 
 
 void main() {
-	uint fragment_idx = gl_GlobalInvocationID.x;
+	const uint fragment_idx = gl_GlobalInvocationID.x;
 	if (fragment_idx < B_contour_desc.num_contour_fragments) {
-		ivec2 pixel_coord = B_contour_fragment_pixel_coord.pixel_coord[fragment_idx];
-		if (pixel_coord == max(pixel_coord, ivec2(0, 0)) &&
-			pixel_coord == min(pixel_coord, imageSize(U_screen_color_image) - 1)
-		) {
-			vec4 output_data = vec4(
+		const ivec2 pixel_coord = B_contour_fragment_pixel_coord.pixel_coord[fragment_idx];
+		if (is_within_screen(pixel_coord, imageSize(U_screen_color_image))) {
+			const vec4 output_data = vec4(
+				B_contour_fragment_normal_depth.normal_depth[fragment_idx].w,
+				float(B_contour_fragment_pseudo_visible.pseudo_visible[fragment_idx]),
 				0.0,
-				float(fragment_idx) / float(B_contour_desc.num_contour_fragments),
-				1.0,
 				1.0
 			);
 			imageStore(U_screen_color_image, pixel_coord, output_data);

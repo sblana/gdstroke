@@ -23,6 +23,7 @@
 #include "gen/cr__fg__allocation.spv.h"
 #include "gen/cr__fg__scatter.spv.h"
 #include "gen/cr__cpg__first_commander.spv.h"
+#include "gen/cr__cpg__soft_depth_test.spv.h"
 #include "gen/debug__display_contour_fragments.spv.h"
 
 
@@ -41,6 +42,7 @@ void const *GdstrokeEffect::shader_to_embedded_data[Shader::SHADER_MAX] = {
 	&SHADER_SPV_cr__fg__allocation,
 	&SHADER_SPV_cr__fg__scatter,
 	&SHADER_SPV_cr__cpg__first_commander,
+	&SHADER_SPV_cr__cpg__soft_depth_test,
 	&SHADER_SPV_debug__display_contour_fragments,
 };
 
@@ -65,7 +67,27 @@ void GdstrokeEffect::_compile_shader(RenderingDevice *p_rd, Shader p_shader, Str
 #define COMPILE_SHADER(p_rd, p_shader) \
 	_compile_shader(p_rd, p_shader, _STR(p_shader))
 
-void GdstrokeEffect::_bind_methods() {}
+void GdstrokeEffect::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("set_config_depth_bias", "p_value"), &GdstrokeEffect::set_config_depth_bias);
+	ClassDB::bind_method(D_METHOD("get_config_depth_bias"),            &GdstrokeEffect::get_config_depth_bias);
+	ClassDB::bind_method(D_METHOD("set_config_use_soft_depth_test_modification", "p_value"), &GdstrokeEffect::set_config_use_soft_depth_test_modification);
+	ClassDB::bind_method(D_METHOD("get_config_use_soft_depth_test_modification"),            &GdstrokeEffect::get_config_use_soft_depth_test_modification);
+
+	ADD_PROPERTY(
+		PropertyInfo(
+			Variant::FLOAT, "depth_bias"
+		),
+		"set_config_depth_bias",
+		"get_config_depth_bias"
+	);
+	ADD_PROPERTY(
+		PropertyInfo(
+			Variant::BOOL, "use_soft_depth_test_modification"
+		),
+		"set_config_use_soft_depth_test_modification",
+		"get_config_use_soft_depth_test_modification"
+	);
+}
 
 GdstrokeEffect::GdstrokeEffect() {
 	this->set_effect_callback_type(EffectCallbackType::EFFECT_CALLBACK_TYPE_POST_OPAQUE);
@@ -100,6 +122,7 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		COMPILE_SHADER(rd, Shader::SHADER_CR_FG_SCATTER);
 
 		COMPILE_SHADER(rd, Shader::SHADER_CR_CPG_FIRST_COMMANDER);
+		COMPILE_SHADER(rd, Shader::SHADER_CR_CPG_SOFT_DEPTH_TEST);
 
 		COMPILE_SHADER(rd, Shader::SHADER_DEBUG_DISPLAY_CONTOUR_FRAGMENTS);
 
@@ -211,9 +234,31 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 	rd->compute_list_end();
 
 	list = rd->compute_list_begin();
+	rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CPG_SOFT_DEPTH_TEST]);
+	this->bind_sets(rd, list);
+	this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_FRAGMENTS);
+	rd->compute_list_end();
+
+	list = rd->compute_list_begin();
 	rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_DEBUG_DISPLAY_CONTOUR_FRAGMENTS]);
 	this->bind_sets(rd, list);
 	this->bind_sets_debug(rd, list);
 	this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_FRAGMENTS);
 	rd->compute_list_end();
+}
+
+float GdstrokeEffect::get_config_depth_bias() const {
+	return scene_interface_set.config_data.depth_bias;
+}
+
+void  GdstrokeEffect::set_config_depth_bias(float p_value) {
+	scene_interface_set.config_data.depth_bias = p_value;
+}
+
+bool GdstrokeEffect::get_config_use_soft_depth_test_modification() const {
+	return scene_interface_set.config_data.use_soft_depth_test_modification;
+}
+
+void GdstrokeEffect::set_config_use_soft_depth_test_modification(bool p_value) {
+	scene_interface_set.config_data.use_soft_depth_test_modification = uint32_t(p_value);
 }

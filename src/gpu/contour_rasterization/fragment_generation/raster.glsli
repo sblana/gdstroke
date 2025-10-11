@@ -10,6 +10,7 @@ vec3 model_pos_to_view_pos(vec3 model_pos) {
 
 vec4 view_pos_to_ndc_pos(vec3 view_pos) {
 	vec4 clip_pos = U_scene_data.cur.projection_matrix * vec4(view_pos, 1.0);
+	clip_pos.z += U_config.depth_bias;
 	return vec4(clip_pos.xyz / clip_pos.w, clip_pos.w);
 }
 
