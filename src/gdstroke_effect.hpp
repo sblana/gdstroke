@@ -27,6 +27,7 @@ class GdstrokeEffect : public CompositorEffect {
 	};
 
 private:
+	static void const *shader_to_embedded_data[GdstrokeEffect::Shader::SHADER_MAX];
 	bool _ready;
 	bool _debug_enabled = true;
 	RID _compiled_shaders[Shader::SHADER_MAX];
@@ -43,6 +44,8 @@ private:
 	void bind_sets(RenderingDevice *p_rd, int64_t p_compute_list) const;
 	void bind_sets_commander(RenderingDevice *p_rd, int64_t p_compute_list) const;
 	void bind_sets_debug(RenderingDevice *p_rd, int64_t p_compute_list) const;
+
+	void _compile_shader(RenderingDevice *p_rd, Shader p_shader, String const &p_name);
 
 protected:
 	static void _bind_methods();

@@ -28,6 +28,22 @@
 
 using namespace godot;
 
+void const *GdstrokeEffect::shader_to_embedded_data[Shader::SHADER_MAX] = {
+	&SHADER_SPV_dummy,
+	&SHADER_SPV_dummy_commander,
+	&SHADER_SPV_dummy_debug,
+	&SHADER_SPV_cr__ced__face_orientation,
+	&SHADER_SPV_cr__ced__detection,
+	&SHADER_SPV_cr__ced__allocation,
+	&SHADER_SPV_cr__ced__scatter,
+	&SHADER_SPV_cr__fg__first_commander,
+	&SHADER_SPV_cr__fg__frag_counts,
+	&SHADER_SPV_cr__fg__allocation,
+	&SHADER_SPV_cr__fg__scatter,
+	&SHADER_SPV_cr__cpg__first_commander,
+	&SHADER_SPV_debug__display_contour_fragments,
+};
+
 void GdstrokeEffect::bind_sets(RenderingDevice *p_rd, int64_t p_compute_list) const {
 	this->  scene_interface_set.bind_to_compute_list(p_rd, p_compute_list, this->_compiled_shaders[Shader::SHADER_DUMMY]);
 	this->   mesh_interface_set.bind_to_compute_list(p_rd, p_compute_list, this->_compiled_shaders[Shader::SHADER_DUMMY]);
@@ -41,6 +57,13 @@ void GdstrokeEffect::bind_sets_commander(RenderingDevice *p_rd, int64_t p_comput
 void GdstrokeEffect::bind_sets_debug(RenderingDevice *p_rd, int64_t p_compute_list) const {
 	this->debug_interface_set.bind_to_compute_list(p_rd, p_compute_list, this->_compiled_shaders[Shader::SHADER_DUMMY_DEBUG]);
 }
+
+void GdstrokeEffect::_compile_shader(RenderingDevice *p_rd, Shader p_shader, String const &p_name) {
+	this->_compiled_shaders[p_shader] = create_comp_shader_from_embedded_spirv(p_rd, *(EmbeddedData const*)shader_to_embedded_data[p_shader], p_name);
+}
+
+#define COMPILE_SHADER(p_rd, p_shader) \
+	_compile_shader(p_rd, p_shader, _STR(p_shader))
 
 void GdstrokeEffect::_bind_methods() {}
 
@@ -62,43 +85,28 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		_ready = true;
 
 
-		this->_compiled_shaders[Shader::SHADER_DUMMY          ] = create_comp_shader_from_embedded_spirv(rd, SHADER_SPV_dummy,           _STR(SHADER_DUMMY          ));
-		this->_compiled_shaders[Shader::SHADER_DUMMY_COMMANDER] = create_comp_shader_from_embedded_spirv(rd, SHADER_SPV_dummy_commander, _STR(SHADER_DUMMY_COMMANDER));
-		this->_compiled_shaders[Shader::SHADER_DUMMY_DEBUG    ] = create_comp_shader_from_embedded_spirv(rd, SHADER_SPV_dummy_debug,     _STR(SHADER_DUMMY_DEBUG    ));
+		COMPILE_SHADER(rd, Shader::SHADER_DUMMY);
+		COMPILE_SHADER(rd, Shader::SHADER_DUMMY_COMMANDER);
+		COMPILE_SHADER(rd, Shader::SHADER_DUMMY_DEBUG);
 
-		this->_compiled_shaders[Shader::SHADER_CR_CED_FACE_ORIENTATION] = create_comp_shader_from_embedded_spirv(rd, SHADER_SPV_cr__ced__face_orientation, _STR(SHADER_CR_CED_FACE_ORIENTATION));
-		this->_compiled_shaders[Shader::SHADER_CR_CED_DETECTION       ] = create_comp_shader_from_embedded_spirv(rd, SHADER_SPV_cr__ced__detection,        _STR(SHADER_CR_CED_DETECTION       ));
-		this->_compiled_shaders[Shader::SHADER_CR_CED_ALLOCATION      ] = create_comp_shader_from_embedded_spirv(rd, SHADER_SPV_cr__ced__allocation,       _STR(SHADER_CR_CED_ALLOCATION      ));
-		this->_compiled_shaders[Shader::SHADER_CR_CED_SCATTER         ] = create_comp_shader_from_embedded_spirv(rd, SHADER_SPV_cr__ced__scatter,          _STR(SHADER_CR_CED_SCATTER         ));
+		COMPILE_SHADER(rd, Shader::SHADER_CR_CED_FACE_ORIENTATION);
+		COMPILE_SHADER(rd, Shader::SHADER_CR_CED_DETECTION);
+		COMPILE_SHADER(rd, Shader::SHADER_CR_CED_ALLOCATION);
+		COMPILE_SHADER(rd, Shader::SHADER_CR_CED_SCATTER);
 
-		this->_compiled_shaders[Shader::SHADER_CR_FG_FIRST_COMMANDER ] = create_comp_shader_from_embedded_spirv(rd, SHADER_SPV_cr__fg__first_commander, _STR(SHADER_CR_FG_FIRST_COMMANDER ));
-		this->_compiled_shaders[Shader::SHADER_CR_FG_FRAG_COUNTS     ] = create_comp_shader_from_embedded_spirv(rd, SHADER_SPV_cr__fg__frag_counts,     _STR(SHADER_CR_FG_FRAG_COUNTS     ));
-		this->_compiled_shaders[Shader::SHADER_CR_FG_ALLOCATION      ] = create_comp_shader_from_embedded_spirv(rd, SHADER_SPV_cr__fg__allocation,      _STR(SHADER_CR_FG_ALLOCATION      ));
-		this->_compiled_shaders[Shader::SHADER_CR_FG_SCATTER         ] = create_comp_shader_from_embedded_spirv(rd, SHADER_SPV_cr__fg__scatter,         _STR(SHADER_CR_FG_SCATTER         ));
+		COMPILE_SHADER(rd, Shader::SHADER_CR_FG_FIRST_COMMANDER);
+		COMPILE_SHADER(rd, Shader::SHADER_CR_FG_FRAG_COUNTS);
+		COMPILE_SHADER(rd, Shader::SHADER_CR_FG_ALLOCATION);
+		COMPILE_SHADER(rd, Shader::SHADER_CR_FG_SCATTER);
 
-		this->_compiled_shaders[Shader::SHADER_CR_CPG_FIRST_COMMANDER] = create_comp_shader_from_embedded_spirv(rd, SHADER_SPV_cr__cpg__first_commander, _STR(SHADER_CR_CPG_FIRST_COMMANDER));
+		COMPILE_SHADER(rd, Shader::SHADER_CR_CPG_FIRST_COMMANDER);
 
-		this->_compiled_shaders[Shader::SHADER_DEBUG_DISPLAY_CONTOUR_FRAGMENTS] = create_comp_shader_from_embedded_spirv(rd, SHADER_SPV_debug__display_contour_fragments, _STR(SHADER_DEBUG_DISPLAY_CONTOUR_FRAGMENTS));
+		COMPILE_SHADER(rd, Shader::SHADER_DEBUG_DISPLAY_CONTOUR_FRAGMENTS);
 
 
-		this->_pipelines[Shader::SHADER_DUMMY          ] = rd->compute_pipeline_create(this->_compiled_shaders[Shader::SHADER_DUMMY          ]);
-		this->_pipelines[Shader::SHADER_DUMMY_COMMANDER] = rd->compute_pipeline_create(this->_compiled_shaders[Shader::SHADER_DUMMY_COMMANDER]);
-		this->_pipelines[Shader::SHADER_DUMMY_DEBUG    ] = rd->compute_pipeline_create(this->_compiled_shaders[Shader::SHADER_DUMMY_DEBUG    ]);
-
-		this->_pipelines[Shader::SHADER_CR_CED_FACE_ORIENTATION] = rd->compute_pipeline_create(this->_compiled_shaders[Shader::SHADER_CR_CED_FACE_ORIENTATION]);
-		this->_pipelines[Shader::SHADER_CR_CED_DETECTION       ] = rd->compute_pipeline_create(this->_compiled_shaders[Shader::SHADER_CR_CED_DETECTION       ]);
-		this->_pipelines[Shader::SHADER_CR_CED_ALLOCATION      ] = rd->compute_pipeline_create(this->_compiled_shaders[Shader::SHADER_CR_CED_ALLOCATION      ]);
-		this->_pipelines[Shader::SHADER_CR_CED_SCATTER         ] = rd->compute_pipeline_create(this->_compiled_shaders[Shader::SHADER_CR_CED_SCATTER         ]);
-
-		this->_pipelines[Shader::SHADER_CR_FG_FIRST_COMMANDER ] = rd->compute_pipeline_create(this->_compiled_shaders[Shader::SHADER_CR_FG_FIRST_COMMANDER ]);
-		this->_pipelines[Shader::SHADER_CR_FG_FRAG_COUNTS     ] = rd->compute_pipeline_create(this->_compiled_shaders[Shader::SHADER_CR_FG_FRAG_COUNTS     ]);
-		this->_pipelines[Shader::SHADER_CR_FG_ALLOCATION      ] = rd->compute_pipeline_create(this->_compiled_shaders[Shader::SHADER_CR_FG_ALLOCATION      ]);
-		this->_pipelines[Shader::SHADER_CR_FG_SCATTER         ] = rd->compute_pipeline_create(this->_compiled_shaders[Shader::SHADER_CR_FG_SCATTER         ]);
-
-		this->_pipelines[Shader::SHADER_CR_CPG_FIRST_COMMANDER] = rd->compute_pipeline_create(this->_compiled_shaders[Shader::SHADER_CR_CPG_FIRST_COMMANDER]);
-
-		this->_pipelines[Shader::SHADER_DEBUG_DISPLAY_CONTOUR_FRAGMENTS] = rd->compute_pipeline_create(this->_compiled_shaders[Shader::SHADER_DEBUG_DISPLAY_CONTOUR_FRAGMENTS]);
-
+		for (int i = 0; i < Shader::SHADER_MAX; ++i) {
+			this->_pipelines[Shader(i)] = rd->compute_pipeline_create(this->_compiled_shaders[Shader(i)]);
+		}
 
 		this->scene_interface_set.create_resources(rd, p_render_data);
 		this->command_interface_set.create_resources(rd, p_render_data);
