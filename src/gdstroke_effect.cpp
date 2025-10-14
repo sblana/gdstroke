@@ -24,6 +24,9 @@
 #include "gen/cr__fg__scatter.spv.h"
 #include "gen/cr__cpg__first_commander.spv.h"
 #include "gen/cr__cpg__soft_depth_test.spv.h"
+#include "gen/cr__cpg__pre_alloc.spv.h"
+#include "gen/cr__cpg__allocation.spv.h"
+#include "gen/cr__cpg__second_commander.spv.h"
 #include "gen/debug__display_contour_fragments.spv.h"
 
 
@@ -43,6 +46,9 @@ void const *GdstrokeEffect::shader_to_embedded_data[Shader::SHADER_MAX] = {
 	&SHADER_SPV_cr__fg__scatter,
 	&SHADER_SPV_cr__cpg__first_commander,
 	&SHADER_SPV_cr__cpg__soft_depth_test,
+	&SHADER_SPV_cr__cpg__pre_alloc,
+	&SHADER_SPV_cr__cpg__allocation,
+	&SHADER_SPV_cr__cpg__second_commander,
 	&SHADER_SPV_debug__display_contour_fragments,
 };
 
@@ -123,6 +129,9 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 
 		COMPILE_SHADER(rd, Shader::SHADER_CR_CPG_FIRST_COMMANDER);
 		COMPILE_SHADER(rd, Shader::SHADER_CR_CPG_SOFT_DEPTH_TEST);
+		COMPILE_SHADER(rd, Shader::SHADER_CR_CPG_PRE_ALLOC);
+		COMPILE_SHADER(rd, Shader::SHADER_CR_CPG_ALLOCATION);
+		COMPILE_SHADER(rd, Shader::SHADER_CR_CPG_SECOND_COMMANDER);
 
 		COMPILE_SHADER(rd, Shader::SHADER_DEBUG_DISPLAY_CONTOUR_FRAGMENTS);
 
@@ -237,6 +246,25 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 	rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CPG_SOFT_DEPTH_TEST]);
 	this->bind_sets(rd, list);
 	this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_FRAGMENTS);
+	rd->compute_list_end();
+
+	list = rd->compute_list_begin();
+	rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CPG_PRE_ALLOC]);
+	this->bind_sets(rd, list);
+	this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_FRAGMENTS);
+	rd->compute_list_end();
+
+	list = rd->compute_list_begin();
+	rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CPG_ALLOCATION]);
+	this->bind_sets(rd, list);
+	rd->compute_list_dispatch(list, 1, 1, 1);
+	rd->compute_list_end();
+
+	list = rd->compute_list_begin();
+	rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CPG_SECOND_COMMANDER]);
+	this->bind_sets(rd, list);
+	this->bind_sets_commander(rd, list);
+	rd->compute_list_dispatch(list, 1, 1, 1);
 	rd->compute_list_end();
 
 	list = rd->compute_list_begin();

@@ -23,6 +23,9 @@ class GdstrokeEffect : public CompositorEffect {
 		SHADER_CR_FG_SCATTER,
 		SHADER_CR_CPG_FIRST_COMMANDER,
 		SHADER_CR_CPG_SOFT_DEPTH_TEST,
+		SHADER_CR_CPG_PRE_ALLOC,
+		SHADER_CR_CPG_ALLOCATION,
+		SHADER_CR_CPG_SECOND_COMMANDER,
 		SHADER_DEBUG_DISPLAY_CONTOUR_FRAGMENTS,
 		SHADER_MAX,
 	};
@@ -54,7 +57,7 @@ protected:
 public:
 	GdstrokeEffect();
 	~GdstrokeEffect() override = default;
-	
+
 	void _render_callback(int32_t p_effect_callback_type, RenderData *p_render_data) override;
 
 	float get_config_depth_bias() const;

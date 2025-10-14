@@ -1,0 +1,23 @@
+#version 450
+#extension GL_ARB_shading_language_include : enable
+
+layout(local_size_x = 64) in;
+
+#include "common/buffers.glsli"
+
+
+void main() {
+	uint fragment_idx = gl_GlobalInvocationID.x;
+	if (fragment_idx < B_contour_desc.num_contour_fragments) {
+		// clear only the relevant region of the buffer
+		B_allocation_contour_pixel.data[fragment_idx] = AllocationContourPixelData(0u, 0u);;
+
+		if (B_contour_fragment_pseudo_visible.pseudo_visible[fragment_idx]) {
+			ivec2 pixel_coord = B_contour_fragment_pixel_coord.pixel_coord[fragment_idx];
+			uint prev_value = imageAtomicOr(U_contour_bitmap, pixel_coord, 1u);
+			if (prev_value == 0u) {
+				B_allocation_contour_pixel.data[fragment_idx].is_fragment_cluster_leader = 1u;
+			}
+		}
+	}
+}

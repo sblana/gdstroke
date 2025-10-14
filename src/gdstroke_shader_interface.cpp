@@ -2,7 +2,10 @@
 
 #include <godot_cpp/classes/render_scene_buffers_rd.hpp>
 #include <godot_cpp/classes/render_scene_data.hpp>
+#include <godot_cpp/classes/uniform_set_cache_rd.hpp>
 #include <godot_cpp/classes/rd_uniform.hpp>
+#include <godot_cpp/classes/rd_texture_format.hpp>
+#include <godot_cpp/classes/rd_texture_view.hpp>
 #include <godot_cpp/classes/rd_sampler_state.hpp>
 
 #include "rd_util.hpp"
@@ -13,6 +16,19 @@
 using namespace godot;
 
 void GdstrokeShaderInterface::_bind_methods() {}
+
+RID GdstrokeShaderInterface::InterfaceSet::get_uniform_set_rid(RID const &p_shader) const {
+	return UniformSetCacheRD::get_cache(p_shader, get_slot(), bindings);
+}
+
+void GdstrokeShaderInterface::InterfaceSet::bind_to_compute_list(RenderingDevice *p_rd, int64_t p_compute_list, RID const &p_shader) const {
+	p_rd->compute_list_bind_uniform_set(p_compute_list, get_uniform_set_rid(p_shader), get_slot());
+}
+
+void GdstrokeShaderInterface::InterfaceSet::bind_to_draw_list(RenderingDevice *p_rd, int64_t p_draw_list, RID const &p_shader) const {
+	p_rd->draw_list_bind_uniform_set(p_draw_list, get_uniform_set_rid(p_shader), get_slot());
+}
+
 
 Error GdstrokeShaderInterface::SceneInterfaceSet::create_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
 	ERR_FAIL_COND_V(p_render_data == nullptr, Error::FAILED);
@@ -60,6 +76,7 @@ Error GdstrokeShaderInterface::CommandInterfaceSet::create_resources(RenderingDe
 	resources = {};
 	resources.resize(Binding::BINDING_MAX);
 	resources[Binding::BINDING_DISPATCH_INDIRECT_COMMANDS_BUFFER] = p_rd->storage_buffer_create(sizeof(DispatchIndirectCommand) * DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_MAX, {}, RenderingDevice::StorageBufferUsage::STORAGE_BUFFER_USAGE_DISPATCH_INDIRECT);
+	resources[Binding::BINDING_DRAW_INDIRECT_COMMANDS_BUFFER] = p_rd->storage_buffer_create(sizeof(DrawIndirectCommand) * DrawIndirectCommands::DRAW_INDIRECT_COMMANDS_MAX, {}, RenderingDevice::StorageBufferUsage::STORAGE_BUFFER_USAGE_DISPATCH_INDIRECT);
 	return Error::OK;
 }
 
@@ -71,6 +88,7 @@ void GdstrokeShaderInterface::CommandInterfaceSet::make_bindings() {
 	bindings = {};
 	ERR_FAIL_COND(resources.size() != Binding::BINDING_MAX);
 	bindings.append(new_uniform(Binding::BINDING_DISPATCH_INDIRECT_COMMANDS_BUFFER, RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_DISPATCH_INDIRECT_COMMANDS_BUFFER]));
+	bindings.append(new_uniform(Binding::BINDING_DRAW_INDIRECT_COMMANDS_BUFFER, RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_DRAW_INDIRECT_COMMANDS_BUFFER]));
 }
 
 
@@ -170,6 +188,16 @@ void GdstrokeShaderInterface::MeshInterfaceSet::make_bindings() {
 }
 
 
+RID GdstrokeShaderInterface::ContourInterfaceSet::create_contour_bitmap(RenderingDevice *p_rd, Vector2i p_size) const {
+	Ref<RDTextureFormat> contour_bitmap_format = Ref(memnew(RDTextureFormat));
+	contour_bitmap_format->set_format(RenderingDevice::DataFormat::DATA_FORMAT_R32_UINT);
+	contour_bitmap_format->set_width(p_size.x);
+	contour_bitmap_format->set_height(p_size.y);
+	contour_bitmap_format->set_usage_bits(RenderingDevice::TextureUsageBits::TEXTURE_USAGE_STORAGE_BIT | RenderingDevice::TextureUsageBits::TEXTURE_USAGE_STORAGE_ATOMIC_BIT | RenderingDevice::TextureUsageBits::TEXTURE_USAGE_COLOR_ATTACHMENT_BIT | RenderingDevice::TextureUsageBits::TEXTURE_USAGE_CAN_COPY_TO_BIT);
+	Ref<RDTextureView> contour_bitmap_view = Ref(memnew(RDTextureView));
+	return p_rd->texture_create(contour_bitmap_format, contour_bitmap_view);
+}
+
 Error GdstrokeShaderInterface::ContourInterfaceSet::create_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
 	ERR_FAIL_COND_V(p_render_data == nullptr, Error::FAILED);
 	Ref<RenderSceneBuffersRD> render_scene_buffers = (Ref<RenderSceneBuffersRD>)p_render_data->get_render_scene_buffers();
@@ -188,8 +216,13 @@ Error GdstrokeShaderInterface::ContourInterfaceSet::create_resources(RenderingDe
 
 	resources[Binding::BINDING_SCREEN_DEPTH_TEXTURE] = render_scene_buffers->get_depth_texture();
 
+	resources[Binding::BINDING_CONTOUR_BITMAP] = create_contour_bitmap(p_rd, render_scene_buffers->get_internal_size());
+
+	resources[Binding::BINDING_ALLOCATION_CONTOUR_PIXEL_BUFFER] = p_rd->storage_buffer_create(sizeof(uint32_t) * 2 * max_num_contour_fragments);
+
 	Ref<RDSamplerState> nearest_sampler_state = Ref(memnew(RDSamplerState));
 	nearest_sampler = p_rd->sampler_create(nearest_sampler_state);
+	prev_internal_size = render_scene_buffers->get_internal_size();
 	return Error::OK;
 }
 
@@ -197,7 +230,18 @@ Error GdstrokeShaderInterface::ContourInterfaceSet::update_resources(RenderingDe
 	ERR_FAIL_COND_V(resources.size() == 0, Error::FAILED);
 	ERR_FAIL_COND_V(p_render_data == nullptr, Error::FAILED);
 	Ref<RenderSceneBuffersRD> render_scene_buffers = (Ref<RenderSceneBuffersRD>)p_render_data->get_render_scene_buffers();
+
 	resources[Binding::BINDING_SCREEN_DEPTH_TEXTURE] = render_scene_buffers->get_depth_texture();
+
+	if (prev_internal_size != render_scene_buffers->get_internal_size()) {
+		if (((RID const&)resources[Binding::BINDING_CONTOUR_BITMAP]).is_valid()) {
+			p_rd->free_rid(resources[Binding::BINDING_CONTOUR_BITMAP]);
+		}
+		resources[Binding::BINDING_CONTOUR_BITMAP] = create_contour_bitmap(p_rd, render_scene_buffers->get_internal_size());
+	}
+	p_rd->texture_clear(resources[Binding::BINDING_CONTOUR_BITMAP], Color(0, 0, 0, 0), 0, 1, 0, 1);
+
+	prev_internal_size = render_scene_buffers->get_internal_size();
 	return Error::OK;
 }
 
@@ -216,6 +260,10 @@ void GdstrokeShaderInterface::ContourInterfaceSet::make_bindings() {
 
 	ERR_FAIL_COND(!nearest_sampler.is_valid());
 	bindings.append(new_uniform(Binding::BINDING_SCREEN_DEPTH_TEXTURE, RenderingDevice::UniformType::UNIFORM_TYPE_SAMPLER_WITH_TEXTURE, nearest_sampler, resources[Binding::BINDING_SCREEN_DEPTH_TEXTURE]));
+
+	bindings.append(new_uniform(Binding::BINDING_CONTOUR_BITMAP, RenderingDevice::UniformType::UNIFORM_TYPE_IMAGE, resources[Binding::BINDING_CONTOUR_BITMAP]));
+
+	bindings.append(new_uniform(Binding::BINDING_ALLOCATION_CONTOUR_PIXEL_BUFFER, RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_ALLOCATION_CONTOUR_PIXEL_BUFFER]));
 }
 
 

@@ -4,6 +4,7 @@
 #include "common/sanity.glsli"
 
 #define MAX_NUM_CONTOUR_FRAGMENTS (1 << 20)
+#define MAX_NUM_CONTOUR_PIXELS    (1 << 20)
 
 layout(set = 3, binding = 0, std430) RESTRICT buffer ContourDescBuffer {
 	int num_contour_edges;
@@ -49,7 +50,17 @@ layout(set = 3, binding = 6, std430) RESTRICT buffer ContourFragmentPseudoVisibl
 
 layout(set = 3, binding = 7) uniform sampler2D U_screen_depth_texture;
 
-// layout(set = 3, binding = 9, r32ui) RESTRICT uniform uimage2D ContourBitmap;
+layout(set = 3, binding = 8, r32ui) RESTRICT uniform uimage2D U_contour_bitmap;
+
+
+struct AllocationContourPixelData {
+	uint is_fragment_cluster_leader;
+	uint contour_pixel_idx;
+};
+
+layout(set = 3, binding = 9, std430) RESTRICT buffer AllocationContourPixelBuffer {
+	AllocationContourPixelData data[MAX_NUM_CONTOUR_FRAGMENTS];
+} B_allocation_contour_pixel;
 
 
 // layout(set = 3, binding = 10, std430) RESTRICT buffer ContourPixelPixelCoordBuffer {

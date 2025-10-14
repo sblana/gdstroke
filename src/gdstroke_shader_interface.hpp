@@ -1,9 +1,6 @@
 #pragma once
 
-#include <godot_cpp/classes/render_scene_buffers_rd.hpp>
 #include <godot_cpp/classes/render_data.hpp>
-#include <godot_cpp/classes/uniform_set_cache_rd.hpp>
-#include <godot_cpp/classes/rendering_device.hpp>
 #include <godot_cpp/classes/rd_uniform.hpp>
 
 using namespace godot;
@@ -21,13 +18,10 @@ public:
 		virtual void make_bindings() = 0;
 		virtual uint32_t get_slot() const = 0;
 
-		inline RID get_uniform_set_rid(RID const &p_shader) const {
-			return UniformSetCacheRD::get_cache(p_shader, get_slot(), bindings);
-		}
+		RID get_uniform_set_rid(RID const &p_shader) const;
 
-		inline void bind_to_compute_list(RenderingDevice *p_rd, int64_t p_compute_list, RID const &p_shader) const {
-			p_rd->compute_list_bind_uniform_set(p_compute_list, get_uniform_set_rid(p_shader), get_slot());
-		}
+		void bind_to_compute_list(RenderingDevice *p_rd, int64_t p_compute_list, RID const &p_shader) const;
+		void bind_to_draw_list(RenderingDevice *p_rd, int64_t p_draw_list, RID const &p_shader) const;
 	};
 
 	struct SceneInterfaceSet : InterfaceSet {
@@ -41,7 +35,7 @@ public:
 			float depth_bias = 0.0;
 			uint32_t use_soft_depth_test_modification = false;
 		};
-		
+
 		ConfigData config_data = {};
 
 		virtual Error create_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
@@ -53,6 +47,7 @@ public:
 	struct CommandInterfaceSet : InterfaceSet {
 		enum Binding : uint32_t {
 			BINDING_DISPATCH_INDIRECT_COMMANDS_BUFFER = 0,
+			BINDING_DRAW_INDIRECT_COMMANDS_BUFFER,
 			BINDING_MAX,
 		};
 
@@ -60,7 +55,13 @@ public:
 			DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_EDGES = 0,
 			DISPATCH_INDIRECT_COMMANDS_WORKGROUP_TO_CONTOUR_EDGES,
 			DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_FRAGMENTS,
+			DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_PIXELS,
 			DISPATCH_INDIRECT_COMMANDS_MAX,
+		};
+
+		enum DrawIndirectCommands : uint32_t {
+			DRAW_INDIRECT_COMMANDS_HARD_DEPTH_TEST = 0,
+			DRAW_INDIRECT_COMMANDS_MAX,
 		};
 
 		RID get_dispatch_indirect_commands_buffer() const;
@@ -103,12 +104,18 @@ public:
 			BINDING_CONTOUR_FRAGMENT_NORMAL_DEPTH_BUFFER,
 			BINDING_CONTOUR_FRAGMENT_PSEUDO_VISIBLE_BUFFER,
 			BINDING_SCREEN_DEPTH_TEXTURE,
+			BINDING_CONTOUR_BITMAP,
+			BINDING_ALLOCATION_CONTOUR_PIXEL_BUFFER,
 			BINDING_MAX,
 		};
 
 		static constexpr uint32_t max_num_contour_fragments = 1u << 20u;
+		static constexpr uint32_t max_num_contour_pixels = 1u << 20u;
 
 		RID nearest_sampler;
+		Vector2i prev_internal_size;
+
+		RID create_contour_bitmap(RenderingDevice *p_rd, Vector2i p_size) const;
 
 		virtual Error create_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
 		virtual Error update_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
