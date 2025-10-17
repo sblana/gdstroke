@@ -1,0 +1,38 @@
+#ifndef SCANS_GLSLI
+#define SCANS_GLSLI
+
+#extension GL_ARB_shading_language_include : enable
+
+#include "common/math.glsli"
+
+
+struct BlockPartitionDesc {
+	uint num_blocks;
+	uint num_elements;
+	uint elements_per_block;
+};
+
+BlockPartitionDesc create_block_partition_desc(in const uint i_max_num_blocks, in const uint i_num_elements) {
+	BlockPartitionDesc bpd;
+	bpd.num_elements = i_num_elements;
+	bpd.elements_per_block = udiv_ceil(i_num_elements, i_max_num_blocks);
+	bpd.num_blocks = udiv_ceil(i_num_elements, bpd.elements_per_block);
+	return bpd;
+}
+
+
+struct BlockDesc {
+	uint block_idx;
+	uint first_element_idx;
+	uint final_element_idx;
+};
+
+BlockDesc create_block_desc(in const BlockPartitionDesc i_bpd, in const uint i_block_idx) {
+	BlockDesc bd;
+	bd.block_idx = i_block_idx;
+	bd.first_element_idx = i_bpd.elements_per_block * i_block_idx;
+	bd.final_element_idx = max(1u, min(bd.first_element_idx + i_bpd.elements_per_block, i_bpd.num_elements)) - 1u;
+	return bd;
+}
+
+#endif // !SCANS_GLSLI

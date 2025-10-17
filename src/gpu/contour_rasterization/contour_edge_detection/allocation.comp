@@ -5,36 +5,32 @@
 layout(local_size_x = 512) in;
 
 #include "common/buffers.glsli"
-#include "common/math.glsli"
+#include "common/scans.glsli"
 
 
 shared int block_offsets[gl_WorkGroupSize.x + 1];
 shared int total_sum;
 
 void main() {
-	uint num_blocks = gl_WorkGroupSize.x;
-	const uint edges_per_block = udiv_ceil(uint(B_mesh_desc.num_edges), num_blocks);
-	num_blocks = udiv_ceil(uint(B_mesh_desc.num_edges), edges_per_block);
+	const BlockPartitionDesc bpd = create_block_partition_desc(gl_WorkGroupSize.x, B_mesh_desc.num_edges);
+	const BlockDesc bd = create_block_desc(bpd, gl_LocalInvocationID.x);
 
-	const bool is_participating_stage_0 = gl_LocalInvocationID.x < num_blocks;
+	const bool is_participating_stage_0 = bd.block_idx < bpd.num_blocks;
 	const bool is_participating_stage_1 = gl_LocalInvocationID.x == 0;
-	const bool is_participating_stage_2 = gl_LocalInvocationID.x < num_blocks;
+	const bool is_participating_stage_2 = bd.block_idx < bpd.num_blocks;
 
 	if (is_participating_stage_0) {
-		const uint block_idx = gl_LocalInvocationID.x;
-		const int start_edge_idx = int(edges_per_block * block_idx);
-		const int final_edge_idx = int(min(start_edge_idx + edges_per_block, B_mesh_desc.num_edges)) - 1;
 		int block_sum = 0;
-		for (int edge_idx = start_edge_idx; edge_idx <= final_edge_idx; ++edge_idx) {
-			B_edge_to_contour_edge.idx[edge_idx] = block_sum;
-			block_sum += int(B_edge_is_contour.contour[edge_idx]);
+		for (uint element_idx = bd.first_element_idx; element_idx <= bd.final_element_idx; ++element_idx) {
+			B_edge_to_contour_edge.idx[element_idx] = block_sum;
+			block_sum += int(B_edge_is_contour.contour[element_idx]);
 		}
-		block_offsets[block_idx] = block_sum;
+		block_offsets[bd.block_idx] = block_sum;
 	}
 	barrier();
 	if (is_participating_stage_1) {
 		total_sum = 0;
-		for (int block_idx = 0; block_idx < num_blocks; ++block_idx) {
+		for (int block_idx = 0; block_idx < bpd.num_blocks; ++block_idx) {
 			const int this_block_sum = block_offsets[block_idx];
 			block_offsets[block_idx] = total_sum;
 			total_sum += this_block_sum;
@@ -43,12 +39,9 @@ void main() {
 	}
 	barrier();
 	if (is_participating_stage_2) {
-		const uint block_idx = gl_LocalInvocationID.x;
-		const int start_edge_idx = int(edges_per_block * block_idx);
-		const int final_edge_idx = int(min(start_edge_idx + edges_per_block, B_mesh_desc.num_edges)) - 1;
-		const int block_offset = block_offsets[block_idx];
-		for (int edge_idx = start_edge_idx; edge_idx <= final_edge_idx; ++edge_idx) {
-			B_edge_to_contour_edge.idx[edge_idx] += block_offset;
+		const int block_offset = block_offsets[bd.block_idx];
+		for (uint element_idx = bd.first_element_idx; element_idx <= bd.final_element_idx; ++element_idx) {
+			B_edge_to_contour_edge.idx[element_idx] += block_offset;
 		}
 	}
 	barrier();
