@@ -17,8 +17,10 @@ public:
 		virtual Error update_resources(RenderingDevice *p_rd, RenderData *p_render_data) = 0;
 		virtual void make_bindings() = 0;
 		virtual uint32_t get_slot() const = 0;
+		inline virtual TypedArray<Ref<RDUniform>> get_draw_bindings() const { return bindings; }
 
 		RID get_uniform_set_rid(RID const &p_shader) const;
+		RID get_draw_uniform_set_rid(RID const &p_shader) const;
 
 		void bind_to_compute_list(RenderingDevice *p_rd, int64_t p_compute_list, RID const &p_shader) const;
 		void bind_to_draw_list(RenderingDevice *p_rd, int64_t p_draw_list, RID const &p_shader) const;
@@ -65,7 +67,9 @@ public:
 		};
 
 		RID get_dispatch_indirect_commands_buffer() const;
+		RID get_draw_indirect_commands_buffer() const;
 		void dispatch_indirect(RenderingDevice *p_rd, int64_t p_compute_list, DispatchIndirectCommands cmd) const;
+		void draw_indirect(RenderingDevice *p_rd, int64_t p_draw_list, DrawIndirectCommands cmd) const;
 
 		virtual Error create_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
 		virtual Error update_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
@@ -106,6 +110,9 @@ public:
 			BINDING_SCREEN_DEPTH_TEXTURE,
 			BINDING_CONTOUR_BITMAP,
 			BINDING_ALLOCATION_CONTOUR_PIXEL_BUFFER,
+			BINDING_CONTOUR_PIXEL_PIXEL_COORD_BUFFER,
+			BINDING_CONTOUR_PIXEL_ORIENTATION_BUFFER,
+			BINDING_CONTOUR_PIXEL_NORMAL_DEPTH_BUFFER,
 			BINDING_MAX,
 		};
 
@@ -113,14 +120,14 @@ public:
 		static constexpr uint32_t max_num_contour_pixels = 1u << 20u;
 
 		RID nearest_sampler;
-		Vector2i prev_internal_size;
 
-		RID create_contour_bitmap(RenderingDevice *p_rd, Vector2i p_size) const;
+		void receive_hard_depth_test_attachments(TypedArray<RID> p_attachments);
 
 		virtual Error create_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
 		virtual Error update_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
 		virtual void make_bindings() override;
 		inline virtual uint32_t get_slot() const override { return 3; }
+		virtual TypedArray<Ref<RDUniform>> get_draw_bindings() const;
 	};
 
 	struct DebugInterfaceSet : InterfaceSet {
@@ -133,6 +140,22 @@ public:
 		virtual Error update_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
 		virtual void make_bindings() override;
 		inline virtual uint32_t get_slot() const override { return 15; }
+	};
+
+	struct HardDepthTestResources {
+		int64_t framebuffer_format = RenderingDevice::INVALID_FORMAT_ID;
+		RID color_attachment;
+		RID depth_attachment;
+		Vector2i prev_internal_size = Vector2i(0, 0);
+
+		TypedArray<uint32_t> get_attachment_usage_flags() const;
+
+		TypedArray<RID> get_attachments(RenderingDevice *p_rd, RenderData *p_render_data);
+		int64_t get_framebuffer_format(RenderingDevice *p_rd);
+		RID get_framebuffer(RenderingDevice *p_rd, RenderData *p_render_data);
+		RID create_render_pipeline(RenderingDevice *p_rd, RID const &p_shader);
+
+		void clear_attachments(RenderingDevice *p_rd, RenderData *p_render_data);
 	};
 
 private:

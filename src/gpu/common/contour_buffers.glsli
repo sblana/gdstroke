@@ -48,9 +48,12 @@ layout(set = 3, binding = 6, std430) RESTRICT buffer ContourFragmentPseudoVisibl
 	bool pseudo_visible[MAX_NUM_CONTOUR_FRAGMENTS];
 } B_contour_fragment_pseudo_visible;
 
+
+#if !defined(STAGE_FRAG) && !defined(STAGE_VERT)
 layout(set = 3, binding = 7) uniform sampler2D U_screen_depth_texture;
 
 layout(set = 3, binding = 8, r32ui) RESTRICT uniform uimage2D U_contour_bitmap;
+#endif // !defined(STAGE_FRAG) && !defined(STAGE_VERT)
 
 
 struct AllocationContourPixelData {
@@ -63,16 +66,16 @@ layout(set = 3, binding = 9, std430) RESTRICT buffer AllocationContourPixelBuffe
 } B_allocation_contour_pixel;
 
 
-// layout(set = 3, binding = 10, std430) RESTRICT buffer ContourPixelPixelCoordBuffer {
-// 	ivec2 pixel_coord[MAX_NUM_CONTOUR_FRAGMENTS];
-// } B_contour_pixel_pixel_coord;
+layout(set = 3, binding = 10, std430) RESTRICT buffer ContourPixelPixelCoordBuffer {
+	ivec2 pixel_coord[MAX_NUM_CONTOUR_PIXELS];
+} B_contour_pixel_pixel_coord;
 
-// layout(set = 3, binding = 11, std430) RESTRICT buffer ContourPixelOrientationBuffer {
-// 	vec2 orientation[MAX_NUM_CONTOUR_FRAGMENTS];
-// } B_contour_pixel_orientation;
+layout(set = 3, binding = 11, std430) RESTRICT buffer ContourPixelOrientationBuffer {
+	vec2 orientation[MAX_NUM_CONTOUR_PIXELS];
+} B_contour_pixel_orientation;
 
-// layout(set = 3, binding = 12, std430) RESTRICT buffer ContourPixelNormalDepthBuffer {
-// 	vec4 normal_depth[MAX_NUM_CONTOUR_FRAGMENTS];
-// } B_contour_pixel_normal_depth;
+layout(set = 3, binding = 12, std430) RESTRICT buffer ContourPixelNormalDepthBuffer {
+	vec4 normal_depth[MAX_NUM_CONTOUR_PIXELS];
+} B_contour_pixel_normal_depth;
 
 #endif // !CONTOUR_BUFFERS_GLSLI

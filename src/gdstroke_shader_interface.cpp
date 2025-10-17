@@ -3,10 +3,19 @@
 #include <godot_cpp/classes/render_scene_buffers_rd.hpp>
 #include <godot_cpp/classes/render_scene_data.hpp>
 #include <godot_cpp/classes/uniform_set_cache_rd.hpp>
+#include <godot_cpp/classes/framebuffer_cache_rd.hpp>
 #include <godot_cpp/classes/rd_uniform.hpp>
 #include <godot_cpp/classes/rd_texture_format.hpp>
 #include <godot_cpp/classes/rd_texture_view.hpp>
 #include <godot_cpp/classes/rd_sampler_state.hpp>
+#include <godot_cpp/classes/rd_pipeline_rasterization_state.hpp>
+#include <godot_cpp/classes/rd_pipeline_multisample_state.hpp>
+#include <godot_cpp/classes/rd_pipeline_depth_stencil_state.hpp>
+#include <godot_cpp/classes/rd_pipeline_color_blend_state.hpp>
+#include <godot_cpp/classes/rd_pipeline_color_blend_state_attachment.hpp>
+#include <godot_cpp/classes/rd_vertex_attribute.hpp>
+#include <godot_cpp/classes/rd_attachment_format.hpp>
+#include <godot_cpp/classes/rd_framebuffer_pass.hpp>
 
 #include "rd_util.hpp"
 #include "vec_util.hpp"
@@ -21,12 +30,16 @@ RID GdstrokeShaderInterface::InterfaceSet::get_uniform_set_rid(RID const &p_shad
 	return UniformSetCacheRD::get_cache(p_shader, get_slot(), bindings);
 }
 
+RID GdstrokeShaderInterface::InterfaceSet::get_draw_uniform_set_rid(RID const &p_shader) const {
+	return UniformSetCacheRD::get_cache(p_shader, get_slot(), get_draw_bindings());
+}
+
 void GdstrokeShaderInterface::InterfaceSet::bind_to_compute_list(RenderingDevice *p_rd, int64_t p_compute_list, RID const &p_shader) const {
 	p_rd->compute_list_bind_uniform_set(p_compute_list, get_uniform_set_rid(p_shader), get_slot());
 }
 
 void GdstrokeShaderInterface::InterfaceSet::bind_to_draw_list(RenderingDevice *p_rd, int64_t p_draw_list, RID const &p_shader) const {
-	p_rd->draw_list_bind_uniform_set(p_draw_list, get_uniform_set_rid(p_shader), get_slot());
+	p_rd->draw_list_bind_uniform_set(p_draw_list, get_draw_uniform_set_rid(p_shader), get_slot());
 }
 
 
@@ -68,8 +81,17 @@ RID GdstrokeShaderInterface::CommandInterfaceSet::get_dispatch_indirect_commands
 	return resources[Binding::BINDING_DISPATCH_INDIRECT_COMMANDS_BUFFER];
 }
 
+RID GdstrokeShaderInterface::CommandInterfaceSet::get_draw_indirect_commands_buffer() const {
+	ERR_FAIL_COND_V(resources.size() == 0, RID());
+	return resources[Binding::BINDING_DRAW_INDIRECT_COMMANDS_BUFFER];
+}
+
 void GdstrokeShaderInterface::CommandInterfaceSet::dispatch_indirect(RenderingDevice *p_rd, int64_t p_compute_list, DispatchIndirectCommands cmd) const {
 	p_rd->compute_list_dispatch_indirect(p_compute_list, get_dispatch_indirect_commands_buffer(), cmd * sizeof(DispatchIndirectCommand));
+}
+
+void GdstrokeShaderInterface::CommandInterfaceSet::draw_indirect(RenderingDevice *p_rd, int64_t p_draw_list, DrawIndirectCommands cmd) const {
+	p_rd->draw_list_draw_indirect(p_draw_list, false, get_draw_indirect_commands_buffer(), cmd * sizeof(DrawIndirectCommand));
 }
 
 Error GdstrokeShaderInterface::CommandInterfaceSet::create_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
@@ -188,14 +210,8 @@ void GdstrokeShaderInterface::MeshInterfaceSet::make_bindings() {
 }
 
 
-RID GdstrokeShaderInterface::ContourInterfaceSet::create_contour_bitmap(RenderingDevice *p_rd, Vector2i p_size) const {
-	Ref<RDTextureFormat> contour_bitmap_format = Ref(memnew(RDTextureFormat));
-	contour_bitmap_format->set_format(RenderingDevice::DataFormat::DATA_FORMAT_R32_UINT);
-	contour_bitmap_format->set_width(p_size.x);
-	contour_bitmap_format->set_height(p_size.y);
-	contour_bitmap_format->set_usage_bits(RenderingDevice::TextureUsageBits::TEXTURE_USAGE_STORAGE_BIT | RenderingDevice::TextureUsageBits::TEXTURE_USAGE_STORAGE_ATOMIC_BIT | RenderingDevice::TextureUsageBits::TEXTURE_USAGE_COLOR_ATTACHMENT_BIT | RenderingDevice::TextureUsageBits::TEXTURE_USAGE_CAN_COPY_TO_BIT);
-	Ref<RDTextureView> contour_bitmap_view = Ref(memnew(RDTextureView));
-	return p_rd->texture_create(contour_bitmap_format, contour_bitmap_view);
+void GdstrokeShaderInterface::ContourInterfaceSet::receive_hard_depth_test_attachments(TypedArray<RID> p_attachments) {
+	resources[Binding::BINDING_CONTOUR_BITMAP] = p_attachments[0];
 }
 
 Error GdstrokeShaderInterface::ContourInterfaceSet::create_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
@@ -216,13 +232,14 @@ Error GdstrokeShaderInterface::ContourInterfaceSet::create_resources(RenderingDe
 
 	resources[Binding::BINDING_SCREEN_DEPTH_TEXTURE] = render_scene_buffers->get_depth_texture();
 
-	resources[Binding::BINDING_CONTOUR_BITMAP] = create_contour_bitmap(p_rd, render_scene_buffers->get_internal_size());
-
 	resources[Binding::BINDING_ALLOCATION_CONTOUR_PIXEL_BUFFER] = p_rd->storage_buffer_create(sizeof(uint32_t) * 2 * max_num_contour_fragments);
+
+	resources[Binding::BINDING_CONTOUR_PIXEL_PIXEL_COORD_BUFFER ] = p_rd->storage_buffer_create(sizeof(int32_t) * 2 * max_num_contour_pixels);
+	resources[Binding::BINDING_CONTOUR_PIXEL_ORIENTATION_BUFFER ] = p_rd->storage_buffer_create(sizeof(float)   * 2 * max_num_contour_pixels);
+	resources[Binding::BINDING_CONTOUR_PIXEL_NORMAL_DEPTH_BUFFER] = p_rd->storage_buffer_create(sizeof(float)   * 4 * max_num_contour_pixels);
 
 	Ref<RDSamplerState> nearest_sampler_state = Ref(memnew(RDSamplerState));
 	nearest_sampler = p_rd->sampler_create(nearest_sampler_state);
-	prev_internal_size = render_scene_buffers->get_internal_size();
 	return Error::OK;
 }
 
@@ -233,15 +250,6 @@ Error GdstrokeShaderInterface::ContourInterfaceSet::update_resources(RenderingDe
 
 	resources[Binding::BINDING_SCREEN_DEPTH_TEXTURE] = render_scene_buffers->get_depth_texture();
 
-	if (prev_internal_size != render_scene_buffers->get_internal_size()) {
-		if (((RID const&)resources[Binding::BINDING_CONTOUR_BITMAP]).is_valid()) {
-			p_rd->free_rid(resources[Binding::BINDING_CONTOUR_BITMAP]);
-		}
-		resources[Binding::BINDING_CONTOUR_BITMAP] = create_contour_bitmap(p_rd, render_scene_buffers->get_internal_size());
-	}
-	p_rd->texture_clear(resources[Binding::BINDING_CONTOUR_BITMAP], Color(0, 0, 0, 0), 0, 1, 0, 1);
-
-	prev_internal_size = render_scene_buffers->get_internal_size();
 	return Error::OK;
 }
 
@@ -264,6 +272,17 @@ void GdstrokeShaderInterface::ContourInterfaceSet::make_bindings() {
 	bindings.append(new_uniform(Binding::BINDING_CONTOUR_BITMAP, RenderingDevice::UniformType::UNIFORM_TYPE_IMAGE, resources[Binding::BINDING_CONTOUR_BITMAP]));
 
 	bindings.append(new_uniform(Binding::BINDING_ALLOCATION_CONTOUR_PIXEL_BUFFER, RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_ALLOCATION_CONTOUR_PIXEL_BUFFER]));
+
+	bindings.append(new_uniform(Binding::BINDING_CONTOUR_PIXEL_PIXEL_COORD_BUFFER,  RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_CONTOUR_PIXEL_PIXEL_COORD_BUFFER ]));
+	bindings.append(new_uniform(Binding::BINDING_CONTOUR_PIXEL_ORIENTATION_BUFFER,  RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_CONTOUR_PIXEL_ORIENTATION_BUFFER ]));
+	bindings.append(new_uniform(Binding::BINDING_CONTOUR_PIXEL_NORMAL_DEPTH_BUFFER, RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_CONTOUR_PIXEL_NORMAL_DEPTH_BUFFER]));
+}
+
+TypedArray<Ref<RDUniform>> GdstrokeShaderInterface::ContourInterfaceSet::get_draw_bindings() const {
+	TypedArray<Ref<RDUniform>> draw_bindings = bindings.duplicate();
+	draw_bindings.remove_at(draw_bindings.find(bindings[Binding::BINDING_SCREEN_DEPTH_TEXTURE]));
+	draw_bindings.remove_at(draw_bindings.find(bindings[Binding::BINDING_CONTOUR_BITMAP]));
+	return draw_bindings;
 }
 
 
@@ -288,4 +307,101 @@ void GdstrokeShaderInterface::DebugInterfaceSet::make_bindings() {
 	bindings = {};
 	ERR_FAIL_COND(resources.size() != Binding::BINDING_MAX);
 	bindings.append(new_uniform(Binding::BINDING_CONTOUR_SCREEN_COLOR_IMAGE, RenderingDevice::UniformType::UNIFORM_TYPE_IMAGE, resources[Binding::BINDING_CONTOUR_SCREEN_COLOR_IMAGE]));
+}
+
+
+TypedArray<uint32_t> GdstrokeShaderInterface::HardDepthTestResources::get_attachment_usage_flags() const {
+	return {
+		( // color
+			RenderingDevice::TextureUsageBits::TEXTURE_USAGE_STORAGE_BIT |
+			RenderingDevice::TextureUsageBits::TEXTURE_USAGE_STORAGE_ATOMIC_BIT |
+			RenderingDevice::TextureUsageBits::TEXTURE_USAGE_COLOR_ATTACHMENT_BIT |
+			RenderingDevice::TextureUsageBits::TEXTURE_USAGE_CAN_COPY_TO_BIT
+		),
+		( // depth
+			RenderingDevice::TextureUsageBits::TEXTURE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT |
+			RenderingDevice::TextureUsageBits::TEXTURE_USAGE_CAN_COPY_TO_BIT
+		),
+	};
+}
+
+TypedArray<RID> GdstrokeShaderInterface::HardDepthTestResources::get_attachments(RenderingDevice *p_rd, RenderData *p_render_data) {
+	Ref<RenderSceneBuffersRD> render_scene_buffers = (Ref<RenderSceneBuffersRD>)p_render_data->get_render_scene_buffers();
+	Vector2i new_size = render_scene_buffers->get_internal_size();
+
+	if (prev_internal_size != new_size || !p_rd->texture_is_valid(color_attachment) || !p_rd->texture_is_valid(depth_attachment)) {
+		if (p_rd->texture_is_valid(color_attachment)) {
+			p_rd->free_rid(color_attachment);
+		}
+		if (p_rd->texture_is_valid(depth_attachment)) {
+			p_rd->free_rid(depth_attachment);
+		}
+
+		Ref<RDTextureFormat> color_format = Ref(memnew(RDTextureFormat));
+		color_format->set_format(RenderingDevice::DataFormat::DATA_FORMAT_R32_UINT);
+		color_format->set_width(new_size.x);
+		color_format->set_height(new_size.y);
+		color_format->set_usage_bits((uint32_t)get_attachment_usage_flags()[0]);
+		Ref<RDTextureView> color_view = Ref(memnew(RDTextureView));
+		color_attachment = p_rd->texture_create(color_format, color_view);
+
+		Ref<RDTextureFormat> depth_format = Ref(memnew(RDTextureFormat));
+		depth_format->set_format(RenderingDevice::DataFormat::DATA_FORMAT_D32_SFLOAT);
+		depth_format->set_width(new_size.x);
+		depth_format->set_height(new_size.y);
+		depth_format->set_usage_bits((uint32_t)get_attachment_usage_flags()[1]);
+		Ref<RDTextureView> depth_view = Ref(memnew(RDTextureView));
+		depth_attachment = p_rd->texture_create(depth_format, depth_view);
+	}
+	prev_internal_size = new_size;
+	return { color_attachment, depth_attachment, };
+}
+
+int64_t GdstrokeShaderInterface::HardDepthTestResources::get_framebuffer_format(RenderingDevice *p_rd) {
+	if (framebuffer_format == RenderingDevice::INVALID_FORMAT_ID) {
+		Ref<RDAttachmentFormat> attachment_format_color = Ref(memnew(RDAttachmentFormat));
+		attachment_format_color->set_format(RenderingDevice::DataFormat::DATA_FORMAT_R32_UINT);
+		attachment_format_color->set_usage_flags(get_attachment_usage_flags()[0]);
+
+		Ref<RDAttachmentFormat> attachment_format_depth = Ref(memnew(RDAttachmentFormat));
+		attachment_format_depth->set_format(RenderingDevice::DataFormat::DATA_FORMAT_D32_SFLOAT);
+		attachment_format_depth->set_usage_flags(get_attachment_usage_flags()[1]);
+
+		Ref<RDFramebufferPass> framebuffer_pass = Ref(memnew(RDFramebufferPass));
+		framebuffer_pass->set_color_attachments({0});
+		framebuffer_pass->set_depth_attachment(1);
+
+		framebuffer_format = p_rd->framebuffer_format_create_multipass({ attachment_format_color, attachment_format_depth }, { framebuffer_pass }, 1);
+	}
+	return framebuffer_format;
+}
+
+RID GdstrokeShaderInterface::HardDepthTestResources::get_framebuffer(RenderingDevice *p_rd, RenderData *p_render_data) {
+	Ref<RDFramebufferPass> framebuffer_pass = Ref(memnew(RDFramebufferPass));
+	framebuffer_pass->set_color_attachments({0});
+	framebuffer_pass->set_depth_attachment(1);
+	return FramebufferCacheRD::get_cache_multipass(get_attachments(p_rd, p_render_data), { framebuffer_pass }, 1);
+}
+
+RID GdstrokeShaderInterface::HardDepthTestResources::create_render_pipeline(RenderingDevice *p_rd, RID const &p_shader) {
+	Ref<RDPipelineRasterizationState> pipeline_rasterization_state = Ref(memnew(RDPipelineRasterizationState));
+	Ref<RDPipelineMultisampleState> pipeline_multisample_state = Ref(memnew(RDPipelineMultisampleState));
+	Ref<RDPipelineDepthStencilState> pipeline_depth_stencil_state = Ref(memnew(RDPipelineDepthStencilState));
+	pipeline_depth_stencil_state->set_enable_depth_test(true);
+	pipeline_depth_stencil_state->set_enable_depth_write(true);
+	pipeline_depth_stencil_state->set_depth_compare_operator(RenderingDevice::CompareOperator::COMPARE_OP_GREATER);
+
+	Ref<RDPipelineColorBlendState> pipeline_color_blend_state = Ref(memnew(RDPipelineColorBlendState));
+	Ref<RDPipelineColorBlendStateAttachment> pipeline_color_blend_state_attachment = Ref(memnew(RDPipelineColorBlendStateAttachment));
+	pipeline_color_blend_state_attachment->set_src_color_blend_factor(RenderingDevice::BlendFactor::BLEND_FACTOR_ONE);
+	pipeline_color_blend_state_attachment->set_dst_color_blend_factor(RenderingDevice::BlendFactor::BLEND_FACTOR_ZERO);
+	pipeline_color_blend_state->set_attachments({ pipeline_color_blend_state_attachment });
+
+	return p_rd->render_pipeline_create(p_shader, get_framebuffer_format(p_rd), RenderingDevice::INVALID_FORMAT_ID, RenderingDevice::RenderPrimitive::RENDER_PRIMITIVE_POINTS, pipeline_rasterization_state, pipeline_multisample_state, pipeline_depth_stencil_state, pipeline_color_blend_state);
+}
+
+void GdstrokeShaderInterface::HardDepthTestResources::clear_attachments(RenderingDevice *p_rd, RenderData *p_render_data) {
+	TypedArray<RID> attachments = get_attachments(p_rd, p_render_data);
+	p_rd->texture_clear(attachments[0], Color(0, 0, 0, 0), 0, 1, 0, 1);
+	p_rd->texture_clear(attachments[1], Color(0, 0, 0, 0), 0, 1, 0, 1);
 }

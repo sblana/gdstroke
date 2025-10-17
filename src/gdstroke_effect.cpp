@@ -26,11 +26,21 @@
 #include "gen/cr__cpg__soft_depth_test.spv.h"
 #include "gen/cr__cpg__pre_alloc.spv.h"
 #include "gen/cr__cpg__allocation.spv.h"
+#include "gen/cr__cpg__scatter.spv.h"
 #include "gen/cr__cpg__second_commander.spv.h"
+#include "gen/cr__cpg__hard_depth_test.vert.spv.h"
+#include "gen/cr__cpg__hard_depth_test.frag.spv.h"
+#include "gen/cr__cpg__decode.spv.h"
 #include "gen/debug__display_contour_fragments.spv.h"
+#include "gen/debug__display_contour_pixels.spv.h"
 
 
 using namespace godot;
+
+void const *hard_depth_test_embedded_data_stages[2] = {
+	&SHADER_SPV_cr__cpg__hard_depth_test__vert,
+	&SHADER_SPV_cr__cpg__hard_depth_test__frag,
+};
 
 void const *GdstrokeEffect::shader_to_embedded_data[Shader::SHADER_MAX] = {
 	&SHADER_SPV_dummy,
@@ -48,8 +58,12 @@ void const *GdstrokeEffect::shader_to_embedded_data[Shader::SHADER_MAX] = {
 	&SHADER_SPV_cr__cpg__soft_depth_test,
 	&SHADER_SPV_cr__cpg__pre_alloc,
 	&SHADER_SPV_cr__cpg__allocation,
+	&SHADER_SPV_cr__cpg__scatter,
 	&SHADER_SPV_cr__cpg__second_commander,
+	hard_depth_test_embedded_data_stages,
+	&SHADER_SPV_cr__cpg__decode,
 	&SHADER_SPV_debug__display_contour_fragments,
+	&SHADER_SPV_debug__display_contour_pixels,
 };
 
 void GdstrokeEffect::bind_sets(RenderingDevice *p_rd, int64_t p_compute_list) const {
@@ -70,8 +84,15 @@ void GdstrokeEffect::_compile_shader(RenderingDevice *p_rd, Shader p_shader, Str
 	this->_compiled_shaders[p_shader] = create_comp_shader_from_embedded_spirv(p_rd, *(EmbeddedData const*)shader_to_embedded_data[p_shader], p_name);
 }
 
+void GdstrokeEffect::_compile_draw_shader(RenderingDevice *p_rd, Shader p_shader, String const &p_name) {
+	this->_compiled_shaders[p_shader] = create_draw_shader_from_embedded_spirv(p_rd, *(((EmbeddedData const**)shader_to_embedded_data[p_shader])[0]), *(((EmbeddedData const**)shader_to_embedded_data[p_shader])[1]), p_name);
+}
+
 #define COMPILE_SHADER(p_rd, p_shader) \
 	_compile_shader(p_rd, p_shader, _STR(p_shader))
+
+#define COMPILE_DRAW_SHADER(p_rd, p_shader) \
+	_compile_draw_shader(p_rd, p_shader, _STR(p_shader))
 
 void GdstrokeEffect::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_config_depth_bias", "p_value"), &GdstrokeEffect::set_config_depth_bias);
@@ -110,8 +131,12 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 	if (!this->_ready) {
 		if (GdstrokeServer::get_singleton()->get_contour_instance() == nullptr)
 			return;
-		_ready = true;
 
+		this->scene_interface_set.create_resources(rd, p_render_data);
+		this->command_interface_set.create_resources(rd, p_render_data);
+		this->mesh_interface_set.create_resources(rd, p_render_data);
+		this->contour_interface_set.create_resources(rd, p_render_data);
+		this->debug_interface_set.create_resources(rd, p_render_data);
 
 		COMPILE_SHADER(rd, Shader::SHADER_DUMMY);
 		COMPILE_SHADER(rd, Shader::SHADER_DUMMY_COMMANDER);
@@ -131,21 +156,27 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		COMPILE_SHADER(rd, Shader::SHADER_CR_CPG_SOFT_DEPTH_TEST);
 		COMPILE_SHADER(rd, Shader::SHADER_CR_CPG_PRE_ALLOC);
 		COMPILE_SHADER(rd, Shader::SHADER_CR_CPG_ALLOCATION);
+		COMPILE_SHADER(rd, Shader::SHADER_CR_CPG_SCATTER);
 		COMPILE_SHADER(rd, Shader::SHADER_CR_CPG_SECOND_COMMANDER);
+		COMPILE_DRAW_SHADER(rd, Shader::SHADER_CR_CPG_HARD_DEPTH_TEST);
+		COMPILE_SHADER(rd, Shader::SHADER_CR_CPG_DECODE);
 
 		COMPILE_SHADER(rd, Shader::SHADER_DEBUG_DISPLAY_CONTOUR_FRAGMENTS);
+		COMPILE_SHADER(rd, Shader::SHADER_DEBUG_DISPLAY_CONTOUR_PIXELS);
 
 
 		for (int i = 0; i < Shader::SHADER_MAX; ++i) {
-			this->_pipelines[Shader(i)] = rd->compute_pipeline_create(this->_compiled_shaders[Shader(i)]);
+			if (i != Shader::SHADER_CR_CPG_HARD_DEPTH_TEST) {
+				this->_pipelines[Shader(i)] = rd->compute_pipeline_create(this->_compiled_shaders[Shader(i)]);
+			}
 		}
 
-		this->scene_interface_set.create_resources(rd, p_render_data);
-		this->command_interface_set.create_resources(rd, p_render_data);
-		this->mesh_interface_set.create_resources(rd, p_render_data);
-		this->contour_interface_set.create_resources(rd, p_render_data);
-		this->debug_interface_set.create_resources(rd, p_render_data);
+		_pipelines[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST] = hard_depth_test_resources.create_render_pipeline(rd, _compiled_shaders[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST]);
+
+		_ready = true;
 	}
+
+	this->hard_depth_test_resources.clear_attachments(rd, p_render_data);
 
 	this->scene_interface_set.update_resources(rd, p_render_data);
 	this->scene_interface_set.make_bindings();
@@ -159,6 +190,7 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 	this->mesh_interface_set.make_bindings();
 	ERR_FAIL_COND(!this->mesh_interface_set.get_uniform_set_rid(this->_compiled_shaders[Shader::SHADER_DUMMY]).is_valid());
 
+	this->contour_interface_set.receive_hard_depth_test_attachments(this->hard_depth_test_resources.get_attachments(rd, p_render_data));
 	this->contour_interface_set.update_resources(rd, p_render_data);
 	this->contour_interface_set.make_bindings();
 	ERR_FAIL_COND(!this->contour_interface_set.get_uniform_set_rid(this->_compiled_shaders[Shader::SHADER_DUMMY]).is_valid());
@@ -261,17 +293,45 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 	rd->compute_list_end();
 
 	list = rd->compute_list_begin();
+	rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CPG_SCATTER]);
+	this->bind_sets(rd, list);
+	this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_FRAGMENTS);
+	rd->compute_list_end();
+
+	list = rd->compute_list_begin();
 	rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CPG_SECOND_COMMANDER]);
 	this->bind_sets(rd, list);
 	this->bind_sets_commander(rd, list);
 	rd->compute_list_dispatch(list, 1, 1, 1);
 	rd->compute_list_end();
 
+	list = rd->draw_list_begin(this->hard_depth_test_resources.get_framebuffer(rd, p_render_data), RenderingDevice::DrawFlags::DRAW_CLEAR_ALL, {Color(0, 0, 0, 0)}, 0.0);
+	rd->draw_list_bind_render_pipeline(list, this->_pipelines[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST]);
+	this->scene_interface_set.bind_to_draw_list(rd, list, this->_compiled_shaders[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST]);
+	this->mesh_interface_set.bind_to_draw_list(rd, list, this->_compiled_shaders[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST]);
+	this->contour_interface_set.bind_to_draw_list(rd, list, this->_compiled_shaders[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST]);
+	this->command_interface_set.draw_indirect(rd, list, DrawIndirectCommands::DRAW_INDIRECT_COMMANDS_HARD_DEPTH_TEST);
+	rd->draw_list_end();
+
+	list = rd->compute_list_begin();
+	rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CPG_DECODE]);
+	this->bind_sets(rd, list);
+	this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_PIXELS);
+	rd->compute_list_end();
+	/*
 	list = rd->compute_list_begin();
 	rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_DEBUG_DISPLAY_CONTOUR_FRAGMENTS]);
 	this->bind_sets(rd, list);
 	this->bind_sets_debug(rd, list);
 	this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_FRAGMENTS);
+	rd->compute_list_end();
+	*/
+
+	list = rd->compute_list_begin();
+	rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_DEBUG_DISPLAY_CONTOUR_PIXELS]);
+	this->bind_sets(rd, list);
+	this->bind_sets_debug(rd, list);
+	this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_PIXELS);
 	rd->compute_list_end();
 }
 

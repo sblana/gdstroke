@@ -23,5 +23,6 @@ void main() {
 		command.instance_count = B_contour_desc.num_contour_fragments;
 		command.first_vertex = 0;
 		command.first_instance = 0;
+		B_draw_indirect_commands.cmds[E_DrawIndirectCommand_HARD_DEPTH_TEST] = command;
 	}
 }

@@ -30,6 +30,21 @@ inline RID create_comp_shader_from_embedded_spirv(RenderingDevice *p_rd, Embedde
 	return p_rd->shader_create_from_spirv(spirv, p_name);
 }
 
+inline RID create_draw_shader_from_embedded_spirv(RenderingDevice *p_rd, EmbeddedData const &p_vertex_embedded_spirv, EmbeddedData const &p_fragment_embedded_spirv, String const &p_name) {
+	PackedByteArray vertex_spirv_data = PackedByteArray();
+	for (uint32_t i = 0; i < p_vertex_embedded_spirv.length; ++i) {
+		vertex_spirv_data.append(p_vertex_embedded_spirv.data[i]);
+	}
+	PackedByteArray fragment_spirv_data = PackedByteArray();
+	for (uint32_t i = 0; i < p_fragment_embedded_spirv.length; ++i) {
+		fragment_spirv_data.append(p_fragment_embedded_spirv.data[i]);
+	}
+	Ref<RDShaderSPIRV> spirv = Ref(memnew(RDShaderSPIRV));
+	spirv->set_stage_bytecode(RenderingDevice::ShaderStage::SHADER_STAGE_VERTEX, vertex_spirv_data);
+	spirv->set_stage_bytecode(RenderingDevice::ShaderStage::SHADER_STAGE_FRAGMENT, fragment_spirv_data);
+	return p_rd->shader_create_from_spirv(spirv, p_name);
+}
+
 constexpr  int64_t idiv_floor( int64_t n,  int64_t d) { return n / d -  int64_t((n % d) != 0 && (n^d) < 0); }
 constexpr  int64_t idiv_ceil ( int64_t n,  int64_t d) { return n / d +  int64_t((n % d) != 0 && (n^d) > 0); }
 constexpr uint64_t udiv_floor(uint64_t n, uint64_t d) { return n / d; } // just for the sake of consistency

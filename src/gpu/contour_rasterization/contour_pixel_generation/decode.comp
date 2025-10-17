@@ -1,0 +1,16 @@
+#version 450
+#extension GL_ARB_shading_language_include : enable
+
+layout(local_size_x = 64) in;
+
+#include "common/buffers.glsli"
+
+void main() {
+	const uint contour_pixel_idx = gl_GlobalInvocationID.x;
+	if (contour_pixel_idx < B_contour_desc.num_contour_pixels) {
+		const ivec2 pixel_coord = B_contour_pixel_pixel_coord.pixel_coord[contour_pixel_idx];
+		const uint fragment_idx = imageLoad(U_contour_bitmap, pixel_coord).x;
+		B_contour_pixel_orientation.orientation[contour_pixel_idx] = B_contour_fragment_orientation.orientation[fragment_idx];
+		B_contour_pixel_normal_depth.normal_depth[contour_pixel_idx] = B_contour_fragment_normal_depth.normal_depth[fragment_idx];
+	}
+}

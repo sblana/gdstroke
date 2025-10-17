@@ -25,8 +25,12 @@ class GdstrokeEffect : public CompositorEffect {
 		SHADER_CR_CPG_SOFT_DEPTH_TEST,
 		SHADER_CR_CPG_PRE_ALLOC,
 		SHADER_CR_CPG_ALLOCATION,
+		SHADER_CR_CPG_SCATTER,
 		SHADER_CR_CPG_SECOND_COMMANDER,
+		SHADER_CR_CPG_HARD_DEPTH_TEST,
+		SHADER_CR_CPG_DECODE,
 		SHADER_DEBUG_DISPLAY_CONTOUR_FRAGMENTS,
+		SHADER_DEBUG_DISPLAY_CONTOUR_PIXELS,
 		SHADER_MAX,
 	};
 
@@ -41,15 +45,19 @@ private:
 	GdstrokeShaderInterface::MeshInterfaceSet mesh_interface_set = {};
 	GdstrokeShaderInterface::ContourInterfaceSet contour_interface_set = {};
 
-	GdstrokeShaderInterface::DebugInterfaceSet debug_interface_set;
+	GdstrokeShaderInterface::DebugInterfaceSet debug_interface_set = {};
+
+	GdstrokeShaderInterface::HardDepthTestResources hard_depth_test_resources = {};
 
 	using DispatchIndirectCommands = GdstrokeShaderInterface::CommandInterfaceSet::DispatchIndirectCommands;
+	using DrawIndirectCommands = GdstrokeShaderInterface::CommandInterfaceSet::DrawIndirectCommands;
 
 	void bind_sets(RenderingDevice *p_rd, int64_t p_compute_list) const;
 	void bind_sets_commander(RenderingDevice *p_rd, int64_t p_compute_list) const;
 	void bind_sets_debug(RenderingDevice *p_rd, int64_t p_compute_list) const;
 
 	void _compile_shader(RenderingDevice *p_rd, Shader p_shader, String const &p_name);
+	void _compile_draw_shader(RenderingDevice *p_rd, Shader p_shader, String const &p_name);
 
 protected:
 	static void _bind_methods();
