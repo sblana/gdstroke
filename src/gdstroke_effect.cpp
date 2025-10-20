@@ -31,8 +31,11 @@
 #include "gen/cr__cpg__hard_depth_test.vert.spv.h"
 #include "gen/cr__cpg__hard_depth_test.frag.spv.h"
 #include "gen/cr__cpg__decode.spv.h"
+#include "gen/cc__peg__first_commander.spv.h"
+#include "gen/cc__peg__generation.spv.h"
 #include "gen/debug__display_contour_fragments.spv.h"
 #include "gen/debug__display_contour_pixels.spv.h"
+#include "gen/debug__display_sparse_pixel_edges.spv.h"
 
 
 using namespace godot;
@@ -62,14 +65,18 @@ void const *GdstrokeEffect::shader_to_embedded_data[Shader::SHADER_MAX] = {
 	&SHADER_SPV_cr__cpg__second_commander,
 	hard_depth_test_embedded_data_stages,
 	&SHADER_SPV_cr__cpg__decode,
+	&SHADER_SPV_cc__peg__first_commander,
+	&SHADER_SPV_cc__peg__generation,
 	&SHADER_SPV_debug__display_contour_fragments,
 	&SHADER_SPV_debug__display_contour_pixels,
+	&SHADER_SPV_debug__display_sparse_pixel_edges,
 };
 
 void GdstrokeEffect::bind_sets(RenderingDevice *p_rd, int64_t p_compute_list) const {
-	this->  scene_interface_set.bind_to_compute_list(p_rd, p_compute_list, this->_compiled_shaders[Shader::SHADER_DUMMY]);
-	this->   mesh_interface_set.bind_to_compute_list(p_rd, p_compute_list, this->_compiled_shaders[Shader::SHADER_DUMMY]);
-	this->contour_interface_set.bind_to_compute_list(p_rd, p_compute_list, this->_compiled_shaders[Shader::SHADER_DUMMY]);
+	this->     scene_interface_set.bind_to_compute_list(p_rd, p_compute_list, this->_compiled_shaders[Shader::SHADER_DUMMY]);
+	this->      mesh_interface_set.bind_to_compute_list(p_rd, p_compute_list, this->_compiled_shaders[Shader::SHADER_DUMMY]);
+	this->   contour_interface_set.bind_to_compute_list(p_rd, p_compute_list, this->_compiled_shaders[Shader::SHADER_DUMMY]);
+	this->pixel_edge_interface_set.bind_to_compute_list(p_rd, p_compute_list, this->_compiled_shaders[Shader::SHADER_DUMMY]);
 }
 
 void GdstrokeEffect::bind_sets_commander(RenderingDevice *p_rd, int64_t p_compute_list) const {
@@ -136,6 +143,7 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		this->command_interface_set.create_resources(rd, p_render_data);
 		this->mesh_interface_set.create_resources(rd, p_render_data);
 		this->contour_interface_set.create_resources(rd, p_render_data);
+		this->pixel_edge_interface_set.create_resources(rd, p_render_data);
 		this->debug_interface_set.create_resources(rd, p_render_data);
 
 		COMPILE_SHADER(rd, Shader::SHADER_DUMMY);
@@ -161,8 +169,12 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		COMPILE_DRAW_SHADER(rd, Shader::SHADER_CR_CPG_HARD_DEPTH_TEST);
 		COMPILE_SHADER(rd, Shader::SHADER_CR_CPG_DECODE);
 
+		COMPILE_SHADER(rd, Shader::SHADER_CC_PEG_FIRST_COMMANDER);
+		COMPILE_SHADER(rd, Shader::SHADER_CC_PEG_GENERATION);
+
 		COMPILE_SHADER(rd, Shader::SHADER_DEBUG_DISPLAY_CONTOUR_FRAGMENTS);
 		COMPILE_SHADER(rd, Shader::SHADER_DEBUG_DISPLAY_CONTOUR_PIXELS);
+		COMPILE_SHADER(rd, Shader::SHADER_DEBUG_DISPLAY_SPARSE_PIXEL_EDGES);
 
 
 		for (int i = 0; i < Shader::SHADER_MAX; ++i) {
@@ -195,6 +207,10 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 	this->contour_interface_set.make_bindings();
 	ERR_FAIL_COND(!this->contour_interface_set.get_uniform_set_rid(this->_compiled_shaders[Shader::SHADER_DUMMY]).is_valid());
 
+	this->pixel_edge_interface_set.update_resources(rd, p_render_data);
+	this->pixel_edge_interface_set.make_bindings();
+	ERR_FAIL_COND(!this->pixel_edge_interface_set.get_uniform_set_rid(this->_compiled_shaders[Shader::SHADER_DUMMY]).is_valid());
+
 	this->debug_interface_set.update_resources(rd, p_render_data);
 	this->debug_interface_set.make_bindings();
 	ERR_FAIL_COND(!this->debug_interface_set.get_uniform_set_rid(this->_compiled_shaders[Shader::SHADER_DUMMY_DEBUG]).is_valid());
@@ -205,134 +221,172 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 	uint32_t num_faces = GdstrokeServer::get_singleton()->get_contour_mesh().face_to_vertex_buffer.size();
 
 	int64_t list;
-	list = rd->compute_list_begin();
-	rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_DUMMY]);
-	this->bind_sets(rd, list);
-	rd->compute_list_dispatch(list, 1, 1, 1);
-	rd->compute_list_end();
+	rd->draw_command_begin_label("dummy", Color(0.3, 0.3, 0.3));
+	{
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_DUMMY]);
+		this->bind_sets(rd, list);
+		rd->compute_list_dispatch(list, 1, 1, 1);
+		rd->compute_list_end();
 
-	list = rd->compute_list_begin();
-	rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_DUMMY]);
-	this->bind_sets(rd, list);
-	this->bind_sets_commander(rd, list);
-	rd->compute_list_dispatch(list, 1, 1, 1);
-	rd->compute_list_end();
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_DUMMY]);
+		this->bind_sets(rd, list);
+		this->bind_sets_commander(rd, list);
+		rd->compute_list_dispatch(list, 1, 1, 1);
+		rd->compute_list_end();
+	}
+	rd->draw_command_end_label();
 
-	list = rd->compute_list_begin();
-	rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CED_FACE_ORIENTATION]);
-	this->bind_sets(rd, list);
-	rd->compute_list_dispatch(list, udiv_ceil(num_faces, 64), 1, 1);
-	rd->compute_list_end();
+	rd->draw_command_begin_label("Contour Edge Detection", Color(1.0, 0.3, 1.0));
+	{
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CED_FACE_ORIENTATION]);
+		this->bind_sets(rd, list);
+		rd->compute_list_dispatch(list, udiv_ceil(num_faces, 64), 1, 1);
+		rd->compute_list_end();
 
-	list = rd->compute_list_begin();
-	rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CED_DETECTION]);
-	this->bind_sets(rd, list);
-	rd->compute_list_dispatch(list, udiv_ceil(num_edges, 64), 1, 1);
-	rd->compute_list_end();
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CED_DETECTION]);
+		this->bind_sets(rd, list);
+		rd->compute_list_dispatch(list, udiv_ceil(num_edges, 64), 1, 1);
+		rd->compute_list_end();
 
-	list = rd->compute_list_begin();
-	rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CED_ALLOCATION]);
-	this->bind_sets(rd, list);
-	rd->compute_list_dispatch(list, 1, 1, 1);
-	rd->compute_list_end();
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CED_ALLOCATION]);
+		this->bind_sets(rd, list);
+		rd->compute_list_dispatch(list, 1, 1, 1);
+		rd->compute_list_end();
 
-	list = rd->compute_list_begin();
-	rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CED_SCATTER]);
-	this->bind_sets(rd, list);
-	rd->compute_list_dispatch(list, udiv_ceil(num_edges, 64), 1, 1);
-	rd->compute_list_end();
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CED_SCATTER]);
+		this->bind_sets(rd, list);
+		rd->compute_list_dispatch(list, udiv_ceil(num_edges, 64), 1, 1);
+		rd->compute_list_end();
+	}
+	rd->draw_command_end_label();
 
-	list = rd->compute_list_begin();
-	rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_FG_FIRST_COMMANDER]);
-	this->bind_sets(rd, list);
-	this->bind_sets_commander(rd, list);
-	rd->compute_list_dispatch(list, 1, 1, 1);
-	rd->compute_list_end();
+	rd->draw_command_begin_label("Fragment Generation", Color(1.0, 0.3, 1.0));
+	{
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_FG_FIRST_COMMANDER]);
+		this->bind_sets(rd, list);
+		this->bind_sets_commander(rd, list);
+		rd->compute_list_dispatch(list, 1, 1, 1);
+		rd->compute_list_end();
 
-	list = rd->compute_list_begin();
-	rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_FG_FRAG_COUNTS]);
-	this->bind_sets(rd, list);
-	this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_EDGES);
-	rd->compute_list_end();
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_FG_FRAG_COUNTS]);
+		this->bind_sets(rd, list);
+		this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_EDGES);
+		rd->compute_list_end();
 
-	list = rd->compute_list_begin();
-	rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_FG_ALLOCATION]);
-	this->bind_sets(rd, list);
-	rd->compute_list_dispatch(list, 1, 1, 1);
-	rd->compute_list_end();
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_FG_ALLOCATION]);
+		this->bind_sets(rd, list);
+		rd->compute_list_dispatch(list, 1, 1, 1);
+		rd->compute_list_end();
 
-	list = rd->compute_list_begin();
-	rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_FG_SCATTER]);
-	this->bind_sets(rd, list);
-	this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_WORKGROUP_TO_CONTOUR_EDGES);
-	rd->compute_list_end();
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_FG_SCATTER]);
+		this->bind_sets(rd, list);
+		this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_WORKGROUP_TO_CONTOUR_EDGES);
+		rd->compute_list_end();
+	}
+	rd->draw_command_end_label();
 
-	list = rd->compute_list_begin();
-	rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CPG_FIRST_COMMANDER]);
-	this->bind_sets(rd, list);
-	this->bind_sets_commander(rd, list);
-	rd->compute_list_dispatch(list, 1, 1, 1);
-	rd->compute_list_end();
 
-	list = rd->compute_list_begin();
-	rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CPG_SOFT_DEPTH_TEST]);
-	this->bind_sets(rd, list);
-	this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_FRAGMENTS);
-	rd->compute_list_end();
+	rd->draw_command_begin_label("Contour Pixel Generation", Color(1.0, 0.3, 1.0));
+	{
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CPG_FIRST_COMMANDER]);
+		this->bind_sets(rd, list);
+		this->bind_sets_commander(rd, list);
+		rd->compute_list_dispatch(list, 1, 1, 1);
+		rd->compute_list_end();
 
-	list = rd->compute_list_begin();
-	rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CPG_PRE_ALLOC]);
-	this->bind_sets(rd, list);
-	this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_FRAGMENTS);
-	rd->compute_list_end();
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CPG_SOFT_DEPTH_TEST]);
+		this->bind_sets(rd, list);
+		this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_FRAGMENTS);
+		rd->compute_list_end();
 
-	list = rd->compute_list_begin();
-	rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CPG_ALLOCATION]);
-	this->bind_sets(rd, list);
-	rd->compute_list_dispatch(list, 1, 1, 1);
-	rd->compute_list_end();
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CPG_PRE_ALLOC]);
+		this->bind_sets(rd, list);
+		this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_FRAGMENTS);
+		rd->compute_list_end();
 
-	list = rd->compute_list_begin();
-	rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CPG_SCATTER]);
-	this->bind_sets(rd, list);
-	this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_FRAGMENTS);
-	rd->compute_list_end();
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CPG_ALLOCATION]);
+		this->bind_sets(rd, list);
+		rd->compute_list_dispatch(list, 1, 1, 1);
+		rd->compute_list_end();
 
-	list = rd->compute_list_begin();
-	rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CPG_SECOND_COMMANDER]);
-	this->bind_sets(rd, list);
-	this->bind_sets_commander(rd, list);
-	rd->compute_list_dispatch(list, 1, 1, 1);
-	rd->compute_list_end();
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CPG_SCATTER]);
+		this->bind_sets(rd, list);
+		this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_FRAGMENTS);
+		rd->compute_list_end();
 
-	list = rd->draw_list_begin(this->hard_depth_test_resources.get_framebuffer(rd, p_render_data), RenderingDevice::DrawFlags::DRAW_CLEAR_ALL, {Color(0, 0, 0, 0)}, 0.0);
-	rd->draw_list_bind_render_pipeline(list, this->_pipelines[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST]);
-	this->scene_interface_set.bind_to_draw_list(rd, list, this->_compiled_shaders[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST]);
-	this->mesh_interface_set.bind_to_draw_list(rd, list, this->_compiled_shaders[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST]);
-	this->contour_interface_set.bind_to_draw_list(rd, list, this->_compiled_shaders[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST]);
-	this->command_interface_set.draw_indirect(rd, list, DrawIndirectCommands::DRAW_INDIRECT_COMMANDS_HARD_DEPTH_TEST);
-	rd->draw_list_end();
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CPG_SECOND_COMMANDER]);
+		this->bind_sets(rd, list);
+		this->bind_sets_commander(rd, list);
+		rd->compute_list_dispatch(list, 1, 1, 1);
+		rd->compute_list_end();
 
-	list = rd->compute_list_begin();
-	rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CPG_DECODE]);
-	this->bind_sets(rd, list);
-	this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_PIXELS);
-	rd->compute_list_end();
-	/*
-	list = rd->compute_list_begin();
-	rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_DEBUG_DISPLAY_CONTOUR_FRAGMENTS]);
-	this->bind_sets(rd, list);
-	this->bind_sets_debug(rd, list);
-	this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_FRAGMENTS);
-	rd->compute_list_end();
-	*/
+		list = rd->draw_list_begin(this->hard_depth_test_resources.get_framebuffer(rd, p_render_data), RenderingDevice::DrawFlags::DRAW_CLEAR_ALL, {Color(0, 0, 0, 0)}, 0.0);
+		rd->draw_list_bind_render_pipeline(list, this->_pipelines[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST]);
+		this->scene_interface_set.bind_to_draw_list(rd, list, this->_compiled_shaders[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST]);
+		this->mesh_interface_set.bind_to_draw_list(rd, list, this->_compiled_shaders[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST]);
+		this->contour_interface_set.bind_to_draw_list(rd, list, this->_compiled_shaders[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST]);
+		this->pixel_edge_interface_set.bind_to_draw_list(rd, list, this->_compiled_shaders[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST]);
+		this->command_interface_set.draw_indirect(rd, list, DrawIndirectCommands::DRAW_INDIRECT_COMMANDS_HARD_DEPTH_TEST);
+		rd->draw_list_end();
 
-	list = rd->compute_list_begin();
-	rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_DEBUG_DISPLAY_CONTOUR_PIXELS]);
-	this->bind_sets(rd, list);
-	this->bind_sets_debug(rd, list);
-	this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_PIXELS);
-	rd->compute_list_end();
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CPG_DECODE]);
+		this->bind_sets(rd, list);
+		this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_PIXELS);
+		rd->compute_list_end();
+	}
+	rd->draw_command_end_label();
+
+	rd->draw_command_begin_label("Pixel Edge Generation", Color(1.0, 0.3, 1.0));
+	{
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CC_PEG_FIRST_COMMANDER]);
+		this->bind_sets(rd, list);
+		this->bind_sets_commander(rd, list);
+		rd->compute_list_dispatch(list, 1, 1, 1);
+		rd->compute_list_end();
+
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CC_PEG_GENERATION]);
+		this->bind_sets(rd, list);
+		this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_SPARSE_PIXEL_EDGES);
+		rd->compute_list_end();
+	}
+	rd->draw_command_end_label();
+
+	rd->draw_command_begin_label("debug", Color(0.2, 0.2, 0.2));
+	{
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_DEBUG_DISPLAY_CONTOUR_PIXELS]);
+		this->bind_sets(rd, list);
+		this->bind_sets_debug(rd, list);
+		this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_PIXELS);
+		rd->compute_list_end();
+
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_DEBUG_DISPLAY_SPARSE_PIXEL_EDGES]);
+		this->bind_sets(rd, list);
+		this->bind_sets_debug(rd, list);
+		this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_SPARSE_PIXEL_EDGES);
+		rd->compute_list_end();
+	}
+	rd->draw_command_end_label();
 }
 
 float GdstrokeEffect::get_config_depth_bias() const {

@@ -29,8 +29,11 @@ class GdstrokeEffect : public CompositorEffect {
 		SHADER_CR_CPG_SECOND_COMMANDER,
 		SHADER_CR_CPG_HARD_DEPTH_TEST,
 		SHADER_CR_CPG_DECODE,
+		SHADER_CC_PEG_FIRST_COMMANDER,
+		SHADER_CC_PEG_GENERATION,
 		SHADER_DEBUG_DISPLAY_CONTOUR_FRAGMENTS,
 		SHADER_DEBUG_DISPLAY_CONTOUR_PIXELS,
+		SHADER_DEBUG_DISPLAY_SPARSE_PIXEL_EDGES,
 		SHADER_MAX,
 	};
 
@@ -44,6 +47,7 @@ private:
 	GdstrokeShaderInterface::CommandInterfaceSet command_interface_set = {};
 	GdstrokeShaderInterface::MeshInterfaceSet mesh_interface_set = {};
 	GdstrokeShaderInterface::ContourInterfaceSet contour_interface_set = {};
+	GdstrokeShaderInterface::PixelEdgeInterfaceSet pixel_edge_interface_set = {};
 
 	GdstrokeShaderInterface::DebugInterfaceSet debug_interface_set = {};
 

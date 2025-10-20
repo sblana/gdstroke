@@ -1,0 +1,21 @@
+#version 450
+#extension GL_ARB_shading_language_include : enable
+
+layout(local_size_x = 1) in;
+
+#include "common/buffers.glsli"
+#include "common/command_buffers.glsli"
+#include "common/math.glsli"
+
+
+void main() {
+	if (gl_GlobalInvocationID.x == 0) {
+		B_pixel_edge_desc.buf_len_sparse_pixel_edge = B_contour_desc.num_contour_pixels * 4;
+
+		DispatchIndirectCommand command;
+		command.workgroups_x = udiv_ceil(B_pixel_edge_desc.buf_len_sparse_pixel_edge, 64);
+		command.workgroups_y = 1;
+		command.workgroups_z = 1;
+		B_dispatch_indirect_commands.cmds[E_DispatchIndirectCommand_INVOCATION_TO_SPARSE_PIXEL_EDGES] = command;
+	}
+}

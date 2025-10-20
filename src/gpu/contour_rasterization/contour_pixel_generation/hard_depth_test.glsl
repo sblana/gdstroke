@@ -29,7 +29,7 @@
 
 	void main() {
 		if (AI_is_pseudo_visible > 0) {
-			AO_contour_fragment_idx = AI_contour_fragment_idx;
+			AO_contour_fragment_idx = AI_contour_fragment_idx + 1u;
 		}
 		else {
 			discard;

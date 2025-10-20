@@ -58,6 +58,7 @@ public:
 			DISPATCH_INDIRECT_COMMANDS_WORKGROUP_TO_CONTOUR_EDGES,
 			DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_FRAGMENTS,
 			DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_PIXELS,
+			DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_SPARSE_PIXEL_EDGES,
 			DISPATCH_INDIRECT_COMMANDS_MAX,
 		};
 
@@ -128,6 +129,21 @@ public:
 		virtual void make_bindings() override;
 		inline virtual uint32_t get_slot() const override { return 3; }
 		virtual TypedArray<Ref<RDUniform>> get_draw_bindings() const;
+	};
+
+	struct PixelEdgeInterfaceSet : InterfaceSet {
+		enum Binding : uint32_t {
+			BINDING_PIXEL_EDGE_DESC_BUFFER = 0,
+			BINDING_SPARSE_PIXEL_EDGE_NEIGHBOURS_BUFFER,
+			BINDING_MAX,
+		};
+
+		static constexpr uint32_t max_num_sparse_pixel_edges = ContourInterfaceSet::max_num_contour_pixels * 4;
+
+		virtual Error create_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
+		virtual Error update_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
+		virtual void make_bindings() override;
+		inline virtual uint32_t get_slot() const override { return 4; }
 	};
 
 	struct DebugInterfaceSet : InterfaceSet {

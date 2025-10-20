@@ -1,0 +1,40 @@
+#ifndef PEL_BUFFERS_GLSLI
+#define PEL_BUFFERS_GLSLI
+
+#extension GL_ARB_shading_language_include : enable
+#include "common/contour_buffers.glsli"
+
+#define MAX_NUM_PIXEL_EDGES (MAX_NUM_CONTOUR_PIXELS * 4)
+
+layout(set = 4, binding = 0, std430) RESTRICT buffer PixelEdgeDescBuffer {
+	int buf_len_sparse_pixel_edge;
+} B_pixel_edge_desc;
+
+struct PixelEdgeOrientation {
+	uint value;
+};
+
+#define E_PixelEdgeOrientation_NORTH (0u)
+#define E_PixelEdgeOrientation_EAST  (1u)
+#define E_PixelEdgeOrientation_SOUTH (2u)
+#define E_PixelEdgeOrientation_WEST  (3u)
+#define E_PixelEdgeOrientation_MAX   (4u)
+
+uint get_sparse_pixel_edge_contour_pixel_idx(in const uint i_sparse_pixel_edge_idx) {
+	return i_sparse_pixel_edge_idx / 4u;
+}
+
+PixelEdgeOrientation get_sparse_pixel_edge_orientation(in const uint i_sparse_pixel_edge_idx) {
+	return PixelEdgeOrientation(i_sparse_pixel_edge_idx % 4u);
+}
+
+struct SparsePixelEdgeNeighboursData {
+	int prev_idx;
+	int next_idx;
+};
+
+layout(set = 4, binding = 1, std430) RESTRICT buffer SparsePixelEdgeNeighboursBuffer {
+	SparsePixelEdgeNeighboursData data[MAX_NUM_PIXEL_EDGES];
+} B_sparse_pixel_edge_neighbours;
+
+#endif // !PEL_BUFFERS_GLSLI

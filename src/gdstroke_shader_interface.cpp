@@ -286,6 +286,31 @@ TypedArray<Ref<RDUniform>> GdstrokeShaderInterface::ContourInterfaceSet::get_dra
 }
 
 
+Error GdstrokeShaderInterface::PixelEdgeInterfaceSet::create_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
+	resources = {};
+	resources.resize(Binding::BINDING_MAX);
+
+	resources[Binding::BINDING_PIXEL_EDGE_DESC_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 1);
+
+	resources[Binding::BINDING_SPARSE_PIXEL_EDGE_NEIGHBOURS_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 2 * max_num_sparse_pixel_edges);
+
+	return Error::OK;
+}
+
+Error GdstrokeShaderInterface::PixelEdgeInterfaceSet::update_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
+	return Error::OK;
+}
+
+void GdstrokeShaderInterface::PixelEdgeInterfaceSet::make_bindings() {
+	bindings = {};
+	ERR_FAIL_COND(resources.size() != Binding::BINDING_MAX);
+
+	bindings.append(new_uniform(Binding::BINDING_PIXEL_EDGE_DESC_BUFFER, RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_PIXEL_EDGE_DESC_BUFFER]));
+
+	bindings.append(new_uniform(Binding::BINDING_SPARSE_PIXEL_EDGE_NEIGHBOURS_BUFFER, RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_SPARSE_PIXEL_EDGE_NEIGHBOURS_BUFFER]));
+}
+
+
 Error GdstrokeShaderInterface::DebugInterfaceSet::create_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
 	ERR_FAIL_COND_V(p_render_data == nullptr, Error::FAILED);
 	Ref<RenderSceneBuffersRD> render_scene_buffers = (Ref<RenderSceneBuffersRD>)p_render_data->get_render_scene_buffers();

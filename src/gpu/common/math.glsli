@@ -1,3 +1,5 @@
+#include "common/contour_buffers.glsli"
+
  int idiv_floor( int n,  int d) { return n / d -  int((n % d) != 0 && (n^d) < 0); }
  int idiv_ceil ( int n,  int d) { return n / d +  int((n % d) != 0 && (n^d) > 0); }
 uint udiv_floor(uint n, uint d) { return n / d; } // just for the sake of consistency
@@ -15,4 +17,34 @@ bool is_within_aabb(in ivec2 i_point, in ivec2 i_aabb_min, in uvec2 i_aabb_size)
 // upper limit is exclusive
 bool is_within_screen(in ivec2 i_point, in uvec2 i_screen_size) {
 	return is_within_aabb(i_point, ivec2(0, 0), i_screen_size);
+}
+
+PixelEdgeOrientation orientation_op_add(in const PixelEdgeOrientation i_a, in const int i_b) {
+	return PixelEdgeOrientation((int(i_a.value + E_PixelEdgeOrientation_MAX) + i_b) % E_PixelEdgeOrientation_MAX);
+}
+
+PixelEdgeOrientation get_prev_orientation(in const PixelEdgeOrientation i_orientation) {
+	return orientation_op_add(i_orientation, -1);
+}
+
+PixelEdgeOrientation get_next_orientation(in const PixelEdgeOrientation i_orientation) {
+	return orientation_op_add(i_orientation, 1);
+}
+
+ivec4 get_orientation_local_axes(in const PixelEdgeOrientation i_orientation) {
+	switch (i_orientation.value) {
+		case E_PixelEdgeOrientation_NORTH:
+			return ivec4( 1, 0, 0,-1);
+		case E_PixelEdgeOrientation_EAST:
+			return ivec4( 0, 1, 1, 0);
+		case E_PixelEdgeOrientation_SOUTH:
+			return ivec4(-1, 0, 0, 1);
+		case E_PixelEdgeOrientation_WEST:
+			return ivec4( 0,-1,-1, 0);
+	}
+	return ivec4(0);
+}
+
+ivec2 mult_axes(in const ivec4 i_axes, in const ivec2 i_vec) {
+	return i_axes.xy * i_vec.x + i_axes.zw * i_vec.y;
 }

@@ -38,8 +38,12 @@
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% %compileshadersSTAGEFRAG% -V .\contour_rasterization\contour_pixel_generation\hard_depth_test.glsl  -o %compileshadersTEMPDIR%cr__cpg__hard_depth_test.frag.spv
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS%                           -V .\contour_rasterization\contour_pixel_generation\decode.comp           -o %compileshadersTEMPDIR%cr__cpg__decode.spv
 
-	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\debug\display_contour_fragments.comp -o %compileshadersTEMPDIR%debug__display_contour_fragments.spv
-	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\debug\display_contour_pixels.comp    -o %compileshadersTEMPDIR%debug__display_contour_pixels.spv
+	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\contour_chaining\pixel_edge_generation\first_commander.comp -o %compileshadersTEMPDIR%cc__peg__first_commander.spv
+	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\contour_chaining\pixel_edge_generation\generation.comp      -o %compileshadersTEMPDIR%cc__peg__generation.spv
+
+	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\debug\display_contour_fragments.comp  -o %compileshadersTEMPDIR%debug__display_contour_fragments.spv
+	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\debug\display_contour_pixels.comp     -o %compileshadersTEMPDIR%debug__display_contour_pixels.spv
+	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\debug\display_sparse_pixel_edges.comp -o %compileshadersTEMPDIR%debug__display_sparse_pixel_edges.spv
 
 gcc embed.c -o %compileshadersEMBED%
 
@@ -67,8 +71,12 @@ gcc embed.c -o %compileshadersEMBED%
 	%compileshadersEMBED% %compileshadersTEMPDIR%cr__cpg__hard_depth_test.frag.spv %compileshadersOUTPUTDIR%cr__cpg__hard_depth_test.frag.spv.h SHADER_SPV_cr__cpg__hard_depth_test__frag
 	%compileshadersEMBED% %compileshadersTEMPDIR%cr__cpg__decode.spv               %compileshadersOUTPUTDIR%cr__cpg__decode.spv.h               SHADER_SPV_cr__cpg__decode
 
-	%compileshadersEMBED% %compileshadersTEMPDIR%debug__display_contour_fragments.spv %compileshadersOUTPUTDIR%debug__display_contour_fragments.spv.h SHADER_SPV_debug__display_contour_fragments
-	%compileshadersEMBED% %compileshadersTEMPDIR%debug__display_contour_pixels.spv    %compileshadersOUTPUTDIR%debug__display_contour_pixels.spv.h    SHADER_SPV_debug__display_contour_pixels
+	%compileshadersEMBED% %compileshadersTEMPDIR%cc__peg__first_commander.spv %compileshadersOUTPUTDIR%cc__peg__first_commander.spv.h SHADER_SPV_cc__peg__first_commander
+	%compileshadersEMBED% %compileshadersTEMPDIR%cc__peg__generation.spv      %compileshadersOUTPUTDIR%cc__peg__generation.spv.h      SHADER_SPV_cc__peg__generation
+
+	%compileshadersEMBED% %compileshadersTEMPDIR%debug__display_contour_fragments.spv  %compileshadersOUTPUTDIR%debug__display_contour_fragments.spv.h  SHADER_SPV_debug__display_contour_fragments
+	%compileshadersEMBED% %compileshadersTEMPDIR%debug__display_contour_pixels.spv     %compileshadersOUTPUTDIR%debug__display_contour_pixels.spv.h     SHADER_SPV_debug__display_contour_pixels
+	%compileshadersEMBED% %compileshadersTEMPDIR%debug__display_sparse_pixel_edges.spv %compileshadersOUTPUTDIR%debug__display_sparse_pixel_edges.spv.h SHADER_SPV_debug__display_sparse_pixel_edges
 
 @ECHO ON
 
