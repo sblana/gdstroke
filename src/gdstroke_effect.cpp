@@ -39,6 +39,7 @@ using namespace godot;
 #include "gen/cc__peg__generation.spv.h"
 #include "gen/cc__lb__init.spv.h"
 #include "gen/cc__lb__wyllie.spv.h"
+#include "gen/cc__lb__scatter.spv.h"
 #include "gen/debug__display_contour_fragments.spv.h"
 #include "gen/debug__display_contour_pixels.spv.h"
 #include "gen/debug__display_sparse_pixel_edges.spv.h"
@@ -73,6 +74,7 @@ void const *GdstrokeEffect::shader_to_embedded_data[Shader::SHADER_MAX] = {
 	&SHADER_SPV_cc__peg__generation,
 	&SHADER_SPV_cc__lb__init,
 	&SHADER_SPV_cc__lb__wyllie,
+	&SHADER_SPV_cc__lb__scatter,
 	&SHADER_SPV_debug__display_contour_fragments,
 	&SHADER_SPV_debug__display_contour_pixels,
 	&SHADER_SPV_debug__display_sparse_pixel_edges,
@@ -183,6 +185,7 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 
 		COMPILE_SHADER(rd, Shader::SHADER_CC_LB_INIT);
 		COMPILE_SHADER(rd, Shader::SHADER_CC_LB_WYLLIE);
+		COMPILE_SHADER(rd, Shader::SHADER_CC_LB_SCATTER);
 
 		COMPILE_SHADER(rd, Shader::SHADER_DEBUG_DISPLAY_CONTOUR_FRAGMENTS);
 		COMPILE_SHADER(rd, Shader::SHADER_DEBUG_DISPLAY_CONTOUR_PIXELS);
@@ -390,10 +393,20 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_SPARSE_PIXEL_EDGES);
 		rd->compute_list_end();
 
+		int const num_steps = 20;
+		for (int step = 0; step < num_steps; ++step) {
+			list = rd->compute_list_begin();
+			rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CC_LB_WYLLIE]);
+			rd->compute_list_set_push_constant(list, PackedInt32Array({ (step + 0) % 2, (step + 1) % 2, 0, 0 }).to_byte_array(), 16u);
+			this->bind_sets(rd, list);
+			this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_SPARSE_PIXEL_EDGES);
+			rd->compute_list_end();
+		}
+
 		list = rd->compute_list_begin();
-		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CC_LB_WYLLIE]);
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CC_LB_SCATTER]);
 		this->bind_sets(rd, list);
-		rd->compute_list_dispatch(list, 1, 1, 1);
+		this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_SPARSE_PIXEL_EDGES);
 		rd->compute_list_end();
 	}
 	rd->draw_command_end_label();
