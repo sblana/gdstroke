@@ -37,4 +37,28 @@ layout(set = 4, binding = 1, std430) RESTRICT buffer SparsePixelEdgeNeighboursBu
 	SparsePixelEdgeNeighboursData data[MAX_NUM_PIXEL_EDGES];
 } B_sparse_pixel_edge_neighbours;
 
+layout(set = 4, binding = 2, std430) RESTRICT buffer SparsePixelEdgeMortonCodeBuffer {
+	uint morton_code[MAX_NUM_PIXEL_EDGES];
+} B_sparse_pixel_edge_morton_code;
+
+struct WyllieData {
+	int next_idx;
+	int sort_key;
+	uint sort_value;
+	uint pad;
+};
+
+struct SparsePixelEdgeLoopBreakingData {
+	WyllieData wd[2];
+};
+
+layout(set = 4, binding = 3, std430) RESTRICT buffer SparsePixelEdgeLoopBreakingBuffer {
+	SparsePixelEdgeLoopBreakingData data[MAX_NUM_PIXEL_EDGES];
+} B_sparse_pixel_edge_loop_breaking;
+
+layout(set = 4, binding = 4, std430) RESTRICT buffer SparsePixelEdgeAssociatedHeadBuffer {
+	int associated_head[MAX_NUM_PIXEL_EDGES];
+} B_sparse_pixel_edge_associated_head;
+
+
 #endif // !PEL_BUFFERS_GLSLI

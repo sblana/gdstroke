@@ -23,8 +23,14 @@ void main() {
 		if (is_within_screen(left_pixel_coord, imageSize(U_screen_color_image))) {
 			const vec4 output_data = vec4(
 				// float(pixel_edge_idx) / B_pixel_edge_desc.buf_len_sparse_pixel_edge,
-				0.5 + 0.5 * local_axes.z,
-				0.5 + 0.5 * local_axes.w,
+				// 0.0,
+
+				// 0.5 + 0.5 * local_axes.z,
+				// 0.5 + 0.5 * local_axes.w,
+
+				float(B_contour_pixel_pixel_coord.pixel_coord[get_sparse_pixel_edge_contour_pixel_idx(B_sparse_pixel_edge_associated_head.associated_head[pixel_edge_idx])].x) / imageSize(U_screen_color_image).x,
+				float(B_contour_pixel_pixel_coord.pixel_coord[get_sparse_pixel_edge_contour_pixel_idx(B_sparse_pixel_edge_associated_head.associated_head[pixel_edge_idx])].y) / imageSize(U_screen_color_image).y,
+
 				0.0,
 				1.0
 			);

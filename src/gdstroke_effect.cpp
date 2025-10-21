@@ -11,6 +11,10 @@
 #include "rd_util.hpp"
 #include "gdstroke_server.hpp"
 
+
+using namespace godot;
+
+#ifndef _USING_EDITOR
 #include "gen/dummy.spv.h"
 #include "gen/dummy_commander.spv.h"
 #include "gen/dummy_debug.spv.h"
@@ -33,12 +37,12 @@
 #include "gen/cr__cpg__decode.spv.h"
 #include "gen/cc__peg__first_commander.spv.h"
 #include "gen/cc__peg__generation.spv.h"
+#include "gen/cc__lb__init.spv.h"
+#include "gen/cc__lb__wyllie.spv.h"
 #include "gen/debug__display_contour_fragments.spv.h"
 #include "gen/debug__display_contour_pixels.spv.h"
 #include "gen/debug__display_sparse_pixel_edges.spv.h"
 
-
-using namespace godot;
 
 void const *hard_depth_test_embedded_data_stages[2] = {
 	&SHADER_SPV_cr__cpg__hard_depth_test__vert,
@@ -67,10 +71,15 @@ void const *GdstrokeEffect::shader_to_embedded_data[Shader::SHADER_MAX] = {
 	&SHADER_SPV_cr__cpg__decode,
 	&SHADER_SPV_cc__peg__first_commander,
 	&SHADER_SPV_cc__peg__generation,
+	&SHADER_SPV_cc__lb__init,
+	&SHADER_SPV_cc__lb__wyllie,
 	&SHADER_SPV_debug__display_contour_fragments,
 	&SHADER_SPV_debug__display_contour_pixels,
 	&SHADER_SPV_debug__display_sparse_pixel_edges,
 };
+
+#endif // !_USING_EDITOR
+
 
 void GdstrokeEffect::bind_sets(RenderingDevice *p_rd, int64_t p_compute_list) const {
 	this->     scene_interface_set.bind_to_compute_list(p_rd, p_compute_list, this->_compiled_shaders[Shader::SHADER_DUMMY]);
@@ -171,6 +180,9 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 
 		COMPILE_SHADER(rd, Shader::SHADER_CC_PEG_FIRST_COMMANDER);
 		COMPILE_SHADER(rd, Shader::SHADER_CC_PEG_GENERATION);
+
+		COMPILE_SHADER(rd, Shader::SHADER_CC_LB_INIT);
+		COMPILE_SHADER(rd, Shader::SHADER_CC_LB_WYLLIE);
 
 		COMPILE_SHADER(rd, Shader::SHADER_DEBUG_DISPLAY_CONTOUR_FRAGMENTS);
 		COMPILE_SHADER(rd, Shader::SHADER_DEBUG_DISPLAY_CONTOUR_PIXELS);
@@ -366,6 +378,22 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CC_PEG_GENERATION]);
 		this->bind_sets(rd, list);
 		this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_SPARSE_PIXEL_EDGES);
+		rd->compute_list_end();
+	}
+	rd->draw_command_end_label();
+
+	rd->draw_command_begin_label("Loop Breaking", Color(1.0, 0.3, 1.0));
+	{
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CC_LB_INIT]);
+		this->bind_sets(rd, list);
+		this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_SPARSE_PIXEL_EDGES);
+		rd->compute_list_end();
+
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CC_LB_WYLLIE]);
+		this->bind_sets(rd, list);
+		rd->compute_list_dispatch(list, 1, 1, 1);
 		rd->compute_list_end();
 	}
 	rd->draw_command_end_label();

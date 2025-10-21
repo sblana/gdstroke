@@ -48,3 +48,16 @@ ivec4 get_orientation_local_axes(in const PixelEdgeOrientation i_orientation) {
 ivec2 mult_axes(in const ivec4 i_axes, in const ivec2 i_vec) {
 	return i_axes.xy * i_vec.x + i_axes.zw * i_vec.y;
 }
+
+uint calc_sparse_pixel_edge_morton_code(in const PixelEdgeOrientation i_orientation, in const ivec2 i_contour_pixel_pixel_coord) {
+	return (
+		((E_PixelEdgeOrientation_MAX - 1u - i_orientation.value)  << 30u) +
+		((uint(i_contour_pixel_pixel_coord.x) & (1u << 15u) - 1u) << 15u) +
+		((uint(i_contour_pixel_pixel_coord.y) & (1u << 15u) - 1u) <<  0u)
+	);
+}
+
+uint get_invalid_morton_code() {
+	return 0u - 1u;
+}
+

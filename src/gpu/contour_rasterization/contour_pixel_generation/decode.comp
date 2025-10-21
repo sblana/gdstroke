@@ -9,8 +9,9 @@ void main() {
 	const uint contour_pixel_idx = gl_GlobalInvocationID.x;
 	if (contour_pixel_idx < B_contour_desc.num_contour_pixels) {
 		const ivec2 pixel_coord = B_contour_pixel_pixel_coord.pixel_coord[contour_pixel_idx];
-		const uint fragment_idx = imageLoad(U_contour_bitmap, pixel_coord).x - 1;
+		const uint fragment_idx = imageLoad(U_foremost_fragment_bitmap, pixel_coord).x - 1;
 		B_contour_pixel_orientation.orientation[contour_pixel_idx] = B_contour_fragment_orientation.orientation[fragment_idx];
 		B_contour_pixel_normal_depth.normal_depth[contour_pixel_idx] = B_contour_fragment_normal_depth.normal_depth[fragment_idx];
+		B_foremost_contour_fragment_to_contour_pixel.contour_pixel_idx[fragment_idx] = contour_pixel_idx;
 	}
 }

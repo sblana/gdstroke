@@ -1,0 +1,55 @@
+#version 450
+#extension GL_ARB_shading_language_include : enable
+
+layout(local_size_x = 1024) in;
+
+#include "common/buffers.glsli"
+#include "common/scans.glsli"
+
+
+void main() {
+	const BlockPartitionDesc bpd = create_block_partition_desc(gl_WorkGroupSize.x, B_pixel_edge_desc.buf_len_sparse_pixel_edge);
+	const BlockDesc bd = create_block_desc(bpd, gl_LocalInvocationID.x);
+
+	const uint max_num_steps = 20u;
+	for (uint step = 0; step < max_num_steps; ++step) {
+		if (bd.block_idx < bpd.num_blocks) {
+			for (uint element_idx = bd.first_element_idx; element_idx <= bd.final_element_idx; ++element_idx) {
+				const SparsePixelEdgeNeighboursData neighbours = B_sparse_pixel_edge_neighbours.data[element_idx];
+				if (neighbours != SparsePixelEdgeNeighboursData(-1, -1)) {
+					const uint  read_layer = (step + 0u) % 2u;
+					const uint write_layer = (step + 1u) % 2u;
+					const WyllieData curr_wd = B_sparse_pixel_edge_loop_breaking.data[element_idx].wd[read_layer];
+					WyllieData next_wd = curr_wd;
+
+					if (curr_wd.next_idx == -1) {
+						B_sparse_pixel_edge_loop_breaking.data[element_idx].wd[write_layer] = curr_wd;
+						continue;
+					}
+
+					if (B_sparse_pixel_edge_loop_breaking.data[curr_wd.next_idx].wd[read_layer].sort_value > curr_wd.sort_value) {
+						next_wd = B_sparse_pixel_edge_loop_breaking.data[curr_wd.next_idx].wd[read_layer];
+					}
+					next_wd.next_idx = B_sparse_pixel_edge_loop_breaking.data[curr_wd.next_idx].wd[read_layer].next_idx;
+
+					B_sparse_pixel_edge_loop_breaking.data[element_idx].wd[write_layer] = next_wd;
+				}
+			}
+		}
+		barrier();
+	}
+
+	if (bd.block_idx < bpd.num_blocks) {
+		for (uint element_idx = bd.first_element_idx; element_idx <= bd.final_element_idx; ++element_idx) {
+			// initialize
+			B_sparse_pixel_edge_associated_head.associated_head[element_idx] = -1;
+
+			const SparsePixelEdgeNeighboursData neighbours = B_sparse_pixel_edge_neighbours.data[element_idx];
+			if (neighbours != SparsePixelEdgeNeighboursData(-1, -1)) {
+				const WyllieData wd = B_sparse_pixel_edge_loop_breaking.data[element_idx].wd[0];
+
+				B_sparse_pixel_edge_associated_head.associated_head[element_idx] = wd.sort_key;
+			}
+		}
+	}
+}

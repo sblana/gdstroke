@@ -15,25 +15,26 @@ void main() {
 	if (pixel_edge_idx < B_pixel_edge_desc.buf_len_sparse_pixel_edge) {
 		// initialize buffer
 		B_sparse_pixel_edge_neighbours.data[pixel_edge_idx] = SparsePixelEdgeNeighboursData(-1, -1);
+		B_sparse_pixel_edge_morton_code.morton_code[pixel_edge_idx] = get_invalid_morton_code();
 
 		const ivec4 local_axes = get_orientation_local_axes(orientation);
 		const ivec2 pixel_coord = B_contour_pixel_pixel_coord.pixel_coord[contour_pixel_idx];
-		const int left_contour_pixel_idx = int(imageLoad(U_contour_bitmap, pixel_coord + mult_axes(local_axes, ivec2(-1, 0))).x) - 1;
+		const int left_contour_pixel_idx = int(imageLoad(U_foremost_fragment_bitmap, pixel_coord + mult_axes(local_axes, ivec2(-1, 0))).x) - 1;
 		if (left_contour_pixel_idx == -1) {
-			const int  ahead_left_contour_pixel_idx  = int(imageLoad(U_contour_bitmap, pixel_coord + mult_axes(local_axes, ivec2(-1, 1))).x) - 1;
-			const int  ahead_right_contour_pixel_idx = int(imageLoad(U_contour_bitmap, pixel_coord + mult_axes(local_axes, ivec2( 0, 1))).x) - 1;
-			const int behind_left_contour_pixel_idx  = int(imageLoad(U_contour_bitmap, pixel_coord + mult_axes(local_axes, ivec2(-1,-1))).x) - 1;
-			const int behind_right_contour_pixel_idx = int(imageLoad(U_contour_bitmap, pixel_coord + mult_axes(local_axes, ivec2( 0,-1))).x) - 1;
+			const int  ahead_left_contour_fragment_idx  = int(imageLoad(U_foremost_fragment_bitmap, pixel_coord + mult_axes(local_axes, ivec2(-1, 1))).x) - 1;
+			const int  ahead_right_contour_fragment_idx = int(imageLoad(U_foremost_fragment_bitmap, pixel_coord + mult_axes(local_axes, ivec2( 0, 1))).x) - 1;
+			const int behind_left_contour_fragment_idx  = int(imageLoad(U_foremost_fragment_bitmap, pixel_coord + mult_axes(local_axes, ivec2(-1,-1))).x) - 1;
+			const int behind_right_contour_fragment_idx = int(imageLoad(U_foremost_fragment_bitmap, pixel_coord + mult_axes(local_axes, ivec2( 0,-1))).x) - 1;
 
 			uint next_contour_pixel_idx;
 			PixelEdgeOrientation next_orientation;
 
-			if (ahead_left_contour_pixel_idx != -1) {
-				next_contour_pixel_idx = ahead_left_contour_pixel_idx;
+			if (ahead_left_contour_fragment_idx != -1) {
+				next_contour_pixel_idx = B_foremost_contour_fragment_to_contour_pixel.contour_pixel_idx[ahead_left_contour_fragment_idx];
 				next_orientation = get_prev_orientation(orientation);
 			}
-			else if (ahead_right_contour_pixel_idx != -1) {
-				next_contour_pixel_idx = ahead_right_contour_pixel_idx;
+			else if (ahead_right_contour_fragment_idx != -1) {
+				next_contour_pixel_idx = B_foremost_contour_fragment_to_contour_pixel.contour_pixel_idx[ahead_right_contour_fragment_idx];
 				next_orientation = orientation;
 			}
 			else {
@@ -44,12 +45,12 @@ void main() {
 			uint prev_contour_pixel_idx;
 			PixelEdgeOrientation prev_orientation;
 
-			if (behind_left_contour_pixel_idx != -1) {
-				prev_contour_pixel_idx = behind_left_contour_pixel_idx;
+			if (behind_left_contour_fragment_idx != -1) {
+				prev_contour_pixel_idx = B_foremost_contour_fragment_to_contour_pixel.contour_pixel_idx[behind_left_contour_fragment_idx];
 				prev_orientation = get_next_orientation(orientation);
 			}
-			else if (behind_right_contour_pixel_idx != -1) {
-				prev_contour_pixel_idx = behind_right_contour_pixel_idx;
+			else if (behind_right_contour_fragment_idx != -1) {
+				prev_contour_pixel_idx = B_foremost_contour_fragment_to_contour_pixel.contour_pixel_idx[behind_right_contour_fragment_idx];
 				prev_orientation = orientation;
 			}
 			else {
@@ -62,6 +63,12 @@ void main() {
 				int(next_contour_pixel_idx * 4 + next_orientation.value)
 			);
 			B_sparse_pixel_edge_neighbours.data[pixel_edge_idx] = pixel_edge;
+			B_sparse_pixel_edge_morton_code.morton_code[pixel_edge_idx] = calc_sparse_pixel_edge_morton_code(orientation, pixel_coord);
+		}
+		const int here_contour_fragment_idx = int(imageLoad(U_foremost_fragment_bitmap, pixel_coord).x) - 1;
+		if (here_contour_fragment_idx == -1 || contour_pixel_idx != B_foremost_contour_fragment_to_contour_pixel.contour_pixel_idx[here_contour_fragment_idx]) {
+			B_sparse_pixel_edge_neighbours.data[pixel_edge_idx] = SparsePixelEdgeNeighboursData(-1, -1);
+			B_sparse_pixel_edge_morton_code.morton_code[pixel_edge_idx] = get_invalid_morton_code();
 		}
 	}
 }
