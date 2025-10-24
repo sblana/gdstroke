@@ -299,7 +299,9 @@ Error GdstrokeShaderInterface::PixelEdgeInterfaceSet::create_resources(Rendering
 	resources[Binding::BINDING_SPARSE_PIXEL_EDGE_NEIGHBOURS_BUFFER     ] = p_rd->storage_buffer_create(sizeof(int32_t)  * 2 * max_num_sparse_pixel_edges);
 	resources[Binding::BINDING_SPARSE_PIXEL_EDGE_MORTON_CODE_BUFFER    ] = p_rd->storage_buffer_create(sizeof(uint32_t) * 1 * max_num_sparse_pixel_edges);
 	resources[Binding::BINDING_SPARSE_PIXEL_EDGE_LOOP_BREAKING_BUFFER  ] = p_rd->storage_buffer_create(sizeof(uint32_t) * 8 * max_num_sparse_pixel_edges);
+	resources[Binding::BINDING_SPARSE_PIXEL_EDGE_LIST_RANKING_BUFFER   ] = p_rd->storage_buffer_create(sizeof(int32_t)  * 4 * max_num_sparse_pixel_edges);
 	resources[Binding::BINDING_SPARSE_PIXEL_EDGE_ASSOCIATED_HEAD_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t)  * 1 * max_num_sparse_pixel_edges);
+	resources[Binding::BINDING_SPARSE_PIXEL_EDGE_LOCAL_IDX_BUFFER      ] = p_rd->storage_buffer_create(sizeof(int32_t)  * 1 * max_num_sparse_pixel_edges);
 
 	return Error::OK;
 }
@@ -317,7 +319,9 @@ void GdstrokeShaderInterface::PixelEdgeInterfaceSet::make_bindings() {
 	bindings.append(new_uniform(Binding::BINDING_SPARSE_PIXEL_EDGE_NEIGHBOURS_BUFFER,      RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_SPARSE_PIXEL_EDGE_NEIGHBOURS_BUFFER     ]));
 	bindings.append(new_uniform(Binding::BINDING_SPARSE_PIXEL_EDGE_MORTON_CODE_BUFFER,     RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_SPARSE_PIXEL_EDGE_MORTON_CODE_BUFFER    ]));
 	bindings.append(new_uniform(Binding::BINDING_SPARSE_PIXEL_EDGE_LOOP_BREAKING_BUFFER,   RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_SPARSE_PIXEL_EDGE_LOOP_BREAKING_BUFFER  ]));
+	bindings.append(new_uniform(Binding::BINDING_SPARSE_PIXEL_EDGE_LIST_RANKING_BUFFER,    RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_SPARSE_PIXEL_EDGE_LIST_RANKING_BUFFER   ]));
 	bindings.append(new_uniform(Binding::BINDING_SPARSE_PIXEL_EDGE_ASSOCIATED_HEAD_BUFFER, RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_SPARSE_PIXEL_EDGE_ASSOCIATED_HEAD_BUFFER]));
+	bindings.append(new_uniform(Binding::BINDING_SPARSE_PIXEL_EDGE_LOCAL_IDX_BUFFER,       RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_SPARSE_PIXEL_EDGE_LOCAL_IDX_BUFFER      ]));
 }
 
 

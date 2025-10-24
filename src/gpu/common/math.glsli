@@ -5,6 +5,9 @@
 uint udiv_floor(uint n, uint d) { return n / d; } // just for the sake of consistency
 uint udiv_ceil (uint n, uint d) { return n / d + uint((n % d) != 0); }
 
+float sqr(in const float i_a) { return i_a * i_a; }
+uint  sqr(in const uint  i_a) { return i_a * i_a; }
+
 // upper limit is exclusive
 bool is_within_aabb(in ivec2 i_point, in ivec2 i_aabb_min, in uvec2 i_aabb_size) {
 	bool passed = (

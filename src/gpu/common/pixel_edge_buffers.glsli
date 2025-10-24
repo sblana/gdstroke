@@ -41,24 +41,34 @@ layout(set = 4, binding = 2, std430) RESTRICT buffer SparsePixelEdgeMortonCodeBu
 	uint morton_code[MAX_NUM_PIXEL_EDGES];
 } B_sparse_pixel_edge_morton_code;
 
-struct WyllieData {
+struct SparsePixelEdgeLoopBreakingData {
 	int next_idx;
-	int sort_key;
-	uint sort_value;
+	int max_key;
+	uint max_value;
 	uint pad;
 };
 
-struct SparsePixelEdgeLoopBreakingData {
-	WyllieData wd[2];
-};
-
 layout(set = 4, binding = 3, std430) RESTRICT buffer SparsePixelEdgeLoopBreakingBuffer {
-	SparsePixelEdgeLoopBreakingData data[MAX_NUM_PIXEL_EDGES];
+	SparsePixelEdgeLoopBreakingData data[MAX_NUM_PIXEL_EDGES][2];
 } B_sparse_pixel_edge_loop_breaking;
 
-layout(set = 4, binding = 4, std430) RESTRICT buffer SparsePixelEdgeAssociatedHeadBuffer {
+struct SparsePixelEdgeListRankingData {
+	int prev_idx;
+	int value;
+};
+
+layout(set = 4, binding = 4, std430) RESTRICT buffer SparsePixelEdgeListRankingBuffer {
+	SparsePixelEdgeListRankingData data[MAX_NUM_PIXEL_EDGES][2];
+} B_sparse_pixel_edge_list_ranking;
+
+layout(set = 4, binding = 5, std430) RESTRICT buffer SparsePixelEdgeAssociatedHeadBuffer {
 	int associated_head[MAX_NUM_PIXEL_EDGES];
 } B_sparse_pixel_edge_associated_head;
+
+// loop-local
+layout(set = 4, binding = 6, std430) RESTRICT buffer SparsePixelEdgeLocalIdxBuffer {
+	int local_idx[MAX_NUM_PIXEL_EDGES];
+} B_sparse_pixel_edge_local_idx;
 
 
 #endif // !PEL_BUFFERS_GLSLI

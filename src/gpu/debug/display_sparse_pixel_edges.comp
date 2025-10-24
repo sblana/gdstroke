@@ -20,6 +20,9 @@ void main() {
 		const ivec2 contour_pixel_coord = B_contour_pixel_pixel_coord.pixel_coord[contour_pixel_idx];
 		const ivec2 left_pixel_coord = contour_pixel_coord + mult_axes(local_axes, ivec2(-1, 0));
 
+		const uint associated_head_idx = B_sparse_pixel_edge_associated_head.associated_head[pixel_edge_idx];
+		const uint loop_len = B_sparse_pixel_edge_local_idx.local_idx[B_sparse_pixel_edge_neighbours.data[associated_head_idx].prev_idx] + 1u;
+
 		if (is_within_screen(left_pixel_coord, imageSize(U_screen_color_image))) {
 			const vec4 output_data = vec4(
 				// float(pixel_edge_idx) / B_pixel_edge_desc.buf_len_sparse_pixel_edge,
@@ -28,10 +31,10 @@ void main() {
 				// 0.5 + 0.5 * local_axes.z,
 				// 0.5 + 0.5 * local_axes.w,
 
-				float(B_contour_pixel_pixel_coord.pixel_coord[get_sparse_pixel_edge_contour_pixel_idx(B_sparse_pixel_edge_associated_head.associated_head[pixel_edge_idx])].x) / imageSize(U_screen_color_image).x,
-				float(B_contour_pixel_pixel_coord.pixel_coord[get_sparse_pixel_edge_contour_pixel_idx(B_sparse_pixel_edge_associated_head.associated_head[pixel_edge_idx])].y) / imageSize(U_screen_color_image).y,
+				sqr(float(B_sparse_pixel_edge_local_idx.local_idx[pixel_edge_idx]) / (loop_len - 1u)),
+				sqr(float(B_sparse_pixel_edge_local_idx.local_idx[pixel_edge_idx]) / (loop_len - 1u)),
+				sqr(float(B_sparse_pixel_edge_local_idx.local_idx[pixel_edge_idx]) / (loop_len - 1u)),
 
-				0.0,
 				1.0
 			);
 			imageStore(U_screen_color_image, left_pixel_coord, output_data);

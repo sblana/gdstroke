@@ -45,6 +45,10 @@
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\contour_chaining\loop_breaking\wyllie.comp  -o %compileshadersTEMPDIR%cc__lb__wyllie.spv
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\contour_chaining\loop_breaking\scatter.comp -o %compileshadersTEMPDIR%cc__lb__scatter.spv
 
+	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\contour_chaining\list_ranking\init.comp    -o %compileshadersTEMPDIR%cc__lr__init.spv
+	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\contour_chaining\list_ranking\wyllie.comp  -o %compileshadersTEMPDIR%cc__lr__wyllie.spv
+	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\contour_chaining\list_ranking\scatter.comp -o %compileshadersTEMPDIR%cc__lr__scatter.spv
+
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\debug\display_contour_fragments.comp  -o %compileshadersTEMPDIR%debug__display_contour_fragments.spv
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\debug\display_contour_pixels.comp     -o %compileshadersTEMPDIR%debug__display_contour_pixels.spv
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\debug\display_sparse_pixel_edges.comp -o %compileshadersTEMPDIR%debug__display_sparse_pixel_edges.spv
@@ -81,6 +85,10 @@ gcc embed.c -o %compileshadersEMBED%
 	%compileshadersEMBED% %compileshadersTEMPDIR%cc__lb__init.spv    %compileshadersOUTPUTDIR%cc__lb__init.spv.h    SHADER_SPV_cc__lb__init
 	%compileshadersEMBED% %compileshadersTEMPDIR%cc__lb__wyllie.spv  %compileshadersOUTPUTDIR%cc__lb__wyllie.spv.h  SHADER_SPV_cc__lb__wyllie
 	%compileshadersEMBED% %compileshadersTEMPDIR%cc__lb__scatter.spv %compileshadersOUTPUTDIR%cc__lb__scatter.spv.h SHADER_SPV_cc__lb__scatter
+
+	%compileshadersEMBED% %compileshadersTEMPDIR%cc__lr__init.spv    %compileshadersOUTPUTDIR%cc__lr__init.spv.h    SHADER_SPV_cc__lr__init
+	%compileshadersEMBED% %compileshadersTEMPDIR%cc__lr__wyllie.spv  %compileshadersOUTPUTDIR%cc__lr__wyllie.spv.h  SHADER_SPV_cc__lr__wyllie
+	%compileshadersEMBED% %compileshadersTEMPDIR%cc__lr__scatter.spv %compileshadersOUTPUTDIR%cc__lr__scatter.spv.h SHADER_SPV_cc__lr__scatter
 
 	%compileshadersEMBED% %compileshadersTEMPDIR%debug__display_contour_fragments.spv  %compileshadersOUTPUTDIR%debug__display_contour_fragments.spv.h  SHADER_SPV_debug__display_contour_fragments
 	%compileshadersEMBED% %compileshadersTEMPDIR%debug__display_contour_pixels.spv     %compileshadersOUTPUTDIR%debug__display_contour_pixels.spv.h     SHADER_SPV_debug__display_contour_pixels

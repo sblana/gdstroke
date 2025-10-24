@@ -14,7 +14,7 @@ void main() {
 		const SparsePixelEdgeNeighboursData neighbours = B_sparse_pixel_edge_neighbours.data[pixel_edge_idx];
 		const uint morton_code = B_sparse_pixel_edge_morton_code.morton_code[pixel_edge_idx];
 
-		B_sparse_pixel_edge_loop_breaking.data[pixel_edge_idx].wd[0] = WyllieData(neighbours.next_idx, int(pixel_edge_idx), morton_code, 0);
-		B_sparse_pixel_edge_loop_breaking.data[pixel_edge_idx].wd[1] = WyllieData(neighbours.next_idx, int(pixel_edge_idx), morton_code, 0);
+		B_sparse_pixel_edge_loop_breaking.data[pixel_edge_idx][0] = SparsePixelEdgeLoopBreakingData(neighbours.next_idx, int(pixel_edge_idx), morton_code, 0);
+		B_sparse_pixel_edge_loop_breaking.data[pixel_edge_idx][1] = SparsePixelEdgeLoopBreakingData(neighbours.next_idx, int(pixel_edge_idx), morton_code, 0);
 	}
 }
