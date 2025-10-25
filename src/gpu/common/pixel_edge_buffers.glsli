@@ -4,10 +4,15 @@
 #extension GL_ARB_shading_language_include : enable
 #include "common/contour_buffers.glsli"
 
-#define MAX_NUM_PIXEL_EDGES (MAX_NUM_CONTOUR_PIXELS * 4)
+#define MAX_NUM_SPARSE_PIXEL_EDGES (MAX_NUM_CONTOUR_PIXELS * 4)
+#define MAX_NUM_COMPACTED_PIXEL_EDGES (MAX_NUM_SPARSE_PIXEL_EDGES)
+#define MAX_NUM_PIXEL_EDGE_LOOPS (MAX_NUM_COMPACTED_PIXEL_EDGES / 4)
 
 layout(set = 4, binding = 0, std430) RESTRICT buffer PixelEdgeDescBuffer {
 	int buf_len_sparse_pixel_edge;
+	int num_pixel_edges;
+	int num_pixel_edge_loops;
+	int pad;
 } B_pixel_edge_desc;
 
 struct PixelEdgeOrientation {
@@ -34,11 +39,20 @@ struct SparsePixelEdgeNeighboursData {
 };
 
 layout(set = 4, binding = 1, std430) RESTRICT buffer SparsePixelEdgeNeighboursBuffer {
-	SparsePixelEdgeNeighboursData data[MAX_NUM_PIXEL_EDGES];
+	SparsePixelEdgeNeighboursData data[MAX_NUM_SPARSE_PIXEL_EDGES];
 } B_sparse_pixel_edge_neighbours;
 
+bool is_sparse_pixel_edge_idx_valid(in const int i_idx) {
+	return (
+		i_idx >= 0 &&
+		i_idx < B_pixel_edge_desc.buf_len_sparse_pixel_edge &&
+		B_sparse_pixel_edge_neighbours.data[i_idx] != SparsePixelEdgeNeighboursData(-1, -1)
+	);
+}
+
+
 layout(set = 4, binding = 2, std430) RESTRICT buffer SparsePixelEdgeMortonCodeBuffer {
-	uint morton_code[MAX_NUM_PIXEL_EDGES];
+	uint morton_code[MAX_NUM_SPARSE_PIXEL_EDGES];
 } B_sparse_pixel_edge_morton_code;
 
 struct SparsePixelEdgeLoopBreakingData {
@@ -49,7 +63,7 @@ struct SparsePixelEdgeLoopBreakingData {
 };
 
 layout(set = 4, binding = 3, std430) RESTRICT buffer SparsePixelEdgeLoopBreakingBuffer {
-	SparsePixelEdgeLoopBreakingData data[MAX_NUM_PIXEL_EDGES][2];
+	SparsePixelEdgeLoopBreakingData data[MAX_NUM_SPARSE_PIXEL_EDGES][2];
 } B_sparse_pixel_edge_loop_breaking;
 
 struct SparsePixelEdgeListRankingData {
@@ -58,17 +72,54 @@ struct SparsePixelEdgeListRankingData {
 };
 
 layout(set = 4, binding = 4, std430) RESTRICT buffer SparsePixelEdgeListRankingBuffer {
-	SparsePixelEdgeListRankingData data[MAX_NUM_PIXEL_EDGES][2];
+	SparsePixelEdgeListRankingData data[MAX_NUM_SPARSE_PIXEL_EDGES][2];
 } B_sparse_pixel_edge_list_ranking;
 
 layout(set = 4, binding = 5, std430) RESTRICT buffer SparsePixelEdgeAssociatedHeadBuffer {
-	int associated_head[MAX_NUM_PIXEL_EDGES];
+	int associated_head[MAX_NUM_SPARSE_PIXEL_EDGES];
 } B_sparse_pixel_edge_associated_head;
 
 // loop-local
 layout(set = 4, binding = 6, std430) RESTRICT buffer SparsePixelEdgeLocalIdxBuffer {
-	int local_idx[MAX_NUM_PIXEL_EDGES];
+	int local_idx[MAX_NUM_SPARSE_PIXEL_EDGES];
 } B_sparse_pixel_edge_local_idx;
+
+layout(set = 4, binding = 7, std430) RESTRICT buffer SparsePixelEdgeToPixelEdgeLoopBuffer {
+	int idx[MAX_NUM_SPARSE_PIXEL_EDGES];
+} B_sparse_pixel_edge_to_pixel_edge_loop;
+
+struct PixelEdgeLoopDescData {
+	int sparse_head_idx;
+	int compacted_head_idx;
+	int loop_len;
+	int pad;
+};
+
+layout(set = 4, binding = 8, std430) RESTRICT buffer PixelEdgeLoopDescBuffer {
+	PixelEdgeLoopDescData data[MAX_NUM_PIXEL_EDGE_LOOPS];
+} B_pixel_edge_loop_desc;
+
+
+struct CompactedPixelEdgeNeighboursData {
+	int prev_idx;
+	int next_idx;
+};
+
+layout(set = 4, binding = 9, std430) RESTRICT buffer CompactedPixelEdgeNeighboursBuffer {
+	CompactedPixelEdgeNeighboursData data[MAX_NUM_COMPACTED_PIXEL_EDGES];
+} B_compacted_pixel_edge_neighbours;
+
+layout(set = 4, binding = 10, std430) RESTRICT buffer CompactedPixelEdgeToContourPixelBuffer {
+	int contour_pixel_idx[MAX_NUM_COMPACTED_PIXEL_EDGES];
+} B_compacted_pixel_edge_to_contour_pixel;
+
+layout(set = 4, binding = 11, std430) RESTRICT buffer CompactedPixelEdgeOrientationBuffer {
+	PixelEdgeOrientation orientation[MAX_NUM_COMPACTED_PIXEL_EDGES];
+} B_compacted_pixel_edge_orientation;
+
+layout(set = 4, binding = 12, std430) RESTRICT buffer CompactedPixelEdgeAssociatedHeadBuffer {
+	int associated_head[MAX_NUM_COMPACTED_PIXEL_EDGES];
+} B_compacted_pixel_edge_associated_head;
 
 
 #endif // !PEL_BUFFERS_GLSLI

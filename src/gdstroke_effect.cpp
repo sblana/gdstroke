@@ -43,9 +43,15 @@ using namespace godot;
 #include "gen/cc__lr__init.spv.h"
 #include "gen/cc__lr__wyllie.spv.h"
 #include "gen/cc__lr__scatter.spv.h"
+#include "gen/cc__d__init.spv.h"
+#include "gen/cc__d__head_allocation.spv.h"
+#include "gen/cc__d__compacted_allocation.spv.h"
+#include "gen/cc__d__compacted_scatter.spv.h"
+#include "gen/cc__d__first_commander.spv.h"
 #include "gen/debug__display_contour_fragments.spv.h"
 #include "gen/debug__display_contour_pixels.spv.h"
 #include "gen/debug__display_sparse_pixel_edges.spv.h"
+#include "gen/debug__display_compacted_pixel_edges.spv.h"
 
 
 void const *hard_depth_test_embedded_data_stages[2] = {
@@ -81,9 +87,15 @@ void const *GdstrokeEffect::shader_to_embedded_data[Shader::SHADER_MAX] = {
 	&SHADER_SPV_cc__lr__init,
 	&SHADER_SPV_cc__lr__wyllie,
 	&SHADER_SPV_cc__lr__scatter,
+	&SHADER_SPV_cc__d__init,
+	&SHADER_SPV_cc__d__head_allocation,
+	&SHADER_SPV_cc__d__compacted_allocation,
+	&SHADER_SPV_cc__d__compacted_scatter,
+	&SHADER_SPV_cc__d__first_commander,
 	&SHADER_SPV_debug__display_contour_fragments,
 	&SHADER_SPV_debug__display_contour_pixels,
 	&SHADER_SPV_debug__display_sparse_pixel_edges,
+	&SHADER_SPV_debug__display_compacted_pixel_edges,
 };
 
 #endif // !_USING_EDITOR
@@ -163,51 +175,14 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		this->pixel_edge_interface_set.create_resources(rd, p_render_data);
 		this->debug_interface_set.create_resources(rd, p_render_data);
 
-		COMPILE_SHADER(rd, Shader::SHADER_DUMMY);
-		COMPILE_SHADER(rd, Shader::SHADER_DUMMY_COMMANDER);
-		COMPILE_SHADER(rd, Shader::SHADER_DUMMY_DEBUG);
-
-		COMPILE_SHADER(rd, Shader::SHADER_CR_CED_FACE_ORIENTATION);
-		COMPILE_SHADER(rd, Shader::SHADER_CR_CED_DETECTION);
-		COMPILE_SHADER(rd, Shader::SHADER_CR_CED_ALLOCATION);
-		COMPILE_SHADER(rd, Shader::SHADER_CR_CED_SCATTER);
-
-		COMPILE_SHADER(rd, Shader::SHADER_CR_FG_FIRST_COMMANDER);
-		COMPILE_SHADER(rd, Shader::SHADER_CR_FG_FRAG_COUNTS);
-		COMPILE_SHADER(rd, Shader::SHADER_CR_FG_ALLOCATION);
-		COMPILE_SHADER(rd, Shader::SHADER_CR_FG_SCATTER);
-
-		COMPILE_SHADER(rd, Shader::SHADER_CR_CPG_FIRST_COMMANDER);
-		COMPILE_SHADER(rd, Shader::SHADER_CR_CPG_SOFT_DEPTH_TEST);
-		COMPILE_SHADER(rd, Shader::SHADER_CR_CPG_PRE_ALLOC);
-		COMPILE_SHADER(rd, Shader::SHADER_CR_CPG_ALLOCATION);
-		COMPILE_SHADER(rd, Shader::SHADER_CR_CPG_SCATTER);
-		COMPILE_SHADER(rd, Shader::SHADER_CR_CPG_SECOND_COMMANDER);
-		COMPILE_DRAW_SHADER(rd, Shader::SHADER_CR_CPG_HARD_DEPTH_TEST);
-		COMPILE_SHADER(rd, Shader::SHADER_CR_CPG_DECODE);
-
-		COMPILE_SHADER(rd, Shader::SHADER_CC_PEG_FIRST_COMMANDER);
-		COMPILE_SHADER(rd, Shader::SHADER_CC_PEG_GENERATION);
-
-		COMPILE_SHADER(rd, Shader::SHADER_CC_LB_INIT);
-		COMPILE_SHADER(rd, Shader::SHADER_CC_LB_WYLLIE);
-		COMPILE_SHADER(rd, Shader::SHADER_CC_LB_SCATTER);
-
-		COMPILE_SHADER(rd, Shader::SHADER_CC_LR_INIT);
-		COMPILE_SHADER(rd, Shader::SHADER_CC_LR_WYLLIE);
-		COMPILE_SHADER(rd, Shader::SHADER_CC_LR_SCATTER);
-
-		COMPILE_SHADER(rd, Shader::SHADER_DEBUG_DISPLAY_CONTOUR_FRAGMENTS);
-		COMPILE_SHADER(rd, Shader::SHADER_DEBUG_DISPLAY_CONTOUR_PIXELS);
-		COMPILE_SHADER(rd, Shader::SHADER_DEBUG_DISPLAY_SPARSE_PIXEL_EDGES);
-
-
 		for (int i = 0; i < Shader::SHADER_MAX; ++i) {
 			if (i != Shader::SHADER_CR_CPG_HARD_DEPTH_TEST) {
+				COMPILE_SHADER(rd, Shader(i));
 				this->_pipelines[Shader(i)] = rd->compute_pipeline_create(this->_compiled_shaders[Shader(i)]);
 			}
 		}
 
+		COMPILE_DRAW_SHADER(rd, Shader::SHADER_CR_CPG_HARD_DEPTH_TEST);
 		_pipelines[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST] = hard_depth_test_resources.create_render_pipeline(rd, _compiled_shaders[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST]);
 
 		_ready = true;
@@ -447,6 +422,41 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 	}
 	rd->draw_command_end_label();
 
+	rd->draw_command_begin_label("Defragmentation", Color(1.0, 0.3, 1.0));
+	{
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CC_D_INIT]);
+		this->bind_sets(rd, list);
+		rd->compute_list_dispatch(list, 1, 1, 1);
+		rd->compute_list_end();
+
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CC_D_HEAD_ALLOCATION]);
+		this->bind_sets(rd, list);
+		this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_SPARSE_PIXEL_EDGES);
+		rd->compute_list_end();
+
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CC_D_COMPACTED_ALLOCATION]);
+		this->bind_sets(rd, list);
+		rd->compute_list_dispatch(list, 1, 1, 1);
+		rd->compute_list_end();
+
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CC_D_COMPACTED_SCATTER]);
+		this->bind_sets(rd, list);
+		this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_SPARSE_PIXEL_EDGES);
+		rd->compute_list_end();
+
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CC_D_FIRST_COMMANDER]);
+		this->bind_sets(rd, list);
+		this->bind_sets_commander(rd, list);
+		rd->compute_list_dispatch(list, 1, 1, 1);
+		rd->compute_list_end();
+	}
+	rd->draw_command_end_label();
+
 	rd->draw_command_begin_label("debug", Color(0.2, 0.2, 0.2));
 	{
 		list = rd->compute_list_begin();
@@ -461,6 +471,13 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		this->bind_sets(rd, list);
 		this->bind_sets_debug(rd, list);
 		this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_SPARSE_PIXEL_EDGES);
+		rd->compute_list_end();
+
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_DEBUG_DISPLAY_COMPACTED_PIXEL_EDGES]);
+		this->bind_sets(rd, list);
+		this->bind_sets_debug(rd, list);
+		this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_COMPACTED_PIXEL_EDGES);
 		rd->compute_list_end();
 	}
 	rd->draw_command_end_label();

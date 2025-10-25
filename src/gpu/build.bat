@@ -49,9 +49,16 @@
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\contour_chaining\list_ranking\wyllie.comp  -o %compileshadersTEMPDIR%cc__lr__wyllie.spv
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\contour_chaining\list_ranking\scatter.comp -o %compileshadersTEMPDIR%cc__lr__scatter.spv
 
-	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\debug\display_contour_fragments.comp  -o %compileshadersTEMPDIR%debug__display_contour_fragments.spv
-	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\debug\display_contour_pixels.comp     -o %compileshadersTEMPDIR%debug__display_contour_pixels.spv
-	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\debug\display_sparse_pixel_edges.comp -o %compileshadersTEMPDIR%debug__display_sparse_pixel_edges.spv
+	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\contour_chaining\defragmentation\init.comp                 -o %compileshadersTEMPDIR%cc__d__init.spv
+	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\contour_chaining\defragmentation\head_allocation.comp      -o %compileshadersTEMPDIR%cc__d__head_allocation.spv
+	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\contour_chaining\defragmentation\compacted_allocation.comp -o %compileshadersTEMPDIR%cc__d__compacted_allocation.spv
+	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\contour_chaining\defragmentation\compacted_scatter.comp    -o %compileshadersTEMPDIR%cc__d__compacted_scatter.spv
+	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\contour_chaining\defragmentation\first_commander.comp      -o %compileshadersTEMPDIR%cc__d__first_commander.spv
+
+	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\debug\display_contour_fragments.comp     -o %compileshadersTEMPDIR%debug__display_contour_fragments.spv
+	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\debug\display_contour_pixels.comp        -o %compileshadersTEMPDIR%debug__display_contour_pixels.spv
+	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\debug\display_sparse_pixel_edges.comp    -o %compileshadersTEMPDIR%debug__display_sparse_pixel_edges.spv
+	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\debug\display_compacted_pixel_edges.comp -o %compileshadersTEMPDIR%debug__display_compacted_pixel_edges.spv
 
 gcc embed.c -o %compileshadersEMBED%
 
@@ -90,9 +97,16 @@ gcc embed.c -o %compileshadersEMBED%
 	%compileshadersEMBED% %compileshadersTEMPDIR%cc__lr__wyllie.spv  %compileshadersOUTPUTDIR%cc__lr__wyllie.spv.h  SHADER_SPV_cc__lr__wyllie
 	%compileshadersEMBED% %compileshadersTEMPDIR%cc__lr__scatter.spv %compileshadersOUTPUTDIR%cc__lr__scatter.spv.h SHADER_SPV_cc__lr__scatter
 
-	%compileshadersEMBED% %compileshadersTEMPDIR%debug__display_contour_fragments.spv  %compileshadersOUTPUTDIR%debug__display_contour_fragments.spv.h  SHADER_SPV_debug__display_contour_fragments
-	%compileshadersEMBED% %compileshadersTEMPDIR%debug__display_contour_pixels.spv     %compileshadersOUTPUTDIR%debug__display_contour_pixels.spv.h     SHADER_SPV_debug__display_contour_pixels
-	%compileshadersEMBED% %compileshadersTEMPDIR%debug__display_sparse_pixel_edges.spv %compileshadersOUTPUTDIR%debug__display_sparse_pixel_edges.spv.h SHADER_SPV_debug__display_sparse_pixel_edges
+	%compileshadersEMBED% %compileshadersTEMPDIR%cc__d__init.spv                 %compileshadersOUTPUTDIR%cc__d__init.spv.h                 SHADER_SPV_cc__d__init
+	%compileshadersEMBED% %compileshadersTEMPDIR%cc__d__head_allocation.spv      %compileshadersOUTPUTDIR%cc__d__head_allocation.spv.h      SHADER_SPV_cc__d__head_allocation
+	%compileshadersEMBED% %compileshadersTEMPDIR%cc__d__compacted_allocation.spv %compileshadersOUTPUTDIR%cc__d__compacted_allocation.spv.h SHADER_SPV_cc__d__compacted_allocation
+	%compileshadersEMBED% %compileshadersTEMPDIR%cc__d__compacted_scatter.spv    %compileshadersOUTPUTDIR%cc__d__compacted_scatter.spv.h    SHADER_SPV_cc__d__compacted_scatter
+	%compileshadersEMBED% %compileshadersTEMPDIR%cc__d__first_commander.spv      %compileshadersOUTPUTDIR%cc__d__first_commander.spv.h      SHADER_SPV_cc__d__first_commander
+
+	%compileshadersEMBED% %compileshadersTEMPDIR%debug__display_contour_fragments.spv     %compileshadersOUTPUTDIR%debug__display_contour_fragments.spv.h     SHADER_SPV_debug__display_contour_fragments
+	%compileshadersEMBED% %compileshadersTEMPDIR%debug__display_contour_pixels.spv        %compileshadersOUTPUTDIR%debug__display_contour_pixels.spv.h        SHADER_SPV_debug__display_contour_pixels
+	%compileshadersEMBED% %compileshadersTEMPDIR%debug__display_sparse_pixel_edges.spv    %compileshadersOUTPUTDIR%debug__display_sparse_pixel_edges.spv.h    SHADER_SPV_debug__display_sparse_pixel_edges
+	%compileshadersEMBED% %compileshadersTEMPDIR%debug__display_compacted_pixel_edges.spv %compileshadersOUTPUTDIR%debug__display_compacted_pixel_edges.spv.h SHADER_SPV_debug__display_compacted_pixel_edges
 
 @ECHO ON
 

@@ -59,7 +59,7 @@ public:
 			DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_FRAGMENTS,
 			DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_PIXELS,
 			DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_SPARSE_PIXEL_EDGES,
-			DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_8_SPARSE_PIXEL_EDGES,
+			DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_COMPACTED_PIXEL_EDGES,
 			DISPATCH_INDIRECT_COMMANDS_MAX,
 		};
 
@@ -142,10 +142,18 @@ public:
 			BINDING_SPARSE_PIXEL_EDGE_LIST_RANKING_BUFFER,
 			BINDING_SPARSE_PIXEL_EDGE_ASSOCIATED_HEAD_BUFFER,
 			BINDING_SPARSE_PIXEL_EDGE_LOCAL_IDX_BUFFER,
+			BINDING_SPARSE_PIXEL_EDGE_TO_PIXEL_EDGE_LOOP_BUFFER,
+			BINDING_PIXEL_EDGE_LOOP_DESC_BUFFER,
+			BINDING_COMPACTED_PIXEL_EDGE_NEIGHBOURS_BUFFER,
+			BINDING_COMPACTED_PIXEL_EDGE_TO_CONTOUR_PIXEL_BUFFER,
+			BINDING_COMPACTED_PIXEL_EDGE_ORIENTATION_BUFFER,
+			BINDING_COMPACTED_PIXEL_EDGE_ASSOCIATED_HEAD_BUFFER,
 			BINDING_MAX,
 		};
 
 		static constexpr uint32_t max_num_sparse_pixel_edges = ContourInterfaceSet::max_num_contour_pixels * 4;
+		static constexpr uint32_t max_num_compacted_pixel_edges = max_num_sparse_pixel_edges;
+		static constexpr uint32_t max_num_pixel_edge_loops = max_num_compacted_pixel_edges / 4;
 
 		virtual Error create_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
 		virtual Error update_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;

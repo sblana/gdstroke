@@ -259,27 +259,18 @@ void GdstrokeShaderInterface::ContourInterfaceSet::make_bindings() {
 	bindings = {};
 	ERR_FAIL_COND(resources.size() != Binding::BINDING_MAX);
 
-	bindings.append(new_uniform(Binding::BINDING_CONTOUR_DESC_BUFFER,                     RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_CONTOUR_DESC_BUFFER                    ]));
-	bindings.append(new_uniform(Binding::BINDING_CONTOUR_EDGE_TO_EDGE_BUFFER,             RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_CONTOUR_EDGE_TO_EDGE_BUFFER            ]));
-	bindings.append(new_uniform(Binding::BINDING_CONTOUR_EDGE_TO_CONTOUR_FRAGMENT_BUFFER, RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_CONTOUR_EDGE_TO_CONTOUR_FRAGMENT_BUFFER]));
-
-	bindings.append(new_uniform(Binding::BINDING_CONTOUR_FRAGMENT_PIXEL_COORD_BUFFER,    RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_CONTOUR_FRAGMENT_PIXEL_COORD_BUFFER   ]));
-	bindings.append(new_uniform(Binding::BINDING_CONTOUR_FRAGMENT_ORIENTATION_BUFFER,    RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_CONTOUR_FRAGMENT_ORIENTATION_BUFFER   ]));
-	bindings.append(new_uniform(Binding::BINDING_CONTOUR_FRAGMENT_NORMAL_DEPTH_BUFFER,   RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_CONTOUR_FRAGMENT_NORMAL_DEPTH_BUFFER  ]));
-	bindings.append(new_uniform(Binding::BINDING_CONTOUR_FRAGMENT_PSEUDO_VISIBLE_BUFFER, RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_CONTOUR_FRAGMENT_PSEUDO_VISIBLE_BUFFER]));
-
-	ERR_FAIL_COND(!nearest_sampler.is_valid());
-	bindings.append(new_uniform(Binding::BINDING_SCREEN_DEPTH_TEXTURE, RenderingDevice::UniformType::UNIFORM_TYPE_SAMPLER_WITH_TEXTURE, nearest_sampler, resources[Binding::BINDING_SCREEN_DEPTH_TEXTURE]));
-
-	bindings.append(new_uniform(Binding::BINDING_FOREMOST_FRAGMENT_BITMAP, RenderingDevice::UniformType::UNIFORM_TYPE_IMAGE, resources[Binding::BINDING_FOREMOST_FRAGMENT_BITMAP]));
-
-	bindings.append(new_uniform(Binding::BINDING_FOREMOST_CONTOUR_FRAGMENT_TO_CONTOUR_PIXEL_BUFFER, RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_FOREMOST_CONTOUR_FRAGMENT_TO_CONTOUR_PIXEL_BUFFER]));
-
-	bindings.append(new_uniform(Binding::BINDING_ALLOCATION_CONTOUR_PIXEL_BUFFER, RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_ALLOCATION_CONTOUR_PIXEL_BUFFER]));
-
-	bindings.append(new_uniform(Binding::BINDING_CONTOUR_PIXEL_PIXEL_COORD_BUFFER,  RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_CONTOUR_PIXEL_PIXEL_COORD_BUFFER ]));
-	bindings.append(new_uniform(Binding::BINDING_CONTOUR_PIXEL_ORIENTATION_BUFFER,  RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_CONTOUR_PIXEL_ORIENTATION_BUFFER ]));
-	bindings.append(new_uniform(Binding::BINDING_CONTOUR_PIXEL_NORMAL_DEPTH_BUFFER, RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_CONTOUR_PIXEL_NORMAL_DEPTH_BUFFER]));
+	for (int i = 0; i < Binding::BINDING_MAX; ++i) {
+		if (Binding(i) == Binding::BINDING_SCREEN_DEPTH_TEXTURE) {
+			ERR_FAIL_COND(!nearest_sampler.is_valid());
+			bindings.append(new_uniform(Binding::BINDING_SCREEN_DEPTH_TEXTURE, RenderingDevice::UniformType::UNIFORM_TYPE_SAMPLER_WITH_TEXTURE, nearest_sampler, resources[Binding::BINDING_SCREEN_DEPTH_TEXTURE]));
+		}
+		else if (Binding(i) == Binding::BINDING_FOREMOST_FRAGMENT_BITMAP) {
+			bindings.append(new_uniform(Binding::BINDING_FOREMOST_FRAGMENT_BITMAP, RenderingDevice::UniformType::UNIFORM_TYPE_IMAGE, resources[Binding::BINDING_FOREMOST_FRAGMENT_BITMAP]));
+		}
+		else {
+			bindings.append(new_uniform(Binding(i), RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding(i)]));
+		}
+	}
 }
 
 TypedArray<Ref<RDUniform>> GdstrokeShaderInterface::ContourInterfaceSet::get_draw_bindings() const {
@@ -294,14 +285,22 @@ Error GdstrokeShaderInterface::PixelEdgeInterfaceSet::create_resources(Rendering
 	resources = {};
 	resources.resize(Binding::BINDING_MAX);
 
-	resources[Binding::BINDING_PIXEL_EDGE_DESC_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 1);
+	resources[Binding::BINDING_PIXEL_EDGE_DESC_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 4);
 
-	resources[Binding::BINDING_SPARSE_PIXEL_EDGE_NEIGHBOURS_BUFFER     ] = p_rd->storage_buffer_create(sizeof(int32_t)  * 2 * max_num_sparse_pixel_edges);
-	resources[Binding::BINDING_SPARSE_PIXEL_EDGE_MORTON_CODE_BUFFER    ] = p_rd->storage_buffer_create(sizeof(uint32_t) * 1 * max_num_sparse_pixel_edges);
-	resources[Binding::BINDING_SPARSE_PIXEL_EDGE_LOOP_BREAKING_BUFFER  ] = p_rd->storage_buffer_create(sizeof(uint32_t) * 8 * max_num_sparse_pixel_edges);
-	resources[Binding::BINDING_SPARSE_PIXEL_EDGE_LIST_RANKING_BUFFER   ] = p_rd->storage_buffer_create(sizeof(int32_t)  * 4 * max_num_sparse_pixel_edges);
-	resources[Binding::BINDING_SPARSE_PIXEL_EDGE_ASSOCIATED_HEAD_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t)  * 1 * max_num_sparse_pixel_edges);
-	resources[Binding::BINDING_SPARSE_PIXEL_EDGE_LOCAL_IDX_BUFFER      ] = p_rd->storage_buffer_create(sizeof(int32_t)  * 1 * max_num_sparse_pixel_edges);
+	resources[Binding::BINDING_SPARSE_PIXEL_EDGE_NEIGHBOURS_BUFFER        ] = p_rd->storage_buffer_create(sizeof(int32_t)  * 2 * max_num_sparse_pixel_edges);
+	resources[Binding::BINDING_SPARSE_PIXEL_EDGE_MORTON_CODE_BUFFER       ] = p_rd->storage_buffer_create(sizeof(uint32_t) * 1 * max_num_sparse_pixel_edges);
+	resources[Binding::BINDING_SPARSE_PIXEL_EDGE_LOOP_BREAKING_BUFFER     ] = p_rd->storage_buffer_create(sizeof(uint32_t) * 8 * max_num_sparse_pixel_edges);
+	resources[Binding::BINDING_SPARSE_PIXEL_EDGE_LIST_RANKING_BUFFER      ] = p_rd->storage_buffer_create(sizeof(int32_t)  * 4 * max_num_sparse_pixel_edges);
+	resources[Binding::BINDING_SPARSE_PIXEL_EDGE_ASSOCIATED_HEAD_BUFFER   ] = p_rd->storage_buffer_create(sizeof(int32_t)  * 1 * max_num_sparse_pixel_edges);
+	resources[Binding::BINDING_SPARSE_PIXEL_EDGE_LOCAL_IDX_BUFFER         ] = p_rd->storage_buffer_create(sizeof(int32_t)  * 1 * max_num_sparse_pixel_edges);
+	resources[Binding::BINDING_SPARSE_PIXEL_EDGE_TO_PIXEL_EDGE_LOOP_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t)  * 1 * max_num_sparse_pixel_edges);
+
+	resources[Binding::BINDING_PIXEL_EDGE_LOOP_DESC_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 4 * max_num_pixel_edge_loops);
+
+	resources[Binding::BINDING_COMPACTED_PIXEL_EDGE_NEIGHBOURS_BUFFER      ] = p_rd->storage_buffer_create(sizeof( int32_t) * 2 * max_num_compacted_pixel_edges);
+	resources[Binding::BINDING_COMPACTED_PIXEL_EDGE_TO_CONTOUR_PIXEL_BUFFER] = p_rd->storage_buffer_create(sizeof( int32_t) * 1 * max_num_compacted_pixel_edges);
+	resources[Binding::BINDING_COMPACTED_PIXEL_EDGE_ORIENTATION_BUFFER     ] = p_rd->storage_buffer_create(sizeof(uint32_t) * 1 * max_num_compacted_pixel_edges);
+	resources[Binding::BINDING_COMPACTED_PIXEL_EDGE_ASSOCIATED_HEAD_BUFFER ] = p_rd->storage_buffer_create(sizeof(uint32_t) * 1 * max_num_compacted_pixel_edges);
 
 	return Error::OK;
 }
@@ -314,14 +313,9 @@ void GdstrokeShaderInterface::PixelEdgeInterfaceSet::make_bindings() {
 	bindings = {};
 	ERR_FAIL_COND(resources.size() != Binding::BINDING_MAX);
 
-	bindings.append(new_uniform(Binding::BINDING_PIXEL_EDGE_DESC_BUFFER, RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_PIXEL_EDGE_DESC_BUFFER]));
-
-	bindings.append(new_uniform(Binding::BINDING_SPARSE_PIXEL_EDGE_NEIGHBOURS_BUFFER,      RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_SPARSE_PIXEL_EDGE_NEIGHBOURS_BUFFER     ]));
-	bindings.append(new_uniform(Binding::BINDING_SPARSE_PIXEL_EDGE_MORTON_CODE_BUFFER,     RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_SPARSE_PIXEL_EDGE_MORTON_CODE_BUFFER    ]));
-	bindings.append(new_uniform(Binding::BINDING_SPARSE_PIXEL_EDGE_LOOP_BREAKING_BUFFER,   RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_SPARSE_PIXEL_EDGE_LOOP_BREAKING_BUFFER  ]));
-	bindings.append(new_uniform(Binding::BINDING_SPARSE_PIXEL_EDGE_LIST_RANKING_BUFFER,    RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_SPARSE_PIXEL_EDGE_LIST_RANKING_BUFFER   ]));
-	bindings.append(new_uniform(Binding::BINDING_SPARSE_PIXEL_EDGE_ASSOCIATED_HEAD_BUFFER, RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_SPARSE_PIXEL_EDGE_ASSOCIATED_HEAD_BUFFER]));
-	bindings.append(new_uniform(Binding::BINDING_SPARSE_PIXEL_EDGE_LOCAL_IDX_BUFFER,       RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_SPARSE_PIXEL_EDGE_LOCAL_IDX_BUFFER      ]));
+	for (int i = 0; i < Binding::BINDING_MAX; ++i) {
+		bindings.append(new_uniform(Binding(i), RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding(i)]));
+	}
 }
 
 

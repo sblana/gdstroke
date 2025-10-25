@@ -1,0 +1,13 @@
+#version 450
+#extension GL_ARB_shading_language_include : enable
+
+layout(local_size_x = 1) in;
+
+#include "common/buffers.glsli"
+
+
+void main() {
+	if (gl_GlobalInvocationID.x == 0) {
+		B_pixel_edge_desc.num_pixel_edge_loops = 0;
+	}
+}
