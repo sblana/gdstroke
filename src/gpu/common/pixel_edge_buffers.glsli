@@ -109,6 +109,15 @@ layout(set = 4, binding = 9, std430) RESTRICT buffer CompactedPixelEdgeNeighbour
 	CompactedPixelEdgeNeighboursData data[MAX_NUM_COMPACTED_PIXEL_EDGES];
 } B_compacted_pixel_edge_neighbours;
 
+bool is_compacted_pixel_edge_idx_valid(in const int i_idx) {
+	return (
+		i_idx >= 0 &&
+		i_idx < B_pixel_edge_desc.num_pixel_edges &&
+		B_compacted_pixel_edge_neighbours.data[i_idx] != CompactedPixelEdgeNeighboursData(-1, -1)
+	);
+}
+
+
 layout(set = 4, binding = 10, std430) RESTRICT buffer CompactedPixelEdgeToContourPixelBuffer {
 	int contour_pixel_idx[MAX_NUM_COMPACTED_PIXEL_EDGES];
 } B_compacted_pixel_edge_to_contour_pixel;
@@ -120,6 +129,15 @@ layout(set = 4, binding = 11, std430) RESTRICT buffer CompactedPixelEdgeOrientat
 layout(set = 4, binding = 12, std430) RESTRICT buffer CompactedPixelEdgeAssociatedHeadBuffer {
 	int associated_head[MAX_NUM_COMPACTED_PIXEL_EDGES];
 } B_compacted_pixel_edge_associated_head;
+
+layout(set = 4, binding = 13, std430) RESTRICT buffer CompactedPixelEdgeMidpointsFilteringBuffer {
+	vec2 midpoint[MAX_NUM_COMPACTED_PIXEL_EDGES];
+} B_compacted_pixel_edge_midpoints_filtering;
+
+layout(set = 4, binding = 14, std430) RESTRICT buffer CompactedPixelEdgeFilteredMidpointBuffer {
+	vec2 midpoint[MAX_NUM_COMPACTED_PIXEL_EDGES];
+} B_compacted_pixel_edge_filtered_midpoint;
+
 
 
 #endif // !PEL_BUFFERS_GLSLI
