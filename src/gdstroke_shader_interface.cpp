@@ -287,22 +287,24 @@ Error GdstrokeShaderInterface::PixelEdgeInterfaceSet::create_resources(Rendering
 
 	resources[Binding::BINDING_PIXEL_EDGE_DESC_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 4);
 
-	resources[Binding::BINDING_SPARSE_PIXEL_EDGE_NEIGHBOURS_BUFFER        ] = p_rd->storage_buffer_create(sizeof(int32_t)  * 2 * max_num_sparse_pixel_edges);
+	resources[Binding::BINDING_SPARSE_PIXEL_EDGE_NEIGHBOURS_BUFFER        ] = p_rd->storage_buffer_create(sizeof( int32_t) * 2 * max_num_sparse_pixel_edges);
 	resources[Binding::BINDING_SPARSE_PIXEL_EDGE_MORTON_CODE_BUFFER       ] = p_rd->storage_buffer_create(sizeof(uint32_t) * 1 * max_num_sparse_pixel_edges);
 	resources[Binding::BINDING_SPARSE_PIXEL_EDGE_LOOP_BREAKING_BUFFER     ] = p_rd->storage_buffer_create(sizeof(uint32_t) * 8 * max_num_sparse_pixel_edges);
-	resources[Binding::BINDING_SPARSE_PIXEL_EDGE_LIST_RANKING_BUFFER      ] = p_rd->storage_buffer_create(sizeof(int32_t)  * 4 * max_num_sparse_pixel_edges);
-	resources[Binding::BINDING_SPARSE_PIXEL_EDGE_ASSOCIATED_HEAD_BUFFER   ] = p_rd->storage_buffer_create(sizeof(int32_t)  * 1 * max_num_sparse_pixel_edges);
-	resources[Binding::BINDING_SPARSE_PIXEL_EDGE_LOCAL_IDX_BUFFER         ] = p_rd->storage_buffer_create(sizeof(int32_t)  * 1 * max_num_sparse_pixel_edges);
-	resources[Binding::BINDING_SPARSE_PIXEL_EDGE_TO_PIXEL_EDGE_LOOP_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t)  * 1 * max_num_sparse_pixel_edges);
+	resources[Binding::BINDING_SPARSE_PIXEL_EDGE_LIST_RANKING_BUFFER      ] = p_rd->storage_buffer_create(sizeof( int32_t) * 4 * max_num_sparse_pixel_edges);
+	resources[Binding::BINDING_SPARSE_PIXEL_EDGE_ASSOCIATED_HEAD_BUFFER   ] = p_rd->storage_buffer_create(sizeof( int32_t) * 1 * max_num_sparse_pixel_edges);
+	resources[Binding::BINDING_SPARSE_PIXEL_EDGE_LOCAL_IDX_BUFFER         ] = p_rd->storage_buffer_create(sizeof( int32_t) * 1 * max_num_sparse_pixel_edges);
+	resources[Binding::BINDING_SPARSE_PIXEL_EDGE_TO_PIXEL_EDGE_LOOP_BUFFER] = p_rd->storage_buffer_create(sizeof( int32_t) * 1 * max_num_sparse_pixel_edges);
 
 	resources[Binding::BINDING_PIXEL_EDGE_LOOP_DESC_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 4 * max_num_pixel_edge_loops);
 
-	resources[Binding::BINDING_COMPACTED_PIXEL_EDGE_NEIGHBOURS_BUFFER         ] = p_rd->storage_buffer_create(sizeof( int32_t) * 2 * max_num_compacted_pixel_edges);
-	resources[Binding::BINDING_COMPACTED_PIXEL_EDGE_TO_CONTOUR_PIXEL_BUFFER   ] = p_rd->storage_buffer_create(sizeof( int32_t) * 1 * max_num_compacted_pixel_edges);
-	resources[Binding::BINDING_COMPACTED_PIXEL_EDGE_ORIENTATION_BUFFER        ] = p_rd->storage_buffer_create(sizeof(uint32_t) * 1 * max_num_compacted_pixel_edges);
-	resources[Binding::BINDING_COMPACTED_PIXEL_EDGE_ASSOCIATED_HEAD_BUFFER    ] = p_rd->storage_buffer_create(sizeof(uint32_t) * 1 * max_num_compacted_pixel_edges);
-	resources[Binding::BINDING_COMPACTED_PIXEL_EDGE_MIDPOINTS_FILTERING_BUFFER] = p_rd->storage_buffer_create(sizeof(   float) * 1 * max_num_compacted_pixel_edges);
-	resources[Binding::BINDING_COMPACTED_PIXEL_EDGE_FILTERED_MIDPOINT_BUFFER  ] = p_rd->storage_buffer_create(sizeof(   float) * 1 * max_num_compacted_pixel_edges);
+	resources[Binding::BINDING_COMPACTED_PIXEL_EDGE_NEIGHBOURS_BUFFER          ] = p_rd->storage_buffer_create(sizeof( int32_t) * 2 * max_num_compacted_pixel_edges);
+	resources[Binding::BINDING_COMPACTED_PIXEL_EDGE_TO_CONTOUR_PIXEL_BUFFER    ] = p_rd->storage_buffer_create(sizeof( int32_t) * 1 * max_num_compacted_pixel_edges);
+	resources[Binding::BINDING_COMPACTED_PIXEL_EDGE_ORIENTATION_BUFFER         ] = p_rd->storage_buffer_create(sizeof(uint32_t) * 1 * max_num_compacted_pixel_edges);
+	resources[Binding::BINDING_COMPACTED_PIXEL_EDGE_ASSOCIATED_HEAD_BUFFER     ] = p_rd->storage_buffer_create(sizeof(uint32_t) * 1 * max_num_compacted_pixel_edges);
+	resources[Binding::BINDING_COMPACTED_PIXEL_EDGE_TO_PIXEL_EDGE_LOOP_BUFFER  ] = p_rd->storage_buffer_create(sizeof(uint32_t) * 1 * max_num_compacted_pixel_edges);
+	resources[Binding::BINDING_COMPACTED_PIXEL_EDGE_MIDPOINTS_FILTERING_BUFFER ] = p_rd->storage_buffer_create(sizeof(   float) * 1 * max_num_compacted_pixel_edges);
+	resources[Binding::BINDING_COMPACTED_PIXEL_EDGE_FILTERED_MIDPOINT_BUFFER   ] = p_rd->storage_buffer_create(sizeof(   float) * 1 * max_num_compacted_pixel_edges);
+	resources[Binding::BINDING_COMPACTED_PIXEL_EDGE_FILTERED_ORIENTATION_BUFFER] = p_rd->storage_buffer_create(sizeof(   float) * 2 * max_num_compacted_pixel_edges);
 
 	return Error::OK;
 }

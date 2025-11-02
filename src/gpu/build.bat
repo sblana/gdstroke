@@ -58,6 +58,8 @@
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\stroke_extraction\midpoints_filtering\init.comp      -o %compileshadersTEMPDIR%se__mf__init.spv
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\stroke_extraction\midpoints_filtering\smoothing.comp -o %compileshadersTEMPDIR%se__mf__smoothing.spv
 
+	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\stroke_extraction\orientations_filtering\curve_fitting.comp -o %compileshadersTEMPDIR%se__of__curve_fitting.spv
+
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\debug\display_contour_fragments.comp     -o %compileshadersTEMPDIR%debug__display_contour_fragments.spv
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\debug\display_contour_pixels.comp        -o %compileshadersTEMPDIR%debug__display_contour_pixels.spv
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\debug\display_sparse_pixel_edges.comp    -o %compileshadersTEMPDIR%debug__display_sparse_pixel_edges.spv
@@ -108,6 +110,8 @@ gcc embed.c -o %compileshadersEMBED%
 
 	%compileshadersEMBED% %compileshadersTEMPDIR%se__mf__init.spv      %compileshadersOUTPUTDIR%se__mf__init.spv.h      SHADER_SPV_se__mf__init
 	%compileshadersEMBED% %compileshadersTEMPDIR%se__mf__smoothing.spv %compileshadersOUTPUTDIR%se__mf__smoothing.spv.h SHADER_SPV_se__mf__smoothing
+
+	%compileshadersEMBED% %compileshadersTEMPDIR%se__of__curve_fitting.spv %compileshadersOUTPUTDIR%se__of__curve_fitting.spv.h SHADER_SPV_se__of__curve_fitting
 
 	%compileshadersEMBED% %compileshadersTEMPDIR%debug__display_contour_fragments.spv     %compileshadersOUTPUTDIR%debug__display_contour_fragments.spv.h     SHADER_SPV_debug__display_contour_fragments
 	%compileshadersEMBED% %compileshadersTEMPDIR%debug__display_contour_pixels.spv        %compileshadersOUTPUTDIR%debug__display_contour_pixels.spv.h        SHADER_SPV_debug__display_contour_pixels

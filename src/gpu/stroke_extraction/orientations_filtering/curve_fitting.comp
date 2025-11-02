@@ -1,0 +1,79 @@
+#version 450
+#extension GL_ARB_shading_language_include : enable
+
+layout(local_size_x = 64) in;
+
+#include "common/buffers.glsli"
+#include "common/math.glsli"
+
+
+// TODO: Implement the modifications of the curve-fitting method from the paper
+
+float curve_fitting_weight() {
+	return 1.0;
+}
+
+void main() {
+	const uint pixel_edge_idx = gl_GlobalInvocationID.x;
+
+	if (is_compacted_pixel_edge_idx_valid(int(pixel_edge_idx))) {
+		const PixelEdgeLoopDescData loop_desc = B_pixel_edge_loop_desc.data[B_compacted_pixel_edge_to_pixel_edge_loop.idx[pixel_edge_idx]];
+
+		const int num_neighbours = min(ORIENTATION_FILTERING_MAX_NUM_NEIGHBOURS, idiv_floor(loop_desc.loop_len, 2));
+
+		// load midpoints
+		vec2 midpoint_stack[ORIENTATION_FILTERING_MAX_WINDOW_SIZE];
+		midpoint_stack[num_neighbours] = B_compacted_pixel_edge_filtered_midpoint.midpoint[pixel_edge_idx];
+
+		for (int forward = 0; forward < 2; ++forward) {
+			int direction = (forward * 2 - 1);
+			uint prev_idx = pixel_edge_idx;
+			for (int i = 1; i <= num_neighbours; ++i) {
+				CompactedPixelEdgeNeighboursData neighbours = B_compacted_pixel_edge_neighbours.data[prev_idx];
+				uint cur_idx = (forward > 0) ? neighbours.next_idx : neighbours.prev_idx;
+				int k = i * direction;
+				midpoint_stack[num_neighbours + k] = B_compacted_pixel_edge_filtered_midpoint.midpoint[cur_idx];
+				prev_idx = cur_idx;
+			}
+		}
+
+		// parametrize
+		float arc_length_stack[ORIENTATION_FILTERING_MAX_WINDOW_SIZE];
+		arc_length_stack[0] = 0.0;
+
+		for (int k = -(num_neighbours - 1); k <= num_neighbours; ++k) {
+			float prev_arc_length = arc_length_stack[num_neighbours + k - 1];
+			float midpoints_vec = length((
+				// HACK: subtraction to prevent overflow
+				(midpoint_stack[num_neighbours + k - 1] - midpoint_stack[0]) *
+				(midpoint_stack[num_neighbours + k    ] - midpoint_stack[0])
+			));
+			arc_length_stack[num_neighbours + k] = prev_arc_length + midpoints_vec;
+		}
+
+		// curve fitting
+		float a1 = 0.0;
+		float a2 = 0.0;
+		float a3 = 0.0;
+
+		vec2 b1 = vec2(0.0, 0.0);
+		vec2 b2 = vec2(0.0, 0.0);
+
+		float middle = arc_length_stack[num_neighbours];
+		for (int k = -num_neighbours; k <= num_neighbours; ++k) {
+			arc_length_stack[num_neighbours + k] -= middle;
+			vec2 vec_to_k = midpoint_stack[num_neighbours + k] - midpoint_stack[num_neighbours];
+			float weight = sqr(curve_fitting_weight());
+			a1 += weight / 1.0 * pow(arc_length_stack[num_neighbours + k], 2.0);
+			a2 += weight / 2.0 * pow(arc_length_stack[num_neighbours + k], 3.0);
+			a3 += weight / 4.0 * pow(arc_length_stack[num_neighbours + k], 4.0);
+
+			b1 += weight / 1.0 *    (arc_length_stack[num_neighbours + k]     ) * (vec_to_k);
+			b2 += weight / 2.0 * pow(arc_length_stack[num_neighbours + k], 2.0) * (vec_to_k);
+		}
+		float determinant = a1 * a3 - a2 * a2;
+		vec2 first_derivative = (a3 * b1 - a2 * b2) / determinant;
+		vec2 filtered_orientation = normalize(first_derivative);
+		B_compacted_pixel_edge_filtered_orientation.orientation[pixel_edge_idx] = filtered_orientation;
+	}
+}

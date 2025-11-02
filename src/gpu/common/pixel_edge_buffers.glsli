@@ -130,14 +130,24 @@ layout(set = 4, binding = 12, std430) RESTRICT buffer CompactedPixelEdgeAssociat
 	int associated_head[MAX_NUM_COMPACTED_PIXEL_EDGES];
 } B_compacted_pixel_edge_associated_head;
 
-layout(set = 4, binding = 13, std430) RESTRICT buffer CompactedPixelEdgeMidpointsFilteringBuffer {
+layout(set = 4, binding = 13, std430) RESTRICT buffer CompactedPixelEdgeToPixelEdgeLoopBuffer {
+	int idx[MAX_NUM_COMPACTED_PIXEL_EDGES];
+} B_compacted_pixel_edge_to_pixel_edge_loop;
+
+layout(set = 4, binding = 14, std430) RESTRICT buffer CompactedPixelEdgeMidpointsFilteringBuffer {
 	vec2 midpoint[MAX_NUM_COMPACTED_PIXEL_EDGES];
 } B_compacted_pixel_edge_midpoints_filtering;
 
-layout(set = 4, binding = 14, std430) RESTRICT buffer CompactedPixelEdgeFilteredMidpointBuffer {
+layout(set = 4, binding = 15, std430) RESTRICT buffer CompactedPixelEdgeFilteredMidpointBuffer {
 	vec2 midpoint[MAX_NUM_COMPACTED_PIXEL_EDGES];
 } B_compacted_pixel_edge_filtered_midpoint;
 
+#define ORIENTATION_FILTERING_MAX_NUM_NEIGHBOURS (8)
+#define ORIENTATION_FILTERING_MAX_WINDOW_SIZE (ORIENTATION_FILTERING_MAX_NUM_NEIGHBOURS * 2 + 1)
+
+layout(set = 4, binding = 16, std430) RESTRICT buffer CompactedPixelEdgeFilteredOrientationBuffer {
+	vec2 orientation[MAX_NUM_COMPACTED_PIXEL_EDGES];
+} B_compacted_pixel_edge_filtered_orientation;
 
 
 #endif // !PEL_BUFFERS_GLSLI

@@ -29,6 +29,7 @@ void main() {
 			B_compacted_pixel_edge_orientation.orientation[compacted_pixel_edge_idx] = orientation;
 
 			B_compacted_pixel_edge_associated_head.associated_head[compacted_pixel_edge_idx] = loop_desc.compacted_head_idx;
+			B_compacted_pixel_edge_to_pixel_edge_loop.idx[compacted_pixel_edge_idx] = pixel_edge_loop_idx;
 		}
 	}
 }
