@@ -305,6 +305,7 @@ Error GdstrokeShaderInterface::PixelEdgeInterfaceSet::create_resources(Rendering
 	resources[Binding::BINDING_COMPACTED_PIXEL_EDGE_MIDPOINTS_FILTERING_BUFFER ] = p_rd->storage_buffer_create(sizeof(   float) * 1 * max_num_compacted_pixel_edges);
 	resources[Binding::BINDING_COMPACTED_PIXEL_EDGE_FILTERED_MIDPOINT_BUFFER   ] = p_rd->storage_buffer_create(sizeof(   float) * 1 * max_num_compacted_pixel_edges);
 	resources[Binding::BINDING_COMPACTED_PIXEL_EDGE_FILTERED_ORIENTATION_BUFFER] = p_rd->storage_buffer_create(sizeof(   float) * 2 * max_num_compacted_pixel_edges);
+	resources[Binding::BINDING_COMPACTED_PIXEL_EDGE_IS_INSIDE_BUFFER           ] = p_rd->storage_buffer_create(sizeof( int32_t) * 2 * max_num_compacted_pixel_edges);
 
 	return Error::OK;
 }

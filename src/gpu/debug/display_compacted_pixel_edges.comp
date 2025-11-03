@@ -22,11 +22,18 @@ void main() {
 
 		const int associated_head_idx = B_compacted_pixel_edge_associated_head.associated_head[pixel_edge_idx];
 
+		const CompactedPixelEdgeIsInsideData is_inside_data = B_compacted_pixel_edge_is_inside.data[pixel_edge_idx];
+
 		if (is_within_screen(left_pixel_coord, imageSize(U_screen_color_image))) {
-			const vec4 output_data = vec4(
+			const vec4 output_data = is_inside_data.final ? vec4(
 				B_compacted_pixel_edge_filtered_orientation.orientation[pixel_edge_idx].x * 0.5 + 0.5,
 				B_compacted_pixel_edge_filtered_orientation.orientation[pixel_edge_idx].y * 0.5 + 0.5,
 				0.0,
+				1.0
+			) : vec4(
+				0.25,
+				0.25,
+				0.25,
 				1.0
 			);
 			imageStore(U_screen_color_image, left_pixel_coord, output_data);

@@ -1,0 +1,55 @@
+#version 450
+#extension GL_ARB_shading_language_include : enable
+
+layout(local_size_x = 64) in;
+
+#include "common/buffers.glsli"
+#include "common/math.glsli"
+
+
+void main() {
+	const uint pixel_edge_idx = gl_GlobalInvocationID.x;
+
+	if (pixel_edge_idx < B_pixel_edge_desc.num_pixel_edges) {
+
+		// init
+		B_compacted_pixel_edge_is_inside.data[pixel_edge_idx] = CompactedPixelEdgeIsInsideData(false, false);
+
+		if (is_compacted_pixel_edge_idx_valid(int(pixel_edge_idx))) {
+			const int contour_pixel_idx = B_compacted_pixel_edge_to_contour_pixel.contour_pixel_idx[pixel_edge_idx];
+			const PixelEdgeLoopDescData loop_desc = B_pixel_edge_loop_desc.data[B_compacted_pixel_edge_to_pixel_edge_loop.idx[pixel_edge_idx]];
+
+			const int num_neighbours = min(INSIDE_OUTSIDE_TEST_MAX_NUM_NEIGHBOURS, idiv_floor(loop_desc.loop_len, 2));
+
+			// load contour pixel orientations
+			vec2 contour_pixel_orientations_stack[INSIDE_OUTSIDE_TEST_MAX_WINDOW_SIZE];
+			contour_pixel_orientations_stack[num_neighbours] = B_contour_pixel_orientation.orientation[contour_pixel_idx];
+
+			for (int forward = 0; forward < 2; ++forward) {
+				const int direction = (forward * 2 - 1);
+				uint prev_idx = pixel_edge_idx;
+				for (int i = 1; i <= num_neighbours; ++i) {
+					CompactedPixelEdgeNeighboursData neighbours = B_compacted_pixel_edge_neighbours.data[prev_idx];
+					const uint cur_idx = (forward > 0) ? neighbours.next_idx : neighbours.prev_idx;
+					const int k = i * direction;
+					const int cur_contour_pixel_idx = B_compacted_pixel_edge_to_contour_pixel.contour_pixel_idx[cur_idx];
+					contour_pixel_orientations_stack[num_neighbours + k] = B_contour_pixel_orientation.orientation[cur_contour_pixel_idx];
+					prev_idx = cur_idx;
+				}
+			}
+
+			const vec2 pixel_edge_orientation = B_compacted_pixel_edge_filtered_orientation.orientation[pixel_edge_idx];
+			const float orientation_threshold = 0.6;
+			int times_passed = 0;
+			for (int k = -num_neighbours; k <= num_neighbours; ++k) {
+				const float orientation_product = dot(pixel_edge_orientation, contour_pixel_orientations_stack[num_neighbours + k]);
+				if (orientation_product > orientation_threshold) {
+					times_passed += 1;
+				}
+			}
+
+			const bool is_inside = times_passed > (num_neighbours * 2 + 1) / 2;
+			B_compacted_pixel_edge_is_inside.data[pixel_edge_idx] = CompactedPixelEdgeIsInsideData(is_inside, false);
+		}
+	}
+}

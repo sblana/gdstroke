@@ -51,6 +51,8 @@ using namespace godot;
 #include "gen/se__mf__init.spv.h"
 #include "gen/se__mf__smoothing.spv.h"
 #include "gen/se__of__curve_fitting.spv.h"
+#include "gen/se__iot__test.spv.h"
+#include "gen/se__iot__smoothing.spv.h"
 #include "gen/debug__display_contour_fragments.spv.h"
 #include "gen/debug__display_contour_pixels.spv.h"
 #include "gen/debug__display_sparse_pixel_edges.spv.h"
@@ -98,6 +100,8 @@ void const *GdstrokeEffect::shader_to_embedded_data[Shader::SHADER_MAX] = {
 	&SHADER_SPV_se__mf__init,
 	&SHADER_SPV_se__mf__smoothing,
 	&SHADER_SPV_se__of__curve_fitting,
+	&SHADER_SPV_se__iot__test,
+	&SHADER_SPV_se__iot__smoothing,
 	&SHADER_SPV_debug__display_contour_fragments,
 	&SHADER_SPV_debug__display_contour_pixels,
 	&SHADER_SPV_debug__display_sparse_pixel_edges,
@@ -489,8 +493,31 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 	}
 	rd->draw_command_end_label();
 
+	rd->draw_command_begin_label("Inside Outside Test", Color(1.0, 0.3, 1.0));
+	{
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_SE_IOT_TEST]);
+		this->bind_sets(rd, list);
+		this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_COMPACTED_PIXEL_EDGES);
+		rd->compute_list_end();
+
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_SE_IOT_SMOOTHING]);
+		this->bind_sets(rd, list);
+		this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_COMPACTED_PIXEL_EDGES);
+		rd->compute_list_end();
+	}
+	rd->draw_command_end_label();
+
 	rd->draw_command_begin_label("debug", Color(0.2, 0.2, 0.2));
 	{
+		// list = rd->compute_list_begin();
+		// rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_DEBUG_DISPLAY_CONTOUR_PIXELS]);
+		// this->bind_sets(rd, list);
+		// this->bind_sets_debug(rd, list);
+		// this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_PIXELS);
+		// rd->compute_list_end();
+
 		list = rd->compute_list_begin();
 		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_DEBUG_DISPLAY_COMPACTED_PIXEL_EDGES]);
 		this->bind_sets(rd, list);

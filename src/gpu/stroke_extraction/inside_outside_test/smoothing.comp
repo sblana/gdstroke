@@ -1,0 +1,22 @@
+#version 450
+#extension GL_ARB_shading_language_include : enable
+
+layout(local_size_x = 64) in;
+
+#include "common/buffers.glsli"
+
+
+void main() {
+	const uint pixel_edge_idx = gl_GlobalInvocationID.x;
+
+	if (is_compacted_pixel_edge_idx_valid(int(pixel_edge_idx))) {
+		CompactedPixelEdgeNeighboursData neighbours = B_compacted_pixel_edge_neighbours.data[pixel_edge_idx];
+
+		const bool smoothed_is_inside = (
+			B_compacted_pixel_edge_is_inside.data[     pixel_edge_idx].initial ||
+			B_compacted_pixel_edge_is_inside.data[neighbours.prev_idx].initial &&
+			B_compacted_pixel_edge_is_inside.data[neighbours.next_idx].initial
+		);
+		B_compacted_pixel_edge_is_inside.data[pixel_edge_idx].final = smoothed_is_inside;
+	}
+}

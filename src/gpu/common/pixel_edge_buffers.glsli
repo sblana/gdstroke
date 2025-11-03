@@ -149,5 +149,17 @@ layout(set = 4, binding = 16, std430) RESTRICT buffer CompactedPixelEdgeFiltered
 	vec2 orientation[MAX_NUM_COMPACTED_PIXEL_EDGES];
 } B_compacted_pixel_edge_filtered_orientation;
 
+#define INSIDE_OUTSIDE_TEST_MAX_NUM_NEIGHBOURS (8)
+#define INSIDE_OUTSIDE_TEST_MAX_WINDOW_SIZE (INSIDE_OUTSIDE_TEST_MAX_NUM_NEIGHBOURS * 2 + 1)
+
+struct CompactedPixelEdgeIsInsideData {
+	bool initial;
+	bool final;
+};
+
+layout(set = 4, binding = 17, std430) RESTRICT buffer CompactedPixelEdgeIsInsideBuffer {
+	CompactedPixelEdgeIsInsideData data[MAX_NUM_COMPACTED_PIXEL_EDGES];
+} B_compacted_pixel_edge_is_inside;
+
 
 #endif // !PEL_BUFFERS_GLSLI
