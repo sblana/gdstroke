@@ -63,6 +63,9 @@
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\stroke_extraction\inside_outside_test\test.comp      -o %compileshadersTEMPDIR%se__iot__test.spv
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\stroke_extraction\inside_outside_test\smoothing.comp -o %compileshadersTEMPDIR%se__iot__smoothing.spv
 
+	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\stroke_extraction\segmentation\segment_head_id.comp         -o %compileshadersTEMPDIR%se__s__segment_head_id.spv
+	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\stroke_extraction\segmentation\loop_local_segmentation.comp -o %compileshadersTEMPDIR%se__s__loop_local_segmentation.spv
+
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\debug\display_contour_fragments.comp     -o %compileshadersTEMPDIR%debug__display_contour_fragments.spv
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\debug\display_contour_pixels.comp        -o %compileshadersTEMPDIR%debug__display_contour_pixels.spv
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\debug\display_sparse_pixel_edges.comp    -o %compileshadersTEMPDIR%debug__display_sparse_pixel_edges.spv
@@ -118,6 +121,9 @@ gcc embed.c -o %compileshadersEMBED%
 
 	%compileshadersEMBED% %compileshadersTEMPDIR%se__iot__test.spv      %compileshadersOUTPUTDIR%se__iot__test.spv.h      SHADER_SPV_se__iot__test
 	%compileshadersEMBED% %compileshadersTEMPDIR%se__iot__smoothing.spv %compileshadersOUTPUTDIR%se__iot__smoothing.spv.h SHADER_SPV_se__iot__smoothing
+
+	%compileshadersEMBED% %compileshadersTEMPDIR%se__s__segment_head_id.spv         %compileshadersOUTPUTDIR%se__s__segment_head_id.spv.h         SHADER_SPV_se__s__segment_head_id
+	%compileshadersEMBED% %compileshadersTEMPDIR%se__s__loop_local_segmentation.spv %compileshadersOUTPUTDIR%se__s__loop_local_segmentation.spv.h SHADER_SPV_se__s__loop_local_segmentation
 
 	%compileshadersEMBED% %compileshadersTEMPDIR%debug__display_contour_fragments.spv     %compileshadersOUTPUTDIR%debug__display_contour_fragments.spv.h     SHADER_SPV_debug__display_contour_fragments
 	%compileshadersEMBED% %compileshadersTEMPDIR%debug__display_contour_pixels.spv        %compileshadersOUTPUTDIR%debug__display_contour_pixels.spv.h        SHADER_SPV_debug__display_contour_pixels

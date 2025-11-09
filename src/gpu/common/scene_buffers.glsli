@@ -12,8 +12,8 @@ layout(set = 0, binding = 0, std140) RESTRICT readonly uniform SceneDataUniform 
 layout(set = 0, binding = 1, std140) RESTRICT readonly uniform ConfigUniform {
 	float depth_bias;
 	uint use_soft_depth_test_modification;
+	uint min_segment_length;
 	float pad0;
-	float pad1;
 } U_config;
 
 #endif // !SCENE_BUFFERS_GLSLI

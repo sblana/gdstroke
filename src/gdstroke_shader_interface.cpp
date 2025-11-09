@@ -63,6 +63,7 @@ Error GdstrokeShaderInterface::SceneInterfaceSet::update_resources(RenderingDevi
 	config_data_bytes.resize(sizeof(ConfigData));
 	config_data_bytes.encode_float(0, config_data.depth_bias);
 	config_data_bytes.encode_u32(4, config_data.use_soft_depth_test_modification);
+	config_data_bytes.encode_u32(8, config_data.min_segment_length);
 
 	p_rd->buffer_update((RID const&)resources[Binding::BINDING_CONFIG_UNIFORM], 0, sizeof(ConfigData), config_data_bytes);
 	return Error::OK;
@@ -306,6 +307,12 @@ Error GdstrokeShaderInterface::PixelEdgeInterfaceSet::create_resources(Rendering
 	resources[Binding::BINDING_COMPACTED_PIXEL_EDGE_FILTERED_MIDPOINT_BUFFER   ] = p_rd->storage_buffer_create(sizeof(   float) * 1 * max_num_compacted_pixel_edges);
 	resources[Binding::BINDING_COMPACTED_PIXEL_EDGE_FILTERED_ORIENTATION_BUFFER] = p_rd->storage_buffer_create(sizeof(   float) * 2 * max_num_compacted_pixel_edges);
 	resources[Binding::BINDING_COMPACTED_PIXEL_EDGE_IS_INSIDE_BUFFER           ] = p_rd->storage_buffer_create(sizeof( int32_t) * 2 * max_num_compacted_pixel_edges);
+	resources[Binding::BINDING_COMPACTED_PIXEL_EDGE_IS_SEGMENT_HEAD_BUFFER     ] = p_rd->storage_buffer_create(sizeof( int32_t) * 1 * max_num_compacted_pixel_edges);
+	resources[Binding::BINDING_COMPACTED_PIXEL_EDGE_SEGMENT_KEY_BUFFER         ] = p_rd->storage_buffer_create(sizeof( int32_t) * 1 * max_num_compacted_pixel_edges);
+	resources[Binding::BINDING_COMPACTED_PIXEL_EDGE_IS_DISCARDED_BUFFER        ] = p_rd->storage_buffer_create(sizeof( int32_t) * 1 * max_num_compacted_pixel_edges);
+	resources[Binding::BINDING_COMPACTED_PIXEL_EDGE_SEGMENT_DESC_BUFFER        ] = p_rd->storage_buffer_create(sizeof( int32_t) * 4 * max_num_compacted_pixel_edges);
+
+	resources[Binding::BINDING_PIXEL_EDGE_LOOP_SEGMENTS_DESC_BUFFER] = p_rd->storage_buffer_create(sizeof( int32_t) * 4 * max_num_pixel_edge_loops);
 
 	return Error::OK;
 }

@@ -53,6 +53,8 @@ using namespace godot;
 #include "gen/se__of__curve_fitting.spv.h"
 #include "gen/se__iot__test.spv.h"
 #include "gen/se__iot__smoothing.spv.h"
+#include "gen/se__s__segment_head_id.spv.h"
+#include "gen/se__s__loop_local_segmentation.spv.h"
 #include "gen/debug__display_contour_fragments.spv.h"
 #include "gen/debug__display_contour_pixels.spv.h"
 #include "gen/debug__display_sparse_pixel_edges.spv.h"
@@ -102,6 +104,8 @@ void const *GdstrokeEffect::shader_to_embedded_data[Shader::SHADER_MAX] = {
 	&SHADER_SPV_se__of__curve_fitting,
 	&SHADER_SPV_se__iot__test,
 	&SHADER_SPV_se__iot__smoothing,
+	&SHADER_SPV_se__s__segment_head_id,
+	&SHADER_SPV_se__s__loop_local_segmentation,
 	&SHADER_SPV_debug__display_contour_fragments,
 	&SHADER_SPV_debug__display_contour_pixels,
 	&SHADER_SPV_debug__display_sparse_pixel_edges,
@@ -145,6 +149,8 @@ void GdstrokeEffect::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_config_depth_bias"),            &GdstrokeEffect::get_config_depth_bias);
 	ClassDB::bind_method(D_METHOD("set_config_use_soft_depth_test_modification", "p_value"), &GdstrokeEffect::set_config_use_soft_depth_test_modification);
 	ClassDB::bind_method(D_METHOD("get_config_use_soft_depth_test_modification"),            &GdstrokeEffect::get_config_use_soft_depth_test_modification);
+	ClassDB::bind_method(D_METHOD("set_config_min_segment_length", "p_value"), &GdstrokeEffect::set_config_min_segment_length);
+	ClassDB::bind_method(D_METHOD("get_config_min_segment_length"),            &GdstrokeEffect::get_config_min_segment_length);
 
 	ADD_PROPERTY(
 		PropertyInfo(
@@ -159,6 +165,14 @@ void GdstrokeEffect::_bind_methods() {
 		),
 		"set_config_use_soft_depth_test_modification",
 		"get_config_use_soft_depth_test_modification"
+	);
+	ADD_PROPERTY(
+		PropertyInfo(
+			Variant::INT, "min_segment_length",
+			PROPERTY_HINT_RANGE, "0,8192"
+		),
+		"set_config_min_segment_length",
+		"get_config_min_segment_length"
 	);
 }
 
@@ -509,6 +523,22 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 	}
 	rd->draw_command_end_label();
 
+	rd->draw_command_begin_label("Segmentation", Color(1.0, 0.3, 1.0));
+	{
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_SE_S_SEGMENT_HEAD_ID]);
+		this->bind_sets(rd, list);
+		this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_COMPACTED_PIXEL_EDGES);
+		rd->compute_list_end();
+
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_SE_S_LOOP_LOCAL_SEGMENTATION]);
+		this->bind_sets(rd, list);
+		this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_WORKGROUP_TO_PIXEL_EDGE_LOOPS);
+		rd->compute_list_end();
+	}
+	rd->draw_command_end_label();
+
 	rd->draw_command_begin_label("debug", Color(0.2, 0.2, 0.2));
 	{
 		// list = rd->compute_list_begin();
@@ -542,4 +572,12 @@ bool GdstrokeEffect::get_config_use_soft_depth_test_modification() const {
 
 void GdstrokeEffect::set_config_use_soft_depth_test_modification(bool p_value) {
 	scene_interface_set.config_data.use_soft_depth_test_modification = uint32_t(p_value);
+}
+
+uint32_t GdstrokeEffect::get_config_min_segment_length() const {
+	return scene_interface_set.config_data.min_segment_length;
+}
+
+void GdstrokeEffect::set_config_min_segment_length(uint32_t p_value) {
+	scene_interface_set.config_data.min_segment_length = uint32_t(p_value);
 }

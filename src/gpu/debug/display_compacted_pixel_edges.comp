@@ -21,22 +21,27 @@ void main() {
 		const vec2 midpoint = B_compacted_pixel_edge_filtered_midpoint.midpoint[pixel_edge_idx];
 
 		const int associated_head_idx = B_compacted_pixel_edge_associated_head.associated_head[pixel_edge_idx];
+		const int loop_idx = B_compacted_pixel_edge_to_pixel_edge_loop.idx[pixel_edge_idx];
+		const PixelEdgeLoopDescData loop_desc = B_pixel_edge_loop_desc.data[loop_idx];
 
 		const CompactedPixelEdgeIsInsideData is_inside_data = B_compacted_pixel_edge_is_inside.data[pixel_edge_idx];
 
-		if (is_within_screen(left_pixel_coord, imageSize(U_screen_color_image))) {
-			const vec4 output_data = is_inside_data.final ? vec4(
-				B_compacted_pixel_edge_filtered_orientation.orientation[pixel_edge_idx].x * 0.5 + 0.5,
-				B_compacted_pixel_edge_filtered_orientation.orientation[pixel_edge_idx].y * 0.5 + 0.5,
-				0.0,
-				1.0
-			) : vec4(
-				0.25,
-				0.25,
-				0.25,
-				1.0
-			);
-			imageStore(U_screen_color_image, left_pixel_coord, output_data);
+		const PixelEdgeLoopSegmentsDescData loop_segments_desc = B_pixel_edge_loop_segments_desc.data[loop_idx];
+		const int segment_key = B_compacted_pixel_edge_segment_key.segment_key[pixel_edge_idx];
+		const bool is_discarded = B_compacted_pixel_edge_is_discarded.discarded[pixel_edge_idx];
+		const CompactedPixelEdgeSegmentDescData pixel_edge_segment = B_compacted_pixel_edge_segment_desc.data[pixel_edge_idx];
+		const int pixel_edge_segment_local_idx = compacted_pixel_edge_segment_local_idx(int(pixel_edge_idx), pixel_edge_segment.segment_head_idx, loop_desc.loop_len);
+
+		if (is_inside_data.final) {
+			if (is_within_screen(ivec2(midpoint), imageSize(U_screen_color_image))) {
+				const vec4 output_data = vec4(
+					is_discarded,
+					(loop_idx + 0.5) / B_pixel_edge_desc.num_pixel_edge_loops,
+					(pixel_edge_segment.allocation_idx + 0.5) / loop_segments_desc.num_segment_edges,
+					1.0
+				);
+				imageStore(U_screen_color_image, ivec2(midpoint), output_data);
+			}
 		}
 	}
 }

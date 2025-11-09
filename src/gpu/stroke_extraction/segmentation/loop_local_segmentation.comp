@@ -1,0 +1,239 @@
+#version 450
+#extension GL_ARB_shading_language_include : enable
+
+layout(local_size_x = 256) in;
+
+#include "common/buffers.glsli"
+#include "common/scans.glsli"
+
+
+shared int block_num_inside_edges[gl_WorkGroupSize.x];
+shared int block_segment_key_offsets[gl_WorkGroupSize.x];
+shared int total_num_segments;
+
+shared int segment_head_idx[MAX_NUM_SEGMENTS_PER_LOOP];
+shared int segment_length[MAX_NUM_SEGMENTS_PER_LOOP];
+shared bool segment_is_discarded[MAX_NUM_SEGMENTS_PER_LOOP];
+shared int segment_passed_key[MAX_NUM_SEGMENTS_PER_LOOP];
+shared int segment_alloc_idx[MAX_NUM_SEGMENTS_PER_LOOP];
+shared int total_num_passed_segments;
+shared int total_num_segment_edges;
+
+void main() {
+	const uint loop_idx = gl_WorkGroupID.x;
+	const PixelEdgeLoopDescData loop_desc = B_pixel_edge_loop_desc.data[gl_WorkGroupID.x];
+	const BlockPartitionDesc loop_bpd = create_block_partition_desc(gl_WorkGroupSize.x, loop_desc.loop_len);
+	const BlockDesc loop_bd = create_block_desc(loop_bpd, gl_LocalInvocationID.x);
+
+	{
+		const bool is_participating_stage_0 = loop_bd.block_idx < loop_bpd.num_blocks;
+		const bool is_participating_stage_1 = gl_LocalInvocationID.x == 0;
+		const bool is_participating_stage_2 = loop_bd.block_idx < loop_bpd.num_blocks;
+		if (is_participating_stage_0) {
+			block_num_inside_edges[loop_bd.block_idx] = 0;
+			block_segment_key_offsets[loop_bd.block_idx] = 0;
+			for (uint element_idx = loop_bd.first_element_idx; element_idx <= loop_bd.final_element_idx; ++element_idx) {
+				const uint pixel_edge_idx = loop_desc.compacted_head_idx + element_idx;
+				const bool is_inside = B_compacted_pixel_edge_is_inside.data[pixel_edge_idx].final;
+
+				B_compacted_pixel_edge_is_discarded.discarded[pixel_edge_idx] = !is_inside;
+				block_num_inside_edges[loop_bd.block_idx] += int(is_inside);
+
+				block_segment_key_offsets[loop_bd.block_idx] += int(B_compacted_pixel_edge_is_segment_head.segment_head[pixel_edge_idx]);
+				B_compacted_pixel_edge_segment_key.segment_key[pixel_edge_idx] = block_segment_key_offsets[loop_bd.block_idx] - 1;
+			}
+		}
+		barrier();
+		if (is_participating_stage_1) {
+			int total_num_inside_edges = 0;
+			total_num_segments = 0;
+			for (int block_idx = 0; block_idx < loop_bpd.num_blocks; ++block_idx) {
+				total_num_inside_edges += block_num_inside_edges[block_idx];
+
+				const int this_block_sum = block_segment_key_offsets[block_idx];
+				block_segment_key_offsets[block_idx] = total_num_segments;
+				total_num_segments += this_block_sum;
+			}
+
+			if (total_num_inside_edges == loop_desc.loop_len) {
+				total_num_segments = 1;
+				B_compacted_pixel_edge_is_segment_head.segment_head[loop_desc.compacted_head_idx] = true;
+			}
+
+			const PixelEdgeLoopSegmentsDescData segments_desc = PixelEdgeLoopSegmentsDescData(
+				total_num_segments,
+				total_num_inside_edges,
+				0,
+				0
+			);
+			B_pixel_edge_loop_segments_desc.data[loop_idx] = segments_desc;
+		}
+		barrier();
+		if (is_participating_stage_2) {
+			const int block_offset = block_segment_key_offsets[loop_bd.block_idx];
+			for (uint element_idx = loop_bd.first_element_idx; element_idx <= loop_bd.final_element_idx; ++element_idx) {
+				const uint pixel_edge_idx = loop_desc.compacted_head_idx + element_idx;
+
+				int this_element_segment_key = block_offset + B_compacted_pixel_edge_segment_key.segment_key[pixel_edge_idx];
+				B_compacted_pixel_edge_segment_key.segment_key[pixel_edge_idx] += block_offset;
+				if (total_num_segments > 0 && this_element_segment_key == -1) {
+					this_element_segment_key = total_num_segments - 1;
+				}
+				B_compacted_pixel_edge_segment_key.segment_key[pixel_edge_idx] = this_element_segment_key;
+			}
+		}
+		barrier();
+	}
+
+	if (total_num_segments > 0) {
+		const BlockPartitionDesc segments_bpd = create_block_partition_desc(gl_WorkGroupSize.x, total_num_segments);
+		const BlockDesc segments_bd = create_block_desc(segments_bpd, gl_LocalInvocationID.x);
+		const uint max_segments_per_loop = udiv_ceil(MAX_NUM_SEGMENTS_PER_LOOP, gl_WorkGroupSize.x);
+		// init
+		if (segments_bd.block_idx < segments_bpd.num_blocks) {
+			for (uint element_idx = segments_bd.first_element_idx; element_idx <= segments_bd.final_element_idx; ++element_idx) {
+				segment_length[element_idx] = 0;
+			}
+		}
+		barrier();
+		// count segment lengths
+		if (loop_bd.block_idx < loop_bpd.num_blocks) {
+			for (uint element_idx = loop_bd.first_element_idx; element_idx <= loop_bd.final_element_idx; ++element_idx) {
+				const uint pixel_edge_idx = loop_desc.compacted_head_idx + element_idx;
+				const int segment_key = B_compacted_pixel_edge_segment_key.segment_key[pixel_edge_idx];
+				if (B_compacted_pixel_edge_is_inside.data[pixel_edge_idx].final) {
+					atomicAdd(segment_length[segment_key], 1);
+				}
+			}
+		}
+		barrier();
+
+		// create mapping for segment head idxs
+		if (loop_bd.block_idx < loop_bpd.num_blocks) {
+			for (uint element_idx = loop_bd.first_element_idx; element_idx <= loop_bd.final_element_idx; ++element_idx) {
+				const uint pixel_edge_idx = loop_desc.compacted_head_idx + element_idx;
+				const int segment_key = B_compacted_pixel_edge_segment_key.segment_key[pixel_edge_idx];
+				if (B_compacted_pixel_edge_is_segment_head.segment_head[pixel_edge_idx]) {
+					segment_head_idx[segment_key] = int(pixel_edge_idx);
+				}
+			}
+		}
+		barrier();
+		// scatter head idx, tail idx, length
+		if (loop_bd.block_idx < loop_bpd.num_blocks) {
+			for (uint element_idx = loop_bd.first_element_idx; element_idx <= loop_bd.final_element_idx; ++element_idx) {
+				const uint pixel_edge_idx = loop_desc.compacted_head_idx + element_idx;
+				const int segment_key = B_compacted_pixel_edge_segment_key.segment_key[pixel_edge_idx];
+
+				const int segment_tail_idx = (
+					(segment_head_idx[segment_key] - loop_desc.compacted_head_idx) + (segment_length[segment_key] - 1)
+				) % loop_desc.loop_len + loop_desc.compacted_head_idx;
+
+				const int segment_local_idx = (
+					int(pixel_edge_idx) - segment_head_idx[segment_key]
+				) % loop_desc.loop_len;
+
+				B_compacted_pixel_edge_segment_desc.data[pixel_edge_idx] = CompactedPixelEdgeSegmentDescData(
+					segment_head_idx[segment_key],
+					segment_tail_idx,
+					segment_length[segment_key],
+					0
+				);
+			}
+		}
+		barrier();
+
+		// mark too short segments as discarded
+		if (segments_bd.block_idx < segments_bpd.num_blocks) {
+			for (uint element_idx = segments_bd.first_element_idx; element_idx <= segments_bd.final_element_idx; ++element_idx) {
+				segment_is_discarded[element_idx] = (
+					segment_length[element_idx] == 0 ||
+					segment_length[element_idx] < U_config.min_segment_length
+				);
+			}
+		}
+		barrier();
+
+		// get loop-local segment allocation idxs (stage 0)
+		if (segments_bd.block_idx < segments_bpd.num_blocks) {
+			block_num_inside_edges[segments_bd.block_idx] = 0;
+			for (uint element_idx = segments_bd.first_element_idx; element_idx <= segments_bd.final_element_idx; ++element_idx) {
+				segment_alloc_idx[element_idx] = block_num_inside_edges[segments_bd.block_idx];
+				if (!segment_is_discarded[element_idx]) {
+					block_num_inside_edges[segments_bd.block_idx] += segment_length[element_idx];
+				}
+			}
+		}
+		barrier();
+		// get loop-local segment allocation idxs (stage 1)
+		if (gl_LocalInvocationID.x == 0) {
+			total_num_segment_edges = 0;
+			for (int block_idx = 0; block_idx < segments_bpd.num_blocks; ++block_idx) {
+				const int this_block_sum = block_num_inside_edges[block_idx];
+				block_num_inside_edges[block_idx] += total_num_segment_edges;
+				total_num_segment_edges += this_block_sum;
+			}
+			B_pixel_edge_loop_segments_desc.data[loop_idx].num_segment_edges = total_num_segment_edges;
+		}
+		barrier();
+		// get loop-local segment allocation idxs (stage 2)
+		if (segments_bd.block_idx < segments_bpd.num_blocks) {
+			for (uint element_idx = segments_bd.first_element_idx; element_idx <= segments_bd.final_element_idx; ++element_idx) {
+				segment_alloc_idx[element_idx] += block_num_inside_edges[segments_bd.block_idx];
+			}
+		}
+		barrier();
+		// scatter
+		if (loop_bd.block_idx < loop_bpd.num_blocks) {
+			for (uint element_idx = loop_bd.first_element_idx; element_idx <= loop_bd.final_element_idx; ++element_idx) {
+				const uint pixel_edge_idx = loop_desc.compacted_head_idx + element_idx;
+				const int edge_segment_key = B_compacted_pixel_edge_segment_key.segment_key[pixel_edge_idx];
+				const CompactedPixelEdgeSegmentDescData edge_segment_desc  = B_compacted_pixel_edge_segment_desc.data[pixel_edge_idx];
+				const int segment_local_idx = compacted_pixel_edge_segment_local_idx(int(pixel_edge_idx), edge_segment_desc.segment_head_idx, loop_desc.loop_len);
+
+				B_compacted_pixel_edge_segment_desc.data[pixel_edge_idx].allocation_idx = segment_alloc_idx[edge_segment_key] + segment_local_idx;
+			}
+		}
+		barrier();
+
+		// get passed segment keys (stage 0)
+		if (segments_bd.block_idx < segments_bpd.num_blocks) {
+			block_segment_key_offsets[segments_bd.block_idx] = 0;
+			for (uint element_idx = segments_bd.first_element_idx; element_idx <= segments_bd.final_element_idx; ++element_idx) {
+				segment_passed_key[element_idx] = block_segment_key_offsets[segments_bd.block_idx];
+				block_segment_key_offsets[segments_bd.block_idx] += int(!segment_is_discarded[element_idx]);
+			}
+		}
+		barrier();
+		// get passed segment keys (stage 1)
+		if (gl_LocalInvocationID.x == 0) {
+			total_num_passed_segments = 0;
+			for (int block_idx = 0; block_idx < segments_bpd.num_blocks; ++block_idx) {
+				const int this_block_sum = block_segment_key_offsets[block_idx];
+				block_segment_key_offsets[block_idx] += total_num_passed_segments;
+				total_num_passed_segments += this_block_sum;
+			}
+		}
+		barrier();
+		// get passed segment keys (stage 2)
+		if (segments_bd.block_idx < segments_bpd.num_blocks) {
+			for (uint element_idx = segments_bd.first_element_idx; element_idx <= segments_bd.final_element_idx; ++element_idx) {
+				segment_passed_key[element_idx] += block_segment_key_offsets[segments_bd.block_idx];
+			}
+		}
+		barrier();
+		// update pixel edge to segment mapping with passed segment key
+		if (loop_bd.block_idx < loop_bpd.num_blocks) {
+			for (uint element_idx = loop_bd.first_element_idx; element_idx <= loop_bd.final_element_idx; ++element_idx) {
+				const uint pixel_edge_idx = loop_desc.compacted_head_idx + element_idx;
+				const int old_segment_key = B_compacted_pixel_edge_segment_key.segment_key[pixel_edge_idx];
+				B_compacted_pixel_edge_segment_key.segment_key[pixel_edge_idx] = segment_passed_key[old_segment_key];
+
+				if (segment_is_discarded[old_segment_key]) {
+					B_compacted_pixel_edge_is_discarded.discarded[pixel_edge_idx] = true;
+				}
+			}
+		}
+		barrier();
+	}
+}

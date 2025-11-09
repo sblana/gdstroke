@@ -7,6 +7,7 @@
 #define MAX_NUM_SPARSE_PIXEL_EDGES (MAX_NUM_CONTOUR_PIXELS * 4)
 #define MAX_NUM_COMPACTED_PIXEL_EDGES (MAX_NUM_SPARSE_PIXEL_EDGES)
 #define MAX_NUM_PIXEL_EDGE_LOOPS (MAX_NUM_COMPACTED_PIXEL_EDGES / 4)
+#define MAX_NUM_SEGMENTS_PER_LOOP (1024)
 
 layout(set = 4, binding = 0, std430) RESTRICT buffer PixelEdgeDescBuffer {
 	int buf_len_sparse_pixel_edge;
@@ -160,6 +161,44 @@ struct CompactedPixelEdgeIsInsideData {
 layout(set = 4, binding = 17, std430) RESTRICT buffer CompactedPixelEdgeIsInsideBuffer {
 	CompactedPixelEdgeIsInsideData data[MAX_NUM_COMPACTED_PIXEL_EDGES];
 } B_compacted_pixel_edge_is_inside;
+
+layout(set = 4, binding = 18, std430) RESTRICT buffer CompactedPixelEdgeIsSegmentHeadBuffer {
+	bool segment_head[MAX_NUM_COMPACTED_PIXEL_EDGES];
+} B_compacted_pixel_edge_is_segment_head;
+
+layout(set = 4, binding = 19, std430) RESTRICT buffer CompactedPixelEdgeSegmentKeyBuffer {
+	int segment_key[MAX_NUM_COMPACTED_PIXEL_EDGES];
+} B_compacted_pixel_edge_segment_key;
+
+layout(set = 4, binding = 20, std430) RESTRICT buffer CompactedPixelEdgeIsDiscardedBuffer {
+	bool discarded[MAX_NUM_COMPACTED_PIXEL_EDGES];
+} B_compacted_pixel_edge_is_discarded;
+
+int compacted_pixel_edge_segment_local_idx(in const int i_pixel_edge_idx, in const int i_segment_head_idx, in const int i_loop_len) {
+	return (int(i_pixel_edge_idx) - i_segment_head_idx) % i_loop_len;
+}
+
+struct CompactedPixelEdgeSegmentDescData {
+	int segment_head_idx;
+	int segment_tail_idx;
+	int segment_length;
+	int allocation_idx;
+};
+
+layout(set = 4, binding = 21, std430) RESTRICT buffer CompactedPixelEdgeSegmentDescBuffer {
+	CompactedPixelEdgeSegmentDescData data[MAX_NUM_COMPACTED_PIXEL_EDGES];
+} B_compacted_pixel_edge_segment_desc;
+
+struct PixelEdgeLoopSegmentsDescData {
+	int num_segments;
+	int num_inside_edges;
+	int num_segment_edges;
+	int pad;
+};
+
+layout(set = 4, binding = 22, std430) RESTRICT buffer PixelEdgeLoopSegmentsDescBuffer {
+	PixelEdgeLoopSegmentsDescData data[MAX_NUM_PIXEL_EDGE_LOOPS];
+} B_pixel_edge_loop_segments_desc;
 
 
 #endif // !PEL_BUFFERS_GLSLI

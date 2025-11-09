@@ -47,6 +47,8 @@ class GdstrokeEffect : public CompositorEffect {
 		SHADER_SE_OF_CURVE_FITTING,
 		SHADER_SE_IOT_TEST,
 		SHADER_SE_IOT_SMOOTHING,
+		SHADER_SE_S_SEGMENT_HEAD_ID,
+		SHADER_SE_S_LOOP_LOCAL_SEGMENTATION,
 		SHADER_DEBUG_DISPLAY_CONTOUR_FRAGMENTS,
 		SHADER_DEBUG_DISPLAY_CONTOUR_PIXELS,
 		SHADER_DEBUG_DISPLAY_SPARSE_PIXEL_EDGES,
@@ -93,4 +95,6 @@ public:
 	void  set_config_depth_bias(float p_value);
 	bool get_config_use_soft_depth_test_modification() const;
 	void set_config_use_soft_depth_test_modification(bool p_value);
+	uint32_t get_config_min_segment_length() const;
+	void set_config_min_segment_length(uint32_t p_value);
 };
