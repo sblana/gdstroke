@@ -63,7 +63,7 @@ void main() {
 					pixel_coord.x = smallest_point.x - calc_local_x_along_bresline(abs_diff, frag_idx);
 				}
 			}
-			const float interpolation_weight = (frag_idx + 0.5) / float(num_fragments);
+			const float interpolation_weight = (frag_idx + 0.5) / float(num_fragments) * (int(is_first_point_smallest) * 2 - 1) + int(!is_first_point_smallest);
 			const vec4 interpolated_ndc = perspective_interpolate_edge(verts_clipped_ndc, interpolation_weight);
 			const float godot_depth = interpolated_ndc.z;
 			B_contour_fragment_pixel_coord.pixel_coord[first_fragment_global_idx + frag_idx] = pixel_coord;
