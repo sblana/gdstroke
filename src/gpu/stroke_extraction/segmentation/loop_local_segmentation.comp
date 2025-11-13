@@ -40,7 +40,7 @@ void main() {
 				block_num_inside_edges[loop_bd.block_idx] += int(is_inside);
 
 				block_segment_key_offsets[loop_bd.block_idx] += int(B_compacted_pixel_edge_is_segment_head.segment_head[pixel_edge_idx]);
-				B_compacted_pixel_edge_segment_key.segment_key[pixel_edge_idx] = block_segment_key_offsets[loop_bd.block_idx] - 1;
+				B_compacted_pixel_edge_loop_local_segment_key.segment_key[pixel_edge_idx] = block_segment_key_offsets[loop_bd.block_idx] - 1;
 			}
 		}
 		barrier();
@@ -74,12 +74,12 @@ void main() {
 			for (uint element_idx = loop_bd.first_element_idx; element_idx <= loop_bd.final_element_idx; ++element_idx) {
 				const uint pixel_edge_idx = loop_desc.compacted_head_idx + element_idx;
 
-				int this_element_segment_key = block_offset + B_compacted_pixel_edge_segment_key.segment_key[pixel_edge_idx];
-				B_compacted_pixel_edge_segment_key.segment_key[pixel_edge_idx] += block_offset;
+				int this_element_segment_key = block_offset + B_compacted_pixel_edge_loop_local_segment_key.segment_key[pixel_edge_idx];
+				B_compacted_pixel_edge_loop_local_segment_key.segment_key[pixel_edge_idx] += block_offset;
 				if (total_num_segments > 0 && this_element_segment_key == -1) {
 					this_element_segment_key = total_num_segments - 1;
 				}
-				B_compacted_pixel_edge_segment_key.segment_key[pixel_edge_idx] = this_element_segment_key;
+				B_compacted_pixel_edge_loop_local_segment_key.segment_key[pixel_edge_idx] = this_element_segment_key;
 			}
 		}
 		barrier();
@@ -100,7 +100,7 @@ void main() {
 		if (loop_bd.block_idx < loop_bpd.num_blocks) {
 			for (uint element_idx = loop_bd.first_element_idx; element_idx <= loop_bd.final_element_idx; ++element_idx) {
 				const uint pixel_edge_idx = loop_desc.compacted_head_idx + element_idx;
-				const int segment_key = B_compacted_pixel_edge_segment_key.segment_key[pixel_edge_idx];
+				const int segment_key = B_compacted_pixel_edge_loop_local_segment_key.segment_key[pixel_edge_idx];
 				if (B_compacted_pixel_edge_is_inside.data[pixel_edge_idx].final) {
 					atomicAdd(segment_length[segment_key], 1);
 				}
@@ -112,7 +112,7 @@ void main() {
 		if (loop_bd.block_idx < loop_bpd.num_blocks) {
 			for (uint element_idx = loop_bd.first_element_idx; element_idx <= loop_bd.final_element_idx; ++element_idx) {
 				const uint pixel_edge_idx = loop_desc.compacted_head_idx + element_idx;
-				const int segment_key = B_compacted_pixel_edge_segment_key.segment_key[pixel_edge_idx];
+				const int segment_key = B_compacted_pixel_edge_loop_local_segment_key.segment_key[pixel_edge_idx];
 				if (B_compacted_pixel_edge_is_segment_head.segment_head[pixel_edge_idx]) {
 					segment_head_idx[segment_key] = int(pixel_edge_idx);
 				}
@@ -123,7 +123,7 @@ void main() {
 		if (loop_bd.block_idx < loop_bpd.num_blocks) {
 			for (uint element_idx = loop_bd.first_element_idx; element_idx <= loop_bd.final_element_idx; ++element_idx) {
 				const uint pixel_edge_idx = loop_desc.compacted_head_idx + element_idx;
-				const int segment_key = B_compacted_pixel_edge_segment_key.segment_key[pixel_edge_idx];
+				const int segment_key = B_compacted_pixel_edge_loop_local_segment_key.segment_key[pixel_edge_idx];
 
 				const int segment_tail_idx = (
 					(segment_head_idx[segment_key] - loop_desc.compacted_head_idx) + (segment_length[segment_key] - 1)
@@ -170,7 +170,7 @@ void main() {
 			total_num_segment_edges = 0;
 			for (int block_idx = 0; block_idx < segments_bpd.num_blocks; ++block_idx) {
 				const int this_block_sum = block_num_inside_edges[block_idx];
-				block_num_inside_edges[block_idx] += total_num_segment_edges;
+				block_num_inside_edges[block_idx] = total_num_segment_edges;
 				total_num_segment_edges += this_block_sum;
 			}
 			B_pixel_edge_loop_segments_desc.data[loop_idx].num_segment_edges = total_num_segment_edges;
@@ -187,8 +187,8 @@ void main() {
 		if (loop_bd.block_idx < loop_bpd.num_blocks) {
 			for (uint element_idx = loop_bd.first_element_idx; element_idx <= loop_bd.final_element_idx; ++element_idx) {
 				const uint pixel_edge_idx = loop_desc.compacted_head_idx + element_idx;
-				const int edge_segment_key = B_compacted_pixel_edge_segment_key.segment_key[pixel_edge_idx];
-				const CompactedPixelEdgeSegmentDescData edge_segment_desc  = B_compacted_pixel_edge_segment_desc.data[pixel_edge_idx];
+				const int edge_segment_key = B_compacted_pixel_edge_loop_local_segment_key.segment_key[pixel_edge_idx];
+				const CompactedPixelEdgeSegmentDescData edge_segment_desc = B_compacted_pixel_edge_segment_desc.data[pixel_edge_idx];
 				const int segment_local_idx = compacted_pixel_edge_segment_local_idx(int(pixel_edge_idx), edge_segment_desc.segment_head_idx, loop_desc.loop_len);
 
 				B_compacted_pixel_edge_segment_desc.data[pixel_edge_idx].allocation_idx = segment_alloc_idx[edge_segment_key] + segment_local_idx;
@@ -210,9 +210,10 @@ void main() {
 			total_num_passed_segments = 0;
 			for (int block_idx = 0; block_idx < segments_bpd.num_blocks; ++block_idx) {
 				const int this_block_sum = block_segment_key_offsets[block_idx];
-				block_segment_key_offsets[block_idx] += total_num_passed_segments;
+				block_segment_key_offsets[block_idx] = total_num_passed_segments;
 				total_num_passed_segments += this_block_sum;
 			}
+			B_pixel_edge_loop_segments_desc.data[loop_idx].num_segments = total_num_passed_segments;
 		}
 		barrier();
 		// get passed segment keys (stage 2)
@@ -226,8 +227,8 @@ void main() {
 		if (loop_bd.block_idx < loop_bpd.num_blocks) {
 			for (uint element_idx = loop_bd.first_element_idx; element_idx <= loop_bd.final_element_idx; ++element_idx) {
 				const uint pixel_edge_idx = loop_desc.compacted_head_idx + element_idx;
-				const int old_segment_key = B_compacted_pixel_edge_segment_key.segment_key[pixel_edge_idx];
-				B_compacted_pixel_edge_segment_key.segment_key[pixel_edge_idx] = segment_passed_key[old_segment_key];
+				const int old_segment_key = B_compacted_pixel_edge_loop_local_segment_key.segment_key[pixel_edge_idx];
+				B_compacted_pixel_edge_loop_local_segment_key.segment_key[pixel_edge_idx] = segment_passed_key[old_segment_key];
 
 				if (segment_is_discarded[old_segment_key]) {
 					B_compacted_pixel_edge_is_discarded.discarded[pixel_edge_idx] = true;

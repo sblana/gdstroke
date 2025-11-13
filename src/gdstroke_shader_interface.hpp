@@ -62,6 +62,8 @@ public:
 			DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_SPARSE_PIXEL_EDGES,
 			DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_COMPACTED_PIXEL_EDGES,
 			DISPATCH_INDIRECT_COMMANDS_WORKGROUP_TO_PIXEL_EDGE_LOOPS,
+			DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_SEGMENTS,
+			DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_SEGMENT_EDGES,
 			DISPATCH_INDIRECT_COMMANDS_MAX,
 		};
 
@@ -156,16 +158,23 @@ public:
 			BINDING_COMPACTED_PIXEL_EDGE_FILTERED_ORIENTATION_BUFFER,
 			BINDING_COMPACTED_PIXEL_EDGE_IS_INSIDE_BUFFER,
 			BINDING_COMPACTED_PIXEL_EDGE_IS_SEGMENT_HEAD_BUFFER,
-			BINDING_COMPACTED_PIXEL_EDGE_SEGMENT_KEY_BUFFER,
+			BINDING_COMPACTED_PIXEL_EDGE_LOOP_LOCAL_SEGMENT_KEY_BUFFER,
 			BINDING_COMPACTED_PIXEL_EDGE_IS_DISCARDED_BUFFER,
 			BINDING_COMPACTED_PIXEL_EDGE_SEGMENT_DESC_BUFFER,
+			BINDING_COMPACTED_PIXEL_EDGE_SEGMENT_KEY_BUFFER,
+			BINDING_COMPACTED_PIXEL_EDGE_TO_SEGMENT_EDGE_BUFFER,
 			BINDING_PIXEL_EDGE_LOOP_SEGMENTS_DESC_BUFFER,
+			BINDING_ALLOCATION_SEGMENT_BUFFER,
+			BINDING_SEGMENT_DESC_BUFFER,
+			BINDING_SEGMENT_EDGE_TO_COMPACTED_PIXEL_EDGE_BUFFER,
 			BINDING_MAX,
 		};
 
 		static constexpr uint32_t max_num_sparse_pixel_edges = ContourInterfaceSet::max_num_contour_pixels * 4;
 		static constexpr uint32_t max_num_compacted_pixel_edges = max_num_sparse_pixel_edges;
 		static constexpr uint32_t max_num_pixel_edge_loops = max_num_compacted_pixel_edges / 4;
+		static constexpr uint32_t max_num_segments = max_num_compacted_pixel_edges / 8;
+		static constexpr uint32_t max_num_segment_edges = max_num_segments * 4;
 
 		virtual Error create_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
 		virtual Error update_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;

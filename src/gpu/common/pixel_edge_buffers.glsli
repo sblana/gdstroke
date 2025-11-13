@@ -166,16 +166,20 @@ layout(set = 4, binding = 18, std430) RESTRICT buffer CompactedPixelEdgeIsSegmen
 	bool segment_head[MAX_NUM_COMPACTED_PIXEL_EDGES];
 } B_compacted_pixel_edge_is_segment_head;
 
-layout(set = 4, binding = 19, std430) RESTRICT buffer CompactedPixelEdgeSegmentKeyBuffer {
+layout(set = 4, binding = 19, std430) RESTRICT buffer CompactedPixelEdgeLoopLocalSegmentKeyBuffer {
 	int segment_key[MAX_NUM_COMPACTED_PIXEL_EDGES];
-} B_compacted_pixel_edge_segment_key;
+} B_compacted_pixel_edge_loop_local_segment_key;
 
 layout(set = 4, binding = 20, std430) RESTRICT buffer CompactedPixelEdgeIsDiscardedBuffer {
 	bool discarded[MAX_NUM_COMPACTED_PIXEL_EDGES];
 } B_compacted_pixel_edge_is_discarded;
 
 int compacted_pixel_edge_segment_local_idx(in const int i_pixel_edge_idx, in const int i_segment_head_idx, in const int i_loop_len) {
-	return (int(i_pixel_edge_idx) - i_segment_head_idx) % i_loop_len;
+	int local_idx = i_pixel_edge_idx - i_segment_head_idx;
+	if (local_idx < 0) {
+		local_idx += i_loop_len;
+	}
+	return local_idx; 
 }
 
 struct CompactedPixelEdgeSegmentDescData {
@@ -189,16 +193,44 @@ layout(set = 4, binding = 21, std430) RESTRICT buffer CompactedPixelEdgeSegmentD
 	CompactedPixelEdgeSegmentDescData data[MAX_NUM_COMPACTED_PIXEL_EDGES];
 } B_compacted_pixel_edge_segment_desc;
 
+layout(set = 4, binding = 22, std430) RESTRICT buffer CompactedPixelEdgeSegmentKeyBuffer {
+	int segment_key[MAX_NUM_COMPACTED_PIXEL_EDGES];
+} B_compacted_pixel_edge_segment_key;
+
+layout(set = 4, binding = 23, std430) RESTRICT buffer CompactedPixelEdgeToSegmentEdgeBuffer {
+	int idx[MAX_NUM_COMPACTED_PIXEL_EDGES];
+} B_compacted_pixel_edge_to_segment_edge;
+
 struct PixelEdgeLoopSegmentsDescData {
 	int num_segments;
 	int num_inside_edges;
 	int num_segment_edges;
-	int pad;
+	int first_segment_edge_idx;
 };
 
-layout(set = 4, binding = 22, std430) RESTRICT buffer PixelEdgeLoopSegmentsDescBuffer {
+layout(set = 4, binding = 24, std430) RESTRICT buffer PixelEdgeLoopSegmentsDescBuffer {
 	PixelEdgeLoopSegmentsDescData data[MAX_NUM_PIXEL_EDGE_LOOPS];
 } B_pixel_edge_loop_segments_desc;
 
+struct AllocationSegmentData {
+	int loop_segment_key_offset;
+	int loop_num_segment_edges_offset;
+};
+
+layout(set = 4, binding = 25, std430) RESTRICT buffer AllocationSegmentBuffer {
+	AllocationSegmentData data[MAX_NUM_PIXEL_EDGE_LOOPS];
+} B_allocation_segment;
+
+#define MAX_NUM_SEGMENTS (MAX_NUM_COMPACTED_PIXEL_EDGES / 8)
+#define MAX_NUM_SEGMENT_EDGES (MAX_NUM_SEGMENTS * 4)
+
+layout(set = 4, binding = 26, std430) RESTRICT buffer SegmentDescBuffer {
+	int num_segments;
+	int num_segment_edges;
+} B_segment_desc;
+
+layout(set = 4, binding = 27, std430) RESTRICT buffer SegmentEdgeToCompactedPixelEdgeBuffer {
+	int idx[MAX_NUM_SEGMENT_EDGES];
+} B_segment_edge_to_compacted_pixel_edge;
 
 #endif // !PEL_BUFFERS_GLSLI

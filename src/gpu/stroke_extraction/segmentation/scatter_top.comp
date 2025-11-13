@@ -1,0 +1,32 @@
+#version 450
+#extension GL_ARB_shading_language_include : enable
+
+layout(local_size_x = 64) in;
+
+#include "common/buffers.glsli"
+
+
+void main() {
+	const uint pixel_edge_idx = gl_GlobalInvocationID.x;
+
+	if (is_compacted_pixel_edge_idx_valid(int(pixel_edge_idx))) {
+		const uint loop_idx = B_compacted_pixel_edge_to_pixel_edge_loop.idx[pixel_edge_idx];
+		const PixelEdgeLoopDescData loop_desc = B_pixel_edge_loop_desc.data[loop_idx];
+		const PixelEdgeLoopSegmentsDescData loop_segments_desc = B_pixel_edge_loop_segments_desc.data[loop_idx];
+		const AllocationSegmentData alloc_data = B_allocation_segment.data[loop_idx];
+
+		const int loop_local_segment_key = B_compacted_pixel_edge_loop_local_segment_key.segment_key[pixel_edge_idx];
+		const CompactedPixelEdgeSegmentDescData pixel_edge_segment = B_compacted_pixel_edge_segment_desc.data[pixel_edge_idx];
+
+		const bool is_discarded = B_compacted_pixel_edge_is_discarded.discarded[pixel_edge_idx];
+
+		if (!is_discarded) {
+			B_compacted_pixel_edge_segment_key.segment_key[pixel_edge_idx] = loop_local_segment_key + alloc_data.loop_segment_key_offset;
+			B_compacted_pixel_edge_to_segment_edge.idx[pixel_edge_idx] = pixel_edge_segment.allocation_idx + alloc_data.loop_num_segment_edges_offset;
+		}
+		else {
+			B_compacted_pixel_edge_segment_key.segment_key[pixel_edge_idx] = -1;
+			B_compacted_pixel_edge_to_segment_edge.idx[pixel_edge_idx] = -1;
+		}
+	}
+}

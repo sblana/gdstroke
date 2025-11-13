@@ -18,7 +18,9 @@ struct DispatchIndirectCommand {
 #define E_DispatchIndirectCommand_INVOCATION_TO_SPARSE_PIXEL_EDGES       (4)
 #define E_DispatchIndirectCommand_INVOCATION_TO_COMPACTED_PIXEL_EDGES    (5)
 #define E_DispatchIndirectCommand_WORKGROUP_TO_PIXEL_EDGE_LOOPS          (6)
-#define E_DispatchIndirectCommand_MAX                                    (7)
+#define E_DispatchIndirectCommand_INVOCATION_TO_SEGMENTS                 (7)
+#define E_DispatchIndirectCommand_INVOCATION_TO_SEGMENT_EDGES            (8)
+#define E_DispatchIndirectCommand_MAX                                    (9)
 
 layout(set = 1, binding = 0, std430) RESTRICT buffer DispatchIndirectCommandsBuffer {
 	DispatchIndirectCommand cmds[E_DispatchIndirectCommand_MAX];
