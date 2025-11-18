@@ -71,6 +71,13 @@
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\stroke_extraction\segmentation\scatter_top.comp             -o %compileshadersTEMPDIR%se__s__scatter_top.spv
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\stroke_extraction\segmentation\scatter_bottom.comp          -o %compileshadersTEMPDIR%se__s__scatter_bottom.spv
 
+	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\stroke_extraction\stroke_generation\allocation.comp      -o %compileshadersTEMPDIR%se__sg__allocation.spv
+	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\stroke_extraction\stroke_generation\first_commander.comp -o %compileshadersTEMPDIR%se__sg__first_commander.spv
+	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\stroke_extraction\stroke_generation\scatter.comp         -o %compileshadersTEMPDIR%se__sg__scatter.spv
+
+	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% %compileshadersSTAGEVERT% -V .\stroke_rendering\default_shader.glsl -o %compileshadersTEMPDIR%sr__default_shader.vert.spv
+	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% %compileshadersSTAGEFRAG% -V .\stroke_rendering\default_shader.glsl -o %compileshadersTEMPDIR%sr__default_shader.frag.spv
+
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\debug\display_contour_fragments.comp     -o %compileshadersTEMPDIR%debug__display_contour_fragments.spv
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\debug\display_contour_pixels.comp        -o %compileshadersTEMPDIR%debug__display_contour_pixels.spv
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\debug\display_sparse_pixel_edges.comp    -o %compileshadersTEMPDIR%debug__display_sparse_pixel_edges.spv
@@ -135,6 +142,13 @@ gcc embed.c -o %compileshadersEMBED%
 	%compileshadersEMBED% %compileshadersTEMPDIR%se__s__clear.spv                   %compileshadersOUTPUTDIR%se__s__clear.spv.h                   SHADER_SPV_se__s__clear
 	%compileshadersEMBED% %compileshadersTEMPDIR%se__s__scatter_top.spv             %compileshadersOUTPUTDIR%se__s__scatter_top.spv.h             SHADER_SPV_se__s__scatter_top
 	%compileshadersEMBED% %compileshadersTEMPDIR%se__s__scatter_bottom.spv          %compileshadersOUTPUTDIR%se__s__scatter_bottom.spv.h          SHADER_SPV_se__s__scatter_bottom
+
+	%compileshadersEMBED% %compileshadersTEMPDIR%se__sg__allocation.spv      %compileshadersOUTPUTDIR%se__sg__allocation.spv.h      SHADER_SPV_se__sg__allocation
+	%compileshadersEMBED% %compileshadersTEMPDIR%se__sg__first_commander.spv %compileshadersOUTPUTDIR%se__sg__first_commander.spv.h SHADER_SPV_se__sg__first_commander
+	%compileshadersEMBED% %compileshadersTEMPDIR%se__sg__scatter.spv         %compileshadersOUTPUTDIR%se__sg__scatter.spv.h         SHADER_SPV_se__sg__scatter
+
+	%compileshadersEMBED% %compileshadersTEMPDIR%sr__default_shader.vert.spv %compileshadersOUTPUTDIR%sr__default_shader.vert.spv.h SHADER_SPV_sr__default_shader__vert
+	%compileshadersEMBED% %compileshadersTEMPDIR%sr__default_shader.frag.spv %compileshadersOUTPUTDIR%sr__default_shader.frag.spv.h SHADER_SPV_sr__default_shader__frag
 
 	%compileshadersEMBED% %compileshadersTEMPDIR%debug__display_contour_fragments.spv     %compileshadersOUTPUTDIR%debug__display_contour_fragments.spv.h     SHADER_SPV_debug__display_contour_fragments
 	%compileshadersEMBED% %compileshadersTEMPDIR%debug__display_contour_pixels.spv        %compileshadersOUTPUTDIR%debug__display_contour_pixels.spv.h        SHADER_SPV_debug__display_contour_pixels

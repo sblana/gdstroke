@@ -1,0 +1,46 @@
+#version 450
+#extension GL_ARB_shading_language_include : enable
+
+layout(local_size_x = 512) in;
+
+#include "common/buffers.glsli"
+#include "common/scans.glsli"
+
+
+shared int block_offsets[gl_WorkGroupSize.x];
+shared int total_sum;
+
+void main() {
+	const BlockPartitionDesc bpd = create_block_partition_desc(gl_WorkGroupSize.x, B_segment_desc.num_segments);
+	const BlockDesc bd = create_block_desc(bpd, gl_LocalInvocationID.x);
+
+	const bool is_participating_stage_0 = bd.block_idx < bpd.num_blocks;
+	const bool is_participating_stage_1 = gl_LocalInvocationID.x == 0;
+	const bool is_participating_stage_2 = bd.block_idx < bpd.num_blocks;
+
+	if (is_participating_stage_0) {
+		block_offsets[bd.block_idx] = 0;
+		for (uint element_idx = bd.first_element_idx; element_idx <= bd.final_element_idx; ++element_idx) {
+			B_segment_stroke_vertex_range.data[element_idx].num_vertices = max(B_segment_range.data[element_idx].num_segment_edges - 1, 1) * 2 * 3;
+
+			B_segment_stroke_vertex_range.data[element_idx].first_idx = block_offsets[bd.block_idx];
+			block_offsets[bd.block_idx] += B_segment_stroke_vertex_range.data[element_idx].num_vertices;
+		}
+	}
+	barrier();
+	if (is_participating_stage_1) {
+		total_sum = 0;
+		for (int block_idx = 0; block_idx < bpd.num_blocks; ++block_idx) {
+			const int this_block_sum = block_offsets[block_idx];
+			block_offsets[block_idx] = total_sum;
+			total_sum += this_block_sum;
+		}
+		B_stroke_desc.total_num_vertices = total_sum;
+	}
+	barrier();
+	if (is_participating_stage_2) {
+		for (uint element_idx = bd.first_element_idx; element_idx <= bd.final_element_idx; ++element_idx) {
+			B_segment_stroke_vertex_range.data[element_idx].first_idx += block_offsets[bd.block_idx];
+		}
+	}
+}

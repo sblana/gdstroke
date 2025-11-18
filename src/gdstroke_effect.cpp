@@ -60,6 +60,11 @@ using namespace godot;
 #include "gen/se__s__clear.spv.h"
 #include "gen/se__s__scatter_top.spv.h"
 #include "gen/se__s__scatter_bottom.spv.h"
+#include "gen/se__sg__allocation.spv.h"
+#include "gen/se__sg__first_commander.spv.h"
+#include "gen/se__sg__scatter.spv.h"
+#include "gen/sr__default_shader.vert.spv.h"
+#include "gen/sr__default_shader.frag.spv.h"
 #include "gen/debug__display_contour_fragments.spv.h"
 #include "gen/debug__display_contour_pixels.spv.h"
 #include "gen/debug__display_sparse_pixel_edges.spv.h"
@@ -70,6 +75,11 @@ using namespace godot;
 void const *hard_depth_test_embedded_data_stages[2] = {
 	&SHADER_SPV_cr__cpg__hard_depth_test__vert,
 	&SHADER_SPV_cr__cpg__hard_depth_test__frag,
+};
+
+void const *stroke_rendering_default_shader_embedded_data_stages[2] = {
+	&SHADER_SPV_sr__default_shader__vert,
+	&SHADER_SPV_sr__default_shader__frag,
 };
 
 void const *GdstrokeEffect::shader_to_embedded_data[Shader::SHADER_MAX] = {
@@ -117,6 +127,10 @@ void const *GdstrokeEffect::shader_to_embedded_data[Shader::SHADER_MAX] = {
 	&SHADER_SPV_se__s__clear,
 	&SHADER_SPV_se__s__scatter_top,
 	&SHADER_SPV_se__s__scatter_bottom,
+	&SHADER_SPV_se__sg__allocation,
+	&SHADER_SPV_se__sg__first_commander,
+	&SHADER_SPV_se__sg__scatter,
+	stroke_rendering_default_shader_embedded_data_stages,
 	&SHADER_SPV_debug__display_contour_fragments,
 	&SHADER_SPV_debug__display_contour_pixels,
 	&SHADER_SPV_debug__display_sparse_pixel_edges,
@@ -163,6 +177,12 @@ void GdstrokeEffect::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_config_use_soft_depth_test_modification"),            &GdstrokeEffect::get_config_use_soft_depth_test_modification);
 	ClassDB::bind_method(D_METHOD("set_config_min_segment_length", "p_value"), &GdstrokeEffect::set_config_min_segment_length);
 	ClassDB::bind_method(D_METHOD("get_config_min_segment_length"),            &GdstrokeEffect::get_config_min_segment_length);
+	ClassDB::bind_method(D_METHOD("set_config_stroke_width", "p_value"), &GdstrokeEffect::set_config_stroke_width);
+	ClassDB::bind_method(D_METHOD("get_config_stroke_width"),            &GdstrokeEffect::get_config_stroke_width);
+	ClassDB::bind_method(D_METHOD("set_config_stroke_width_factor_start", "p_value"), &GdstrokeEffect::set_config_stroke_width_factor_start);
+	ClassDB::bind_method(D_METHOD("get_config_stroke_width_factor_start"),            &GdstrokeEffect::get_config_stroke_width_factor_start);
+	ClassDB::bind_method(D_METHOD("set_config_stroke_width_factor_end", "p_value"), &GdstrokeEffect::set_config_stroke_width_factor_end);
+	ClassDB::bind_method(D_METHOD("get_config_stroke_width_factor_end"),            &GdstrokeEffect::get_config_stroke_width_factor_end);
 
 	ADD_PROPERTY(
 		PropertyInfo(
@@ -185,6 +205,27 @@ void GdstrokeEffect::_bind_methods() {
 		),
 		"set_config_min_segment_length",
 		"get_config_min_segment_length"
+	);
+	ADD_PROPERTY(
+		PropertyInfo(
+			Variant::FLOAT, "stroke_width"
+		),
+		"set_config_stroke_width",
+		"get_config_stroke_width"
+	);
+	ADD_PROPERTY(
+		PropertyInfo(
+			Variant::FLOAT, "stroke_width_factor_start"
+		),
+		"set_config_stroke_width_factor_start",
+		"get_config_stroke_width_factor_start"
+	);
+	ADD_PROPERTY(
+		PropertyInfo(
+			Variant::FLOAT, "stroke_width_factor_end"
+		),
+		"set_config_stroke_width_factor_end",
+		"get_config_stroke_width_factor_end"
 	);
 }
 
@@ -212,7 +253,7 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		this->debug_interface_set.create_resources(rd, p_render_data);
 
 		for (int i = 0; i < Shader::SHADER_MAX; ++i) {
-			if (i != Shader::SHADER_CR_CPG_HARD_DEPTH_TEST) {
+			if (i != Shader::SHADER_CR_CPG_HARD_DEPTH_TEST && i != Shader::SHADER_SR_DEFAULT_SHADER) {
 				COMPILE_SHADER(rd, Shader(i));
 				this->_pipelines[Shader(i)] = rd->compute_pipeline_create(this->_compiled_shaders[Shader(i)]);
 			}
@@ -220,6 +261,8 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 
 		COMPILE_DRAW_SHADER(rd, Shader::SHADER_CR_CPG_HARD_DEPTH_TEST);
 		_pipelines[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST] = hard_depth_test_resources.create_render_pipeline(rd, _compiled_shaders[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST]);
+		COMPILE_DRAW_SHADER(rd, Shader::SHADER_SR_DEFAULT_SHADER);
+		_pipelines[Shader::SHADER_SR_DEFAULT_SHADER] = stroke_rendering_resources.create_render_pipeline(rd, p_render_data, _compiled_shaders[Shader::SHADER_SR_DEFAULT_SHADER]);
 
 		_ready = true;
 	}
@@ -469,7 +512,7 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		list = rd->compute_list_begin();
 		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CC_D_HEAD_ALLOCATION]);
 		this->bind_sets(rd, list);
-		this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_SPARSE_PIXEL_EDGES);
+		rd->compute_list_dispatch(list, 1, 1, 1);
 		rd->compute_list_end();
 
 		list = rd->compute_list_begin();
@@ -582,14 +625,44 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 	}
 	rd->draw_command_end_label();
 
-	rd->draw_command_begin_label("debug", Color(0.2, 0.2, 0.2));
+	rd->draw_command_begin_label("Stroke Generation", Color(1.0, 0.3, 1.0));
 	{
 		list = rd->compute_list_begin();
-		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_DEBUG_DISPLAY_SEGMENT_EDGES]);
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_SE_SG_ALLOCATION]);
 		this->bind_sets(rd, list);
-		this->bind_sets_debug(rd, list);
+		rd->compute_list_dispatch(list, 1, 1, 1);
+		rd->compute_list_end();
+
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_SE_SG_FIRST_COMMANDER]);
+		this->bind_sets(rd, list);
+		this->bind_sets_commander(rd, list);
+		rd->compute_list_dispatch(list, 1, 1, 1);
+		rd->compute_list_end();
+
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_SE_SG_SCATTER]);
+		this->bind_sets(rd, list);
 		this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_SEGMENT_EDGES);
 		rd->compute_list_end();
+	}
+	rd->draw_command_end_label();
+
+	rd->draw_command_begin_label("Stroke Rendering", Color(1.0, 0.3, 1.0));
+	{
+		list = rd->draw_list_begin(this->stroke_rendering_resources.get_framebuffer(rd, p_render_data), RenderingDevice::DrawFlags::DRAW_DEFAULT_ALL);
+		rd->draw_list_bind_render_pipeline(list, this->_pipelines[Shader::SHADER_SR_DEFAULT_SHADER]);
+		this->scene_interface_set.bind_to_draw_list(rd, list, this->_compiled_shaders[Shader::SHADER_SR_DEFAULT_SHADER]);
+		this->mesh_interface_set.bind_to_draw_list(rd, list, this->_compiled_shaders[Shader::SHADER_SR_DEFAULT_SHADER]);
+		this->contour_interface_set.bind_to_draw_list(rd, list, this->_compiled_shaders[Shader::SHADER_SR_DEFAULT_SHADER]);
+		this->pixel_edge_interface_set.bind_to_draw_list(rd, list, this->_compiled_shaders[Shader::SHADER_SR_DEFAULT_SHADER]);
+		this->command_interface_set.draw_indirect(rd, list, DrawIndirectCommands::DRAW_INDIRECT_COMMANDS_STROKE_RENDERING);
+		rd->draw_list_end();
+	}
+	rd->draw_command_end_label();
+
+	rd->draw_command_begin_label("debug", Color(0.2, 0.2, 0.2));
+	{
 	}
 	rd->draw_command_end_label();
 }
@@ -616,4 +689,28 @@ uint32_t GdstrokeEffect::get_config_min_segment_length() const {
 
 void GdstrokeEffect::set_config_min_segment_length(uint32_t p_value) {
 	scene_interface_set.config_data.min_segment_length = uint32_t(p_value);
+}
+
+float GdstrokeEffect::get_config_stroke_width() const {
+	return scene_interface_set.config_data.stroke_width;
+}
+
+void  GdstrokeEffect::set_config_stroke_width(float p_value) {
+	scene_interface_set.config_data.stroke_width = p_value;
+}
+
+float GdstrokeEffect::get_config_stroke_width_factor_start() const {
+	return scene_interface_set.config_data.stroke_width_factor_start;
+}
+
+void  GdstrokeEffect::set_config_stroke_width_factor_start(float p_value) {
+	scene_interface_set.config_data.stroke_width_factor_start = p_value;
+}
+
+float GdstrokeEffect::get_config_stroke_width_factor_end() const {
+	return scene_interface_set.config_data.stroke_width_factor_end;
+}
+
+void  GdstrokeEffect::set_config_stroke_width_factor_end(float p_value) {
+	scene_interface_set.config_data.stroke_width_factor_end = p_value;
 }

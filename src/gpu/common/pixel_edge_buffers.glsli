@@ -8,6 +8,8 @@
 #define MAX_NUM_COMPACTED_PIXEL_EDGES (MAX_NUM_SPARSE_PIXEL_EDGES)
 #define MAX_NUM_PIXEL_EDGE_LOOPS (MAX_NUM_COMPACTED_PIXEL_EDGES / 4)
 #define MAX_NUM_SEGMENTS_PER_LOOP (1024)
+#define MAX_NUM_SEGMENTS (MAX_NUM_COMPACTED_PIXEL_EDGES / 8)
+#define MAX_NUM_SEGMENT_EDGES (MAX_NUM_SEGMENTS * 4)
 
 layout(set = 4, binding = 0, std430) RESTRICT buffer PixelEdgeDescBuffer {
 	int buf_len_sparse_pixel_edge;
@@ -179,7 +181,7 @@ int compacted_pixel_edge_segment_local_idx(in const int i_pixel_edge_idx, in con
 	if (local_idx < 0) {
 		local_idx += i_loop_len;
 	}
-	return local_idx; 
+	return local_idx;
 }
 
 struct CompactedPixelEdgeSegmentDescData {
@@ -221,9 +223,6 @@ layout(set = 4, binding = 25, std430) RESTRICT buffer AllocationSegmentBuffer {
 	AllocationSegmentData data[MAX_NUM_PIXEL_EDGE_LOOPS];
 } B_allocation_segment;
 
-#define MAX_NUM_SEGMENTS (MAX_NUM_COMPACTED_PIXEL_EDGES / 8)
-#define MAX_NUM_SEGMENT_EDGES (MAX_NUM_SEGMENTS * 4)
-
 layout(set = 4, binding = 26, std430) RESTRICT buffer SegmentDescBuffer {
 	int num_segments;
 	int num_segment_edges;
@@ -232,5 +231,47 @@ layout(set = 4, binding = 26, std430) RESTRICT buffer SegmentDescBuffer {
 layout(set = 4, binding = 27, std430) RESTRICT buffer SegmentEdgeToCompactedPixelEdgeBuffer {
 	int idx[MAX_NUM_SEGMENT_EDGES];
 } B_segment_edge_to_compacted_pixel_edge;
+
+struct SegmentRangeData {
+	int first_idx;
+	int num_segment_edges;
+};
+
+layout(set = 4, binding = 28, std430) RESTRICT buffer SegmentRangeBuffer {
+	SegmentRangeData data[MAX_NUM_SEGMENTS];
+} B_segment_range;
+
+
+#define MAX_NUM_STROKE_VERTICES (MAX_NUM_SEGMENT_EDGES * 4)
+
+layout(set = 4, binding = 29, std430) RESTRICT buffer StrokeDescBuffer {
+	int total_num_vertices;
+} B_stroke_desc;
+
+struct SegmentStrokeVertexRangeData {
+	int first_idx;
+	int num_vertices;
+};
+
+layout(set = 4, binding = 30, std430) RESTRICT buffer SegmentStrokeVertexRangeBuffer {
+	SegmentStrokeVertexRangeData data[MAX_NUM_SEGMENTS];
+} B_segment_stroke_vertex_range;
+
+layout(set = 4, binding = 31, std430) RESTRICT buffer StrokeVertexToSegmentEdgeBuffer {
+	int idx[MAX_NUM_STROKE_VERTICES];
+} B_stroke_vertex_to_segment_edge;
+
+#define StrokeVertexKind uint
+#define E_StrokeVertexKind_BACK_LEFT   (0u)
+#define E_StrokeVertexKind_BACK_RIGHT  (1u)
+#define E_StrokeVertexKind_FRONT_LEFT  (2u)
+#define E_StrokeVertexKind_FRONT_RIGHT (3u)
+#define E_StrokeVertexKind_MAX         (4u)
+#define E_StrokeVertexKind_RIGHT_MASK (1u << 0u)
+#define E_StrokeVertexKind_FRONT_MASK (1u << 1u)
+
+layout(set = 4, binding = 32, std430) RESTRICT buffer StrokeVertexKindBuffer {
+	StrokeVertexKind kind[MAX_NUM_STROKE_VERTICES];
+} B_stroke_vertex_kind;
 
 #endif // !PEL_BUFFERS_GLSLI

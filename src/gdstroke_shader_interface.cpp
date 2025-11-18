@@ -49,7 +49,7 @@ Error GdstrokeShaderInterface::SceneInterfaceSet::create_resources(RenderingDevi
 	resources = {};
 	resources.resize(Binding::BINDING_MAX);
 	resources[Binding::BINDING_SCENE_DATA_UNIFORM] = p_render_data->get_render_scene_data()->get_uniform_buffer();
-	resources[Binding::BINDING_CONFIG_UNIFORM] = p_rd->uniform_buffer_create(sizeof(float) * 4);
+	resources[Binding::BINDING_CONFIG_UNIFORM] = p_rd->uniform_buffer_create(sizeof(float) * 8);
 	return Error::OK;
 }
 
@@ -64,6 +64,9 @@ Error GdstrokeShaderInterface::SceneInterfaceSet::update_resources(RenderingDevi
 	config_data_bytes.encode_float(0, config_data.depth_bias);
 	config_data_bytes.encode_u32(4, config_data.use_soft_depth_test_modification);
 	config_data_bytes.encode_u32(8, config_data.min_segment_length);
+	config_data_bytes.encode_float(12, config_data.stroke_width);
+	config_data_bytes.encode_float(16, config_data.stroke_width_factor_start);
+	config_data_bytes.encode_float(20, config_data.stroke_width_factor_end);
 
 	p_rd->buffer_update((RID const&)resources[Binding::BINDING_CONFIG_UNIFORM], 0, sizeof(ConfigData), config_data_bytes);
 	return Error::OK;
@@ -321,6 +324,15 @@ Error GdstrokeShaderInterface::PixelEdgeInterfaceSet::create_resources(Rendering
 
 	resources[Binding::BINDING_SEGMENT_EDGE_TO_COMPACTED_PIXEL_EDGE_BUFFER] = p_rd->storage_buffer_create(sizeof( int32_t) * 1 * max_num_segment_edges);
 
+	resources[Binding::BINDING_SEGMENT_RANGE_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 2 * max_num_segments);
+
+	resources[Binding::BINDING_STROKE_DESC_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 1);
+
+	resources[Binding::BINDING_SEGMENT_STROKE_VERTEX_RANGE_BUFFER  ] = p_rd->storage_buffer_create(sizeof(int32_t) * 2 * max_num_segments);
+
+	resources[Binding::BINDING_STROKE_VERTEX_TO_SEGMENT_EDGE_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 1 * max_num_stroke_vertices);
+	resources[Binding::BINDING_STROKE_VERTEX_KIND_BUFFER           ] = p_rd->storage_buffer_create(sizeof(int32_t) * 1 * max_num_stroke_vertices);
+
 	return Error::OK;
 }
 
@@ -456,4 +468,52 @@ void GdstrokeShaderInterface::HardDepthTestResources::clear_attachments(Renderin
 	TypedArray<RID> attachments = get_attachments(p_rd, p_render_data);
 	p_rd->texture_clear(attachments[0], Color(0, 0, 0, 0), 0, 1, 0, 1);
 	p_rd->texture_clear(attachments[1], Color(0, 0, 0, 0), 0, 1, 0, 1);
+}
+
+
+TypedArray<RID> GdstrokeShaderInterface::StrokeRenderingResources::get_attachments(RenderingDevice *p_rd, RenderData *p_render_data) {
+	ERR_FAIL_COND_V(p_render_data == nullptr, {});
+	Ref<RenderSceneBuffersRD> render_scene_buffers = (Ref<RenderSceneBuffersRD>)p_render_data->get_render_scene_buffers();
+
+	return { render_scene_buffers->get_color_texture(), render_scene_buffers->get_depth_texture() };
+}
+
+int64_t GdstrokeShaderInterface::StrokeRenderingResources::get_framebuffer_format(RenderingDevice *p_rd, RenderData *p_render_data) {
+	if (framebuffer_format == RenderingDevice::INVALID_FORMAT_ID) {
+		Ref<RDAttachmentFormat> attachment_format_color = Ref(memnew(RDAttachmentFormat));
+		attachment_format_color->set_format(p_rd->texture_get_format(get_attachments(p_rd, p_render_data)[0])->get_format());
+		attachment_format_color->set_samples(p_rd->texture_get_format(get_attachments(p_rd, p_render_data)[0])->get_samples());
+		attachment_format_color->set_usage_flags(p_rd->texture_get_format(get_attachments(p_rd, p_render_data)[0])->get_usage_bits());
+
+		Ref<RDAttachmentFormat> attachment_format_depth = Ref(memnew(RDAttachmentFormat));
+		attachment_format_depth->set_format(p_rd->texture_get_format(get_attachments(p_rd, p_render_data)[1])->get_format());
+		attachment_format_depth->set_samples(p_rd->texture_get_format(get_attachments(p_rd, p_render_data)[1])->get_samples());
+		attachment_format_depth->set_usage_flags(p_rd->texture_get_format(get_attachments(p_rd, p_render_data)[1])->get_usage_bits());
+
+		framebuffer_format = p_rd->framebuffer_format_create({ attachment_format_color, attachment_format_depth }, 1);
+	}
+	return framebuffer_format;
+}
+
+RID GdstrokeShaderInterface::StrokeRenderingResources::get_framebuffer(RenderingDevice *p_rd, RenderData *p_render_data) {
+	// Ref<RDFramebufferPass> framebuffer_pass = Ref(memnew(RDFramebufferPass));
+	// framebuffer_pass->set_color_attachments({0});
+	// framebuffer_pass->set_depth_attachment(1);
+	RID framebuffer = FramebufferCacheRD::get_cache_multipass(get_attachments(p_rd, p_render_data), {}, 1);
+	ERR_FAIL_COND_V(get_framebuffer_format(p_rd, p_render_data) != p_rd->framebuffer_get_format(framebuffer), {});
+	return framebuffer;
+}
+
+RID GdstrokeShaderInterface::StrokeRenderingResources::create_render_pipeline(RenderingDevice *p_rd, RenderData *p_render_data, RID const &p_shader) {
+	Ref<RDPipelineRasterizationState> pipeline_rasterization_state = Ref(memnew(RDPipelineRasterizationState));
+	Ref<RDPipelineMultisampleState> pipeline_multisample_state = Ref(memnew(RDPipelineMultisampleState));
+	Ref<RDPipelineDepthStencilState> pipeline_depth_stencil_state = Ref(memnew(RDPipelineDepthStencilState));
+
+	Ref<RDPipelineColorBlendState> pipeline_color_blend_state = Ref(memnew(RDPipelineColorBlendState));
+	Ref<RDPipelineColorBlendStateAttachment> pipeline_color_blend_state_attachment = Ref(memnew(RDPipelineColorBlendStateAttachment));
+	pipeline_color_blend_state_attachment->set_src_color_blend_factor(RenderingDevice::BlendFactor::BLEND_FACTOR_ONE);
+	pipeline_color_blend_state_attachment->set_dst_color_blend_factor(RenderingDevice::BlendFactor::BLEND_FACTOR_ZERO);
+	pipeline_color_blend_state->set_attachments({ pipeline_color_blend_state_attachment });
+
+	return p_rd->render_pipeline_create(p_shader, get_framebuffer_format(p_rd, p_render_data), RenderingDevice::INVALID_FORMAT_ID, RenderingDevice::RenderPrimitive::RENDER_PRIMITIVE_TRIANGLES, pipeline_rasterization_state, pipeline_multisample_state, pipeline_depth_stencil_state, pipeline_color_blend_state);
 }

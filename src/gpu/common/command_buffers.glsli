@@ -34,8 +34,9 @@ struct DrawIndirectCommand {
 	uint first_instance;
 };
 
-#define E_DrawIndirectCommand_HARD_DEPTH_TEST (0)
-#define E_DrawIndirectCommand_MAX             (1)
+#define E_DrawIndirectCommand_HARD_DEPTH_TEST  (0)
+#define E_DrawIndirectCommand_STROKE_RENDERING (1)
+#define E_DrawIndirectCommand_MAX              (2)
 
 layout(set = 1, binding = 1, std430) RESTRICT buffer DrawIndirectCommandsBuffer {
 	DrawIndirectCommand cmds[E_DrawIndirectCommand_MAX];

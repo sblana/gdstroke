@@ -1,0 +1,20 @@
+#version 450
+#extension GL_ARB_shading_language_include : enable
+
+layout(local_size_x = 1) in;
+
+#include "common/buffers.glsli"
+#include "common/command_buffers.glsli"
+#include "common/math.glsli"
+
+
+void main() {
+	if (gl_GlobalInvocationID.x == 0) {
+		DrawIndirectCommand command;
+		command.vertex_count = B_stroke_desc.total_num_vertices;
+		command.instance_count = 1;
+		command.first_vertex = 0;
+		command.first_instance = 0;
+		B_draw_indirect_commands.cmds[E_DrawIndirectCommand_STROKE_RENDERING] = command;
+	}
+}

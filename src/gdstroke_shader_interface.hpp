@@ -37,6 +37,9 @@ public:
 			float depth_bias = 0.0;
 			uint32_t use_soft_depth_test_modification = false;
 			uint32_t min_segment_length = 32;
+			float stroke_width = 1.0;
+			float stroke_width_factor_start = 1.0;
+			float stroke_width_factor_end = 0.5;
 		};
 
 		ConfigData config_data = {};
@@ -69,6 +72,7 @@ public:
 
 		enum DrawIndirectCommands : uint32_t {
 			DRAW_INDIRECT_COMMANDS_HARD_DEPTH_TEST = 0,
+			DRAW_INDIRECT_COMMANDS_STROKE_RENDERING,
 			DRAW_INDIRECT_COMMANDS_MAX,
 		};
 
@@ -167,6 +171,11 @@ public:
 			BINDING_ALLOCATION_SEGMENT_BUFFER,
 			BINDING_SEGMENT_DESC_BUFFER,
 			BINDING_SEGMENT_EDGE_TO_COMPACTED_PIXEL_EDGE_BUFFER,
+			BINDING_SEGMENT_RANGE_BUFFER,
+			BINDING_STROKE_DESC_BUFFER,
+			BINDING_SEGMENT_STROKE_VERTEX_RANGE_BUFFER,
+			BINDING_STROKE_VERTEX_TO_SEGMENT_EDGE_BUFFER,
+			BINDING_STROKE_VERTEX_KIND_BUFFER,
 			BINDING_MAX,
 		};
 
@@ -175,6 +184,7 @@ public:
 		static constexpr uint32_t max_num_pixel_edge_loops = max_num_compacted_pixel_edges / 4;
 		static constexpr uint32_t max_num_segments = max_num_compacted_pixel_edges / 8;
 		static constexpr uint32_t max_num_segment_edges = max_num_segments * 4;
+		static constexpr uint32_t max_num_stroke_vertices = max_num_segment_edges * 4;
 
 		virtual Error create_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
 		virtual Error update_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
@@ -208,6 +218,15 @@ public:
 		RID create_render_pipeline(RenderingDevice *p_rd, RID const &p_shader);
 
 		void clear_attachments(RenderingDevice *p_rd, RenderData *p_render_data);
+	};
+
+	struct StrokeRenderingResources {
+		int64_t framebuffer_format = RenderingDevice::INVALID_FORMAT_ID;
+
+		TypedArray<RID> get_attachments(RenderingDevice *p_rd, RenderData *p_render_data);
+		int64_t get_framebuffer_format(RenderingDevice *p_rd, RenderData *p_render_data);
+		RID get_framebuffer(RenderingDevice *p_rd, RenderData *p_render_data);
+		RID create_render_pipeline(RenderingDevice *p_rd, RenderData *p_render_data, RID const &p_shader);
 	};
 
 private:

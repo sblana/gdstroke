@@ -54,6 +54,10 @@ class GdstrokeEffect : public CompositorEffect {
 		SHADER_SE_S_CLEAR,
 		SHADER_SE_S_SCATTER_TOP,
 		SHADER_SE_S_SCATTER_BOTTOM,
+		SHADER_SE_SG_ALLOCATION,
+		SHADER_SE_SG_FIRST_COMMANDER,
+		SHADER_SE_SG_SCATTER,
+		SHADER_SR_DEFAULT_SHADER,
 		SHADER_DEBUG_DISPLAY_CONTOUR_FRAGMENTS,
 		SHADER_DEBUG_DISPLAY_CONTOUR_PIXELS,
 		SHADER_DEBUG_DISPLAY_SPARSE_PIXEL_EDGES,
@@ -77,9 +81,11 @@ private:
 	GdstrokeShaderInterface::DebugInterfaceSet debug_interface_set = {};
 
 	GdstrokeShaderInterface::HardDepthTestResources hard_depth_test_resources = {};
+	GdstrokeShaderInterface::StrokeRenderingResources stroke_rendering_resources = {};
 
 	using DispatchIndirectCommands = GdstrokeShaderInterface::CommandInterfaceSet::DispatchIndirectCommands;
 	using DrawIndirectCommands = GdstrokeShaderInterface::CommandInterfaceSet::DrawIndirectCommands;
+	using RasterizationMode = GdstrokeShaderInterface::SceneInterfaceSet::RasterizationMode;
 
 	void bind_sets(RenderingDevice *p_rd, int64_t p_compute_list) const;
 	void bind_sets_commander(RenderingDevice *p_rd, int64_t p_compute_list) const;
@@ -103,4 +109,10 @@ public:
 	void set_config_use_soft_depth_test_modification(bool p_value);
 	uint32_t get_config_min_segment_length() const;
 	void set_config_min_segment_length(uint32_t p_value);
+	float get_config_stroke_width() const;
+	void  set_config_stroke_width(float p_value);
+	float get_config_stroke_width_factor_start() const;
+	void  set_config_stroke_width_factor_start(float p_value);
+	float get_config_stroke_width_factor_end() const;
+	void  set_config_stroke_width_factor_end(float p_value);
 };
