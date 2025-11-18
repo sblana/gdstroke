@@ -85,7 +85,6 @@ private:
 
 	using DispatchIndirectCommands = GdstrokeShaderInterface::CommandInterfaceSet::DispatchIndirectCommands;
 	using DrawIndirectCommands = GdstrokeShaderInterface::CommandInterfaceSet::DrawIndirectCommands;
-	using RasterizationMode = GdstrokeShaderInterface::SceneInterfaceSet::RasterizationMode;
 
 	void bind_sets(RenderingDevice *p_rd, int64_t p_compute_list) const;
 	void bind_sets_commander(RenderingDevice *p_rd, int64_t p_compute_list) const;
