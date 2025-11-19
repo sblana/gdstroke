@@ -33,6 +33,6 @@ public:
 private:
 	static GdstrokeServer *singleton;
 
-	static ContourMesh contour_mesh;
+	static ContourMesh* contour_mesh;
 	static MeshInstance3D *contour_instance;
 };

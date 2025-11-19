@@ -46,7 +46,7 @@ void GdstrokeShaderInterface::InterfaceSet::bind_to_draw_list(RenderingDevice *p
 Error GdstrokeShaderInterface::SceneInterfaceSet::create_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
 	ERR_FAIL_COND_V(p_render_data == nullptr, Error::FAILED);
 	ERR_FAIL_COND_V(!p_render_data->get_render_scene_data()->get_uniform_buffer().is_valid(), Error::FAILED);
-	resources = {};
+	resources.clear();
 	resources.resize(Binding::BINDING_MAX);
 	resources[Binding::BINDING_SCENE_DATA_UNIFORM] = p_render_data->get_render_scene_data()->get_uniform_buffer();
 	resources[Binding::BINDING_CONFIG_UNIFORM] = p_rd->uniform_buffer_create(sizeof(float) * 8);
@@ -59,7 +59,7 @@ Error GdstrokeShaderInterface::SceneInterfaceSet::update_resources(RenderingDevi
 	ERR_FAIL_COND_V(!p_render_data->get_render_scene_data()->get_uniform_buffer().is_valid(), Error::FAILED);
 	resources[Binding::BINDING_SCENE_DATA_UNIFORM] = p_render_data->get_render_scene_data()->get_uniform_buffer();
 
-	PackedByteArray config_data_bytes = {};
+	PackedByteArray config_data_bytes;
 	config_data_bytes.resize(sizeof(ConfigData));
 	config_data_bytes.encode_float(0, config_data.depth_bias);
 	config_data_bytes.encode_u32(4, config_data.use_soft_depth_test_modification);
@@ -73,7 +73,7 @@ Error GdstrokeShaderInterface::SceneInterfaceSet::update_resources(RenderingDevi
 }
 
 void GdstrokeShaderInterface::SceneInterfaceSet::make_bindings() {
-	bindings = {};
+	bindings.clear();
 	ERR_FAIL_COND(resources.size() != Binding::BINDING_MAX);
 	bindings.append(new_uniform(Binding::BINDING_SCENE_DATA_UNIFORM, RenderingDevice::UniformType::UNIFORM_TYPE_UNIFORM_BUFFER, resources[Binding::BINDING_SCENE_DATA_UNIFORM]));
 	bindings.append(new_uniform(Binding::BINDING_CONFIG_UNIFORM,     RenderingDevice::UniformType::UNIFORM_TYPE_UNIFORM_BUFFER, resources[Binding::BINDING_CONFIG_UNIFORM    ]));
@@ -99,7 +99,7 @@ void GdstrokeShaderInterface::CommandInterfaceSet::draw_indirect(RenderingDevice
 }
 
 Error GdstrokeShaderInterface::CommandInterfaceSet::create_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
-	resources = {};
+	resources.clear();
 	resources.resize(Binding::BINDING_MAX);
 	resources[Binding::BINDING_DISPATCH_INDIRECT_COMMANDS_BUFFER] = p_rd->storage_buffer_create(sizeof(DispatchIndirectCommand) * DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_MAX, {}, RenderingDevice::StorageBufferUsage::STORAGE_BUFFER_USAGE_DISPATCH_INDIRECT);
 	resources[Binding::BINDING_DRAW_INDIRECT_COMMANDS_BUFFER] = p_rd->storage_buffer_create(sizeof(DrawIndirectCommand) * DrawIndirectCommands::DRAW_INDIRECT_COMMANDS_MAX, {}, RenderingDevice::StorageBufferUsage::STORAGE_BUFFER_USAGE_DISPATCH_INDIRECT);
@@ -111,7 +111,7 @@ Error GdstrokeShaderInterface::CommandInterfaceSet::update_resources(RenderingDe
 }
 
 void GdstrokeShaderInterface::CommandInterfaceSet::make_bindings() {
-	bindings = {};
+	bindings.clear();
 	ERR_FAIL_COND(resources.size() != Binding::BINDING_MAX);
 	bindings.append(new_uniform(Binding::BINDING_DISPATCH_INDIRECT_COMMANDS_BUFFER, RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_DISPATCH_INDIRECT_COMMANDS_BUFFER]));
 	bindings.append(new_uniform(Binding::BINDING_DRAW_INDIRECT_COMMANDS_BUFFER, RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_DRAW_INDIRECT_COMMANDS_BUFFER]));
@@ -119,7 +119,7 @@ void GdstrokeShaderInterface::CommandInterfaceSet::make_bindings() {
 
 
 Error GdstrokeShaderInterface::MeshInterfaceSet::create_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
-	resources = {};
+	resources.clear();
 	resources.resize(Binding::BINDING_MAX);
 
 	GdstrokeServer::ContourMesh const &contour_mesh = GdstrokeServer::get_singleton()->get_contour_mesh();
@@ -199,7 +199,7 @@ Error GdstrokeShaderInterface::MeshInterfaceSet::update_resources(RenderingDevic
 }
 
 void GdstrokeShaderInterface::MeshInterfaceSet::make_bindings() {
-	bindings = {};
+	bindings.clear();
 	ERR_FAIL_COND(resources.size() != Binding::BINDING_MAX);
 	bindings.append(new_uniform(Binding::BINDING_MESH_DESC_BUFFER,            RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_MESH_DESC_BUFFER           ]));
 	bindings.append(new_uniform(Binding::BINDING_VERTEX_BUFFER,               RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_VERTEX_BUFFER              ]));
@@ -223,7 +223,7 @@ Error GdstrokeShaderInterface::ContourInterfaceSet::create_resources(RenderingDe
 	Ref<RenderSceneBuffersRD> render_scene_buffers = (Ref<RenderSceneBuffersRD>)p_render_data->get_render_scene_buffers();
 	uint32_t num_edges = GdstrokeServer::get_singleton()->get_contour_mesh().edge_to_vertex_buffer.size();
 
-	resources = {};
+	resources.clear();
 	resources.resize(Binding::BINDING_MAX);
 	resources[Binding::BINDING_CONTOUR_DESC_BUFFER                    ] = p_rd->storage_buffer_create(sizeof(int32_t) * 6);
 	resources[Binding::BINDING_CONTOUR_EDGE_TO_EDGE_BUFFER            ] = p_rd->storage_buffer_create(sizeof(int32_t) * 1 * num_edges);
@@ -260,7 +260,7 @@ Error GdstrokeShaderInterface::ContourInterfaceSet::update_resources(RenderingDe
 }
 
 void GdstrokeShaderInterface::ContourInterfaceSet::make_bindings() {
-	bindings = {};
+	bindings.clear();
 	ERR_FAIL_COND(resources.size() != Binding::BINDING_MAX);
 
 	for (int i = 0; i < Binding::BINDING_MAX; ++i) {
@@ -286,7 +286,7 @@ TypedArray<Ref<RDUniform>> GdstrokeShaderInterface::ContourInterfaceSet::get_dra
 
 
 Error GdstrokeShaderInterface::PixelEdgeInterfaceSet::create_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
-	resources = {};
+	resources.clear();
 	resources.resize(Binding::BINDING_MAX);
 
 	resources[Binding::BINDING_PIXEL_EDGE_DESC_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 4);
@@ -341,7 +341,7 @@ Error GdstrokeShaderInterface::PixelEdgeInterfaceSet::update_resources(Rendering
 }
 
 void GdstrokeShaderInterface::PixelEdgeInterfaceSet::make_bindings() {
-	bindings = {};
+	bindings.clear();
 	ERR_FAIL_COND(resources.size() != Binding::BINDING_MAX);
 
 	for (int i = 0; i < Binding::BINDING_MAX; ++i) {
@@ -353,7 +353,7 @@ void GdstrokeShaderInterface::PixelEdgeInterfaceSet::make_bindings() {
 Error GdstrokeShaderInterface::DebugInterfaceSet::create_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
 	ERR_FAIL_COND_V(p_render_data == nullptr, Error::FAILED);
 	Ref<RenderSceneBuffersRD> render_scene_buffers = (Ref<RenderSceneBuffersRD>)p_render_data->get_render_scene_buffers();
-	resources = {};
+	resources.clear();
 	resources.resize(Binding::BINDING_MAX);
 	resources[Binding::BINDING_CONTOUR_SCREEN_COLOR_IMAGE] = render_scene_buffers->get_color_texture();
 	return Error::OK;
@@ -368,7 +368,7 @@ Error GdstrokeShaderInterface::DebugInterfaceSet::update_resources(RenderingDevi
 }
 
 void GdstrokeShaderInterface::DebugInterfaceSet::make_bindings() {
-	bindings = {};
+	bindings.clear();
 	ERR_FAIL_COND(resources.size() != Binding::BINDING_MAX);
 	bindings.append(new_uniform(Binding::BINDING_CONTOUR_SCREEN_COLOR_IMAGE, RenderingDevice::UniformType::UNIFORM_TYPE_IMAGE, resources[Binding::BINDING_CONTOUR_SCREEN_COLOR_IMAGE]));
 }
