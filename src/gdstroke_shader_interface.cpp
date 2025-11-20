@@ -123,7 +123,7 @@ Error GdstrokeShaderInterface::MeshInterfaceSet::create_resources(RenderingDevic
 	resources.resize(Binding::BINDING_MAX);
 
 	GdstrokeServer::ContourMesh const &contour_mesh = GdstrokeServer::get_singleton()->get_contour_mesh();
-	Transform3D contour_instance_transform = GdstrokeServer::get_singleton()->get_contour_instance()->get_global_transform().inverse();
+	Transform3D contour_instance_transform = GdstrokeServer::get_singleton()->get_contour_instance()->get_global_transform().affine_inverse();
 	PackedByteArray mesh_desc_buffer_data = PackedByteArray();
 	mesh_desc_buffer_data.resize(4 * sizeof(int32_t));
 	mesh_desc_buffer_data.encode_s32(0, contour_mesh.vertex_buffer.size());
@@ -134,7 +134,7 @@ Error GdstrokeShaderInterface::MeshInterfaceSet::create_resources(RenderingDevic
 		ctor_vec3_f(contour_instance_transform.get_basis()[0]),
 		ctor_vec3_f(contour_instance_transform.get_basis()[1]),
 		ctor_vec3_f(contour_instance_transform.get_basis()[2]),
-		ctor_vec3_f(contour_instance_transform.get_origin(), 1.0),
+		ctor_vec3_f(-contour_instance_transform.get_origin(), 1.0),
 	}).to_byte_array());
 
 	// todo: maybe some functions to make serialization less ass
@@ -195,7 +195,16 @@ Error GdstrokeShaderInterface::MeshInterfaceSet::create_resources(RenderingDevic
 }
 
 Error GdstrokeShaderInterface::MeshInterfaceSet::update_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
-	return Error::OK;
+	GdstrokeServer::ContourMesh const &contour_mesh = GdstrokeServer::get_singleton()->get_contour_mesh();
+	Transform3D contour_instance_transform = GdstrokeServer::get_singleton()->get_contour_instance()->get_global_transform().affine_inverse();
+	PackedByteArray mesh_desc_buffer_transform_data = PackedByteArray();
+	mesh_desc_buffer_transform_data.append_array(PackedVector4Array({
+		ctor_vec3_f(contour_instance_transform.get_basis()[0]),
+		ctor_vec3_f(contour_instance_transform.get_basis()[1]),
+		ctor_vec3_f(contour_instance_transform.get_basis()[2]),
+		ctor_vec3_f(-contour_instance_transform.get_origin(), 1.0),
+	}).to_byte_array());
+	return p_rd->buffer_update(resources[Binding::BINDING_MESH_DESC_BUFFER], 16, mesh_desc_buffer_transform_data.size(), mesh_desc_buffer_transform_data);
 }
 
 void GdstrokeShaderInterface::MeshInterfaceSet::make_bindings() {
