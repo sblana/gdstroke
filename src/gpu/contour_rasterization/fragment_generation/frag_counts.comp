@@ -10,10 +10,20 @@ layout(local_size_x = 64) in;
 void main() {
 	const int contour_edge_idx = int(gl_GlobalInvocationID.x);
 	if (contour_edge_idx < B_contour_desc.num_contour_edges) {
-		const int edge_idx = B_contour_edge_to_edge.idx[contour_edge_idx];
-		const vec4 verts_clipped_ndc[2] = pre_raster_edge(edge_idx);
-		const ivec2 diff = abs(ivec2(ndc_pos_to_screen_pos(verts_clipped_ndc[1])) - ivec2(ndc_pos_to_screen_pos(verts_clipped_ndc[0])));
-		const int num_fragments = max(diff.x, diff.y) + 1;
-		B_contour_edge_to_contour_fragment.data[contour_edge_idx] = ContourEdgeToContourFragmentData(num_fragments, 0);
+		// init
+		B_contour_edge_to_contour_fragment.data[contour_edge_idx] = ContourEdgeToContourFragmentData(0, 0);
+
+		if (!B_contour_edge_is_discarded.discarded[contour_edge_idx]) {
+			const int edge_idx = B_contour_edge_to_edge.idx[contour_edge_idx];
+			const vec4 verts_ndc[2] = pre_raster_edge(edge_idx);
+			const float clip_t[2] = B_contour_edge_clip_t.t[contour_edge_idx];
+			const vec4 verts_clipped_ndc[2] = {
+				verts_ndc[0] + (verts_ndc[1] - verts_ndc[0]) * clip_t[0],
+				verts_ndc[0] + (verts_ndc[1] - verts_ndc[0]) * clip_t[1]
+			};
+			const ivec2 diff = abs(ivec2(ndc_pos_to_screen_pos(verts_clipped_ndc[1])) - ivec2(ndc_pos_to_screen_pos(verts_clipped_ndc[0])));
+			const int num_fragments = max(diff.x, diff.y) + 1;
+			B_contour_edge_to_contour_fragment.data[contour_edge_idx] = ContourEdgeToContourFragmentData(num_fragments, 0);
+		}
 	}
 }

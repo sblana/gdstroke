@@ -236,6 +236,8 @@ Error GdstrokeShaderInterface::ContourInterfaceSet::create_resources(RenderingDe
 	resources.resize(Binding::BINDING_MAX);
 	resources[Binding::BINDING_CONTOUR_DESC_BUFFER                    ] = p_rd->storage_buffer_create(sizeof(int32_t) * 6);
 	resources[Binding::BINDING_CONTOUR_EDGE_TO_EDGE_BUFFER            ] = p_rd->storage_buffer_create(sizeof(int32_t) * 1 * num_edges);
+	resources[Binding::BINDING_CONTOUR_EDGE_IS_DISCARDED_BUFFER       ] = p_rd->storage_buffer_create(sizeof(int32_t) * 1 * num_edges);
+	resources[Binding::BINDING_CONTOUR_EDGE_CLIP_T_BUFFER             ] = p_rd->storage_buffer_create(sizeof(int32_t) * 2 * num_edges);
 	resources[Binding::BINDING_CONTOUR_EDGE_TO_CONTOUR_FRAGMENT_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 2 * num_edges);
 
 	resources[Binding::BINDING_CONTOUR_FRAGMENT_PIXEL_COORD_BUFFER   ] = p_rd->storage_buffer_create(sizeof(int32_t)  * 2 * max_num_contour_fragments);
@@ -505,9 +507,6 @@ int64_t GdstrokeShaderInterface::StrokeRenderingResources::get_framebuffer_forma
 }
 
 RID GdstrokeShaderInterface::StrokeRenderingResources::get_framebuffer(RenderingDevice *p_rd, RenderData *p_render_data) {
-	// Ref<RDFramebufferPass> framebuffer_pass = Ref(memnew(RDFramebufferPass));
-	// framebuffer_pass->set_color_attachments({0});
-	// framebuffer_pass->set_depth_attachment(1);
 	RID framebuffer = FramebufferCacheRD::get_cache_multipass(get_attachments(p_rd, p_render_data), {}, 1);
 	ERR_FAIL_COND_V(get_framebuffer_format(p_rd, p_render_data) != p_rd->framebuffer_get_format(framebuffer), {});
 	return framebuffer;

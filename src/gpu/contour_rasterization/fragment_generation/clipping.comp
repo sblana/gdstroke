@@ -1,0 +1,92 @@
+#version 450
+#extension GL_ARB_shading_language_include : enable
+
+layout(local_size_x = 64) in;
+
+#include "common/buffers.glsli"
+#include "raster.glsli"
+
+
+struct LineClipData {
+	float t0;
+	float t1;
+	bool discarded;
+};
+
+// adapted from https://en.wikipedia.org/wiki/Liang%E2%80%93Barsky_algorithm (2025-11-20)
+LineClipData _clip_line_3d_liang_barsky(in const vec3 v0, in const vec3 v1) {
+	const vec3 p = -(v1 - v0);
+
+	const vec3 window_min = vec3(-1, -1, 0);
+	const vec3 window_max = vec3(1, 1, 1);
+	const vec3 q_min = v0 - window_min;
+	const vec3 q_max = window_max - v0;
+
+	// line is parallel to clipping volume and outside it
+	if (p.x == 0 && (q_min.x < 0 || q_max.x < 0) ||
+		p.y == 0 && (q_min.y < 0 || q_max.y < 0) ||
+		p.z == 0 && (q_min.z < 0 || q_max.z < 0)
+	) {
+		return LineClipData(0, 0, true);
+	}
+
+	float t0 = 0;
+	float t1 = 1;
+
+	if (p.x != 0) {
+		float r0 = q_min.x /  p.x;
+		float r1 = q_max.x / -p.x;
+		if (p.x < 0) {
+			t0 = max(t0, r0);
+			t1 = min(t1, r1);
+		} else {
+			t0 = max(t0, r1);
+			t1 = min(t1, r0);
+		}
+	}
+	if (p.y != 0) {
+		float r2 = q_min.y /  p.y;
+		float r3 = q_max.y / -p.y;
+		if (p.y < 0) {
+			t0 = max(t0, r2);
+			t1 = min(t1, r3);
+		} else {
+			t0 = max(t0, r3);
+			t1 = min(t1, r2);
+		}
+	}
+	if (p.z != 0) {
+		float r4 = q_min.z /  p.z;
+		float r5 = q_max.z / -p.z;
+		if (p.z < 0) {
+			t0 = max(t0, r4);
+			t1 = min(t1, r5);
+		} else {
+			t0 = max(t0, r5);
+			t1 = min(t1, r4);
+		}
+	}
+
+	// line is outside the clipping volume
+	if (t0 > t1) {
+		return LineClipData(0, 0, true);
+	}
+
+	return LineClipData(t0, t1, false);
+}
+
+LineClipData clip_line(in const vec4 i_ndc_verts[2]) {
+	return _clip_line_3d_liang_barsky(i_ndc_verts[0].xyz, i_ndc_verts[1].xyz);
+}
+
+void main() {
+	const int contour_edge_idx = int(gl_GlobalInvocationID.x);
+	if (contour_edge_idx < B_contour_desc.num_contour_edges) {
+		const int edge_idx = B_contour_edge_to_edge.idx[contour_edge_idx];
+		const vec4 ndc[2] = pre_raster_edge(edge_idx);
+		const LineClipData line_clip_data = clip_line(ndc);
+		B_contour_edge_clip_t.t[contour_edge_idx][0] = line_clip_data.t0;
+		B_contour_edge_clip_t.t[contour_edge_idx][1] = line_clip_data.t1;
+		B_contour_edge_is_discarded.discarded[contour_edge_idx] = line_clip_data.discarded;
+	}
+}

@@ -25,8 +25,9 @@ vec4[2] pre_raster_edge(int edge_idx) {
 
 	vec4 first_vert_ndc_pos = view_pos_to_ndc_pos(first_vert_view_pos);
 	vec4 secnd_vert_ndc_pos = view_pos_to_ndc_pos(secnd_vert_view_pos);
-
-	// TODO: clipping/discarding
+	// HACK: needed for proper clipping, but just a guess
+	first_vert_ndc_pos *= vec4(sign(first_vert_ndc_pos.ww), vec2(1.0));
+	secnd_vert_ndc_pos *= vec4(sign(secnd_vert_ndc_pos.ww), vec2(1.0));
 
 	vec4 result[2];
 	result[uint( reverse_vertex_order)] = first_vert_ndc_pos;

@@ -10,8 +10,16 @@ layout(local_size_x = 64) in;
 
 void main() {
 	const int contour_edge_idx = int(gl_WorkGroupID.x);
+	if (B_contour_edge_is_discarded.discarded[contour_edge_idx]) {
+		return;
+	}
 	const int edge_idx = B_contour_edge_to_edge.idx[contour_edge_idx];
-	const vec4 verts_clipped_ndc[2] = pre_raster_edge(edge_idx);
+	const vec4 verts_ndc[2] = pre_raster_edge(edge_idx);
+	const float clip_t[2] = B_contour_edge_clip_t.t[contour_edge_idx];
+	const vec4 verts_clipped_ndc[2] = {
+		verts_ndc[0] + (verts_ndc[1] - verts_ndc[0]) * clip_t[0],
+		verts_ndc[0] + (verts_ndc[1] - verts_ndc[0]) * clip_t[1]
+	};
 	const vec2 verts_clipped_screen[2] = {ndc_pos_to_screen_pos(verts_clipped_ndc[0]), ndc_pos_to_screen_pos(verts_clipped_ndc[1])};
 
 	const bool is_first_face_frontfacing = !B_face_backfacing.backfacing[B_edge_to_face.face_idxs[edge_idx][0]];

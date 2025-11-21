@@ -23,6 +23,7 @@ using namespace godot;
 #include "gen/cr__ced__allocation.spv.h"
 #include "gen/cr__ced__scatter.spv.h"
 #include "gen/cr__fg__first_commander.spv.h"
+#include "gen/cr__fg__clipping.spv.h"
 #include "gen/cr__fg__frag_counts.spv.h"
 #include "gen/cr__fg__allocation.spv.h"
 #include "gen/cr__fg__scatter.spv.h"
@@ -91,6 +92,7 @@ void const *GdstrokeEffect::shader_to_embedded_data[Shader::SHADER_MAX] = {
 	&SHADER_SPV_cr__ced__allocation,
 	&SHADER_SPV_cr__ced__scatter,
 	&SHADER_SPV_cr__fg__first_commander,
+	&SHADER_SPV_cr__fg__clipping,
 	&SHADER_SPV_cr__fg__frag_counts,
 	&SHADER_SPV_cr__fg__allocation,
 	&SHADER_SPV_cr__fg__scatter,
@@ -355,6 +357,12 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		rd->compute_list_end();
 
 		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_FG_CLIPPING]);
+		this->bind_sets(rd, list);
+		this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_EDGES);
+		rd->compute_list_end();
+
+		list = rd->compute_list_begin();
 		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_FG_FRAG_COUNTS]);
 		this->bind_sets(rd, list);
 		this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_EDGES);
@@ -373,7 +381,6 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		rd->compute_list_end();
 	}
 	rd->draw_command_end_label();
-
 
 	rd->draw_command_begin_label("Contour Pixel Generation", Color(1.0, 0.3, 1.0));
 	{
