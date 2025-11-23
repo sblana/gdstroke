@@ -1,47 +1,71 @@
 #version 450
 #extension GL_ARB_shading_language_include : enable
 
+#include "common/ext/subgroup.glsli"
+
 // NOTE: just one big huge fat workgroup
-layout(local_size_x = 512) in;
+layout(local_size_x = 1024) in;
 
 #include "common/buffers.glsli"
 #include "common/scans.glsli"
 
 
-shared int block_offsets[gl_WorkGroupSize.x + 1];
-shared int total_sum;
+shared uint block_offsets[gl_WorkGroupSize.x];
+shared uint total_sum;
 
 void main() {
-	const BlockPartitionDesc bpd = create_block_partition_desc(gl_WorkGroupSize.x, B_mesh_desc.num_edges);
-	const BlockDesc bd = create_block_desc(bpd, gl_LocalInvocationID.x);
+	const BlockPartitionDesc bpd = create_block_partition_desc(gl_NumSubgroups, udiv_ceil(B_mesh_desc.num_edges, gl_SubgroupSize));
+	const BlockDesc bd = create_block_desc(bpd, gl_SubgroupID);
 
 	const bool is_participating_stage_0 = bd.block_idx < bpd.num_blocks;
-	const bool is_participating_stage_1 = gl_LocalInvocationID.x == 0;
+	const bool is_participating_stage_1 = gl_SubgroupID == 0;
 	const bool is_participating_stage_2 = bd.block_idx < bpd.num_blocks;
 
 	if (is_participating_stage_0) {
-		int block_sum = 0;
+		block_offsets[bd.block_idx] = 0;
 		for (uint element_idx = bd.first_element_idx; element_idx <= bd.final_element_idx; ++element_idx) {
-			B_edge_to_contour_edge.idx[element_idx] = block_sum;
-			block_sum += int(B_edge_is_contour.contour[element_idx]);
+			const uint idx = element_idx * gl_SubgroupSize + gl_SubgroupInvocationID;
+
+			uint value = 0;
+			if (idx < B_mesh_desc.num_edges) {
+				value = uint(B_edge_is_contour.contour[idx]);
+			}
+			const uint exclusive = subgroupExclusiveAdd(value) + block_offsets[bd.block_idx];
+			const uint element_sum = subgroupAdd(value);
+
+			if (subgroupElect()) {
+				block_offsets[bd.block_idx] += element_sum;
+			}
+			if (idx < B_mesh_desc.num_edges) {
+				B_edge_to_contour_edge.idx[idx] = int(exclusive);
+			}
 		}
-		block_offsets[bd.block_idx] = block_sum;
 	}
 	barrier();
 	if (is_participating_stage_1) {
 		total_sum = 0;
-		for (int block_idx = 0; block_idx < bpd.num_blocks; ++block_idx) {
-			const int this_block_sum = block_offsets[block_idx];
-			block_offsets[block_idx] = total_sum;
-			total_sum += this_block_sum;
+		const uint block_idx = gl_SubgroupInvocationID;
+		uint value = 0;
+		if (block_idx < bpd.num_blocks) {
+			value = block_offsets[block_idx];
 		}
-		B_contour_desc.num_contour_edges = total_sum;
+
+		const uint exclusive = subgroupExclusiveAdd(value);
+		const uint sum = subgroupAdd(value);
+
+		if (subgroupElect()) {
+			B_contour_desc.num_contour_edges = int(sum);
+		}
+		block_offsets[block_idx] = exclusive;
 	}
 	barrier();
 	if (is_participating_stage_2) {
-		const int block_offset = block_offsets[bd.block_idx];
+		const int block_offset = int(block_offsets[bd.block_idx]);
 		for (uint element_idx = bd.first_element_idx; element_idx <= bd.final_element_idx; ++element_idx) {
-			B_edge_to_contour_edge.idx[element_idx] += block_offset;
+			const uint idx = element_idx * gl_SubgroupSize + gl_SubgroupInvocationID;
+			if (idx < B_mesh_desc.num_edges) {
+				B_edge_to_contour_edge.idx[idx] += block_offset;
+			}
 		}
 	}
 	barrier();

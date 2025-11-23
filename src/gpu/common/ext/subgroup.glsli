@@ -1,0 +1,51 @@
+#ifndef EXT_SUBGROUP_GLSLI
+#define EXT_SUBGROUP_GLSLI
+
+#extension GL_KHR_shader_subgroup_basic : enable
+#extension GL_KHR_shader_subgroup_vote : enable
+#extension GL_KHR_shader_subgroup_arithmetic : enable
+
+
+#define gl_NumSubgroups gl_NumSubgroups
+#define gl_SubgroupID gl_SubgroupID
+#define gl_SubgroupSize gl_SubgroupSize
+#define gl_SubgroupInvocationID gl_SubgroupInvocationID
+
+#define subgroupBarrier() subgroupBarrier()
+#define subgroupMemoryBarrier() subgroupMemoryBarrier()
+#define subgroupMemoryBarrierBuffer() subgroupMemoryBarrierBuffer()
+#define subgroupMemoryBarrierShared() subgroupMemoryBarrierShared()
+#define subgroupMemoryBarrierImage() subgroupMemoryBarrierImage()
+#define subgroupElect() subgroupElect()
+
+
+#define subgroupAll(_value_) subgroupAll(_value_)
+#define subgroupAny(_value_) subgroupAny(_value_)
+#define subgroupAllEqual(_value_) subgroupAllEqual(_value_)
+
+
+#define subgroupAdd(_value_) subgroupAdd(_value_)
+#define subgroupMul(_value_) subgroupMul(_value_)
+#define subgroupMin(_value_) subgroupMin(_value_)
+#define subgroupMax(_value_) subgroupMax(_value_)
+#define subgroupAnd(_value_) subgroupAnd(_value_)
+#define subgroupOr(_value_)  subgroupOr(_value_)
+#define subgroupXor(_value_) subgroupXor(_value_)
+
+#define subgroupInclusiveAdd(_value_) subgroupInclusiveAdd(_value_)
+#define subgroupInclusiveMul(_value_) subgroupInclusiveMul(_value_)
+#define subgroupInclusiveMin(_value_) subgroupInclusiveMin(_value_)
+#define subgroupInclusiveMax(_value_) subgroupInclusiveMax(_value_)
+#define subgroupInclusiveAnd(_value_) subgroupInclusiveAnd(_value_)
+#define subgroupInclusiveOr(_value_)  subgroupInclusiveOr(_value_)
+#define subgroupInclusiveXor(_value_) subgroupInclusiveXor(_value_)
+
+#define subgroupExclusiveAdd(_value_) subgroupExclusiveAdd(_value_)
+#define subgroupExclusiveMul(_value_) subgroupExclusiveMul(_value_)
+#define subgroupExclusiveMin(_value_) subgroupExclusiveMin(_value_)
+#define subgroupExclusiveMax(_value_) subgroupExclusiveMax(_value_)
+#define subgroupExclusiveAnd(_value_) subgroupExclusiveAnd(_value_)
+#define subgroupExclusiveOr(_value_)  subgroupExclusiveOr(_value_)
+#define subgroupExclusiveXor(_value_) subgroupExclusiveXor(_value_)
+
+#endif // !EXT_SUBGROUP_GLSLI
