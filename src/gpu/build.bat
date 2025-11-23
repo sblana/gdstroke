@@ -20,7 +20,9 @@
 
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\contour_rasterization\contour_edge_detection\face_orientation.comp -o %compileshadersTEMPDIR%cr__ced__face_orientation.spv
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\contour_rasterization\contour_edge_detection\detection.comp        -o %compileshadersTEMPDIR%cr__ced__detection.spv
-	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\contour_rasterization\contour_edge_detection\allocation.comp       -o %compileshadersTEMPDIR%cr__ced__allocation.spv
+	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -DLEVEL_0 -DUP_SWEEP   -V .\contour_rasterization\contour_edge_detection\allocation.comp -o %compileshadersTEMPDIR%cr__ced__allocation_l0_up.spv
+	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -DLEVEL_1 -DUP_SWEEP   -V .\contour_rasterization\contour_edge_detection\allocation.comp -o %compileshadersTEMPDIR%cr__ced__allocation_l1_up.spv
+	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -DLEVEL_0 -DDOWN_SWEEP -V .\contour_rasterization\contour_edge_detection\allocation.comp -o %compileshadersTEMPDIR%cr__ced__allocation_l0_down.spv
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\contour_rasterization\contour_edge_detection\scatter.comp          -o %compileshadersTEMPDIR%cr__ced__scatter.spv
 
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\contour_rasterization\fragment_generation\first_commander.comp -o %compileshadersTEMPDIR%cr__fg__first_commander.spv
@@ -91,10 +93,12 @@ gcc embed.c -o %compileshadersEMBED%
 	%compileshadersEMBED% %compileshadersTEMPDIR%dummy_commander.spv %compileshadersOUTPUTDIR%dummy_commander.spv.h SHADER_SPV_dummy_commander
 	%compileshadersEMBED% %compileshadersTEMPDIR%dummy_debug.spv     %compileshadersOUTPUTDIR%dummy_debug.spv.h     SHADER_SPV_dummy_debug
 
-	%compileshadersEMBED% %compileshadersTEMPDIR%cr__ced__face_orientation.spv %compileshadersOUTPUTDIR%cr__ced__face_orientation.spv.h SHADER_SPV_cr__ced__face_orientation
-	%compileshadersEMBED% %compileshadersTEMPDIR%cr__ced__detection.spv        %compileshadersOUTPUTDIR%cr__ced__detection.spv.h        SHADER_SPV_cr__ced__detection
-	%compileshadersEMBED% %compileshadersTEMPDIR%cr__ced__allocation.spv       %compileshadersOUTPUTDIR%cr__ced__allocation.spv.h       SHADER_SPV_cr__ced__allocation
-	%compileshadersEMBED% %compileshadersTEMPDIR%cr__ced__scatter.spv          %compileshadersOUTPUTDIR%cr__ced__scatter.spv.h          SHADER_SPV_cr__ced__scatter
+	%compileshadersEMBED% %compileshadersTEMPDIR%cr__ced__face_orientation.spv   %compileshadersOUTPUTDIR%cr__ced__face_orientation.spv.h   SHADER_SPV_cr__ced__face_orientation
+	%compileshadersEMBED% %compileshadersTEMPDIR%cr__ced__detection.spv          %compileshadersOUTPUTDIR%cr__ced__detection.spv.h          SHADER_SPV_cr__ced__detection
+	%compileshadersEMBED% %compileshadersTEMPDIR%cr__ced__allocation_l0_up.spv   %compileshadersOUTPUTDIR%cr__ced__allocation_l0_up.spv.h   SHADER_SPV_cr__ced__allocation_l0_up
+	%compileshadersEMBED% %compileshadersTEMPDIR%cr__ced__allocation_l1_up.spv   %compileshadersOUTPUTDIR%cr__ced__allocation_l1_up.spv.h   SHADER_SPV_cr__ced__allocation_l1_up
+	%compileshadersEMBED% %compileshadersTEMPDIR%cr__ced__allocation_l0_down.spv %compileshadersOUTPUTDIR%cr__ced__allocation_l0_down.spv.h SHADER_SPV_cr__ced__allocation_l0_down
+	%compileshadersEMBED% %compileshadersTEMPDIR%cr__ced__scatter.spv            %compileshadersOUTPUTDIR%cr__ced__scatter.spv.h            SHADER_SPV_cr__ced__scatter
 
 	%compileshadersEMBED% %compileshadersTEMPDIR%cr__fg__first_commander.spv %compileshadersOUTPUTDIR%cr__fg__first_commander.spv.h SHADER_SPV_cr__fg__first_commander
 	%compileshadersEMBED% %compileshadersTEMPDIR%cr__fg__clipping.spv        %compileshadersOUTPUTDIR%cr__fg__clipping.spv.h        SHADER_SPV_cr__fg__clipping

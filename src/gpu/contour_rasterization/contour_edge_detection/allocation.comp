@@ -3,7 +3,6 @@
 
 #include "common/ext/subgroup.glsli"
 
-// NOTE: just one big huge fat workgroup
 layout(local_size_x = 1024) in;
 
 #include "common/buffers.glsli"
@@ -11,62 +10,95 @@ layout(local_size_x = 1024) in;
 
 
 shared uint block_offsets[gl_WorkGroupSize.x];
-shared uint total_sum;
 
 void main() {
-	const BlockPartitionDesc bpd = create_block_partition_desc(gl_NumSubgroups, udiv_ceil(B_mesh_desc.num_edges, gl_SubgroupSize));
-	const BlockDesc bd = create_block_desc(bpd, gl_SubgroupID);
+	// NOTE: will break if there are more than 1024 * 1024 * 8 edges
+	const uint level_0_num_workgroups = udiv_ceil(B_mesh_desc.num_edges, gl_WorkGroupSize.x);
+	const uint level_1_num_elements_per_subgroup = udiv_ceil(level_0_num_workgroups, gl_WorkGroupSize.x);
+
+	#ifdef LEVEL_0
+		#define SRC_ARRAY      B_edge_is_contour.contour
+		#define SRC_SIZE       B_mesh_desc.num_edges
+		#define SRC_TO_DST_MAP B_edge_to_contour_edge.idx
+		#define DST_SIZE       B_allocation_column_edge.column_sum[gl_WorkGroupID.x]
+	#else
+		#define SRC_ARRAY      B_allocation_column_edge.column_sum
+		#define SRC_SIZE       level_0_num_workgroups
+		#define SRC_TO_DST_MAP B_allocation_column_edge.column_offset
+		#define DST_SIZE       B_contour_desc.num_contour_edges
+	#endif
+
+	const BlockPartitionDesc bpd = create_block_partition_desc(
+		gl_NumSubgroups * gl_NumWorkGroups.x,
+		udiv_ceil(SRC_SIZE, gl_SubgroupSize)
+	);
+	const BlockDesc bd = create_block_desc(
+		bpd,
+		gl_SubgroupID + gl_NumSubgroups * gl_WorkGroupID.x
+	);
 
 	const bool is_participating_stage_0 = bd.block_idx < bpd.num_blocks;
 	const bool is_participating_stage_1 = gl_SubgroupID == 0;
 	const bool is_participating_stage_2 = bd.block_idx < bpd.num_blocks;
 
-	if (is_participating_stage_0) {
-		block_offsets[bd.block_idx] = 0;
-		for (uint element_idx = bd.first_element_idx; element_idx <= bd.final_element_idx; ++element_idx) {
-			const uint idx = element_idx * gl_SubgroupSize + gl_SubgroupInvocationID;
+	#ifndef DOWN_SWEEP
 
-			uint value = 0;
-			if (idx < B_mesh_desc.num_edges) {
-				value = uint(B_edge_is_contour.contour[idx]);
+		block_offsets[gl_SubgroupID] = 0;
+		if (is_participating_stage_0) {
+			for (uint element_idx = bd.first_element_idx; element_idx <= bd.final_element_idx; ++element_idx) {
+				const uint idx = element_idx * gl_SubgroupSize + gl_SubgroupInvocationID;
+
+				uint value = 0;
+				if (idx < SRC_SIZE) {
+					value = uint(SRC_ARRAY[idx]);
+				}
+				const uint exclusive = subgroupExclusiveAdd(value) + block_offsets[gl_SubgroupID];
+				const uint element_sum = subgroupAdd(value);
+
+				if (subgroupElect()) {
+					block_offsets[gl_SubgroupID] += element_sum;
+				}
+				if (idx < SRC_SIZE) {
+					SRC_TO_DST_MAP[idx] = int(exclusive);
+				}
 			}
-			const uint exclusive = subgroupExclusiveAdd(value) + block_offsets[bd.block_idx];
-			const uint element_sum = subgroupAdd(value);
+		}
+		barrier();
+		if (is_participating_stage_1) {
+			const uint block_idx = gl_SubgroupInvocationID;
+			uint value = block_offsets[block_idx];
+
+			const uint exclusive = subgroupExclusiveAdd(value);
+			const uint sum = subgroupAdd(value);
 
 			if (subgroupElect()) {
-				block_offsets[bd.block_idx] += element_sum;
+				DST_SIZE = int(sum);
 			}
-			if (idx < B_mesh_desc.num_edges) {
-				B_edge_to_contour_edge.idx[idx] = int(exclusive);
+			block_offsets[block_idx] = exclusive;
+		}
+	#else
+
+		if (is_participating_stage_1) {
+			if (subgroupElect()) {
+				block_offsets[0] = B_allocation_column_edge.column_offset[gl_WorkGroupID.x];
 			}
 		}
-	}
-	barrier();
-	if (is_participating_stage_1) {
-		total_sum = 0;
-		const uint block_idx = gl_SubgroupInvocationID;
-		uint value = 0;
-		if (block_idx < bpd.num_blocks) {
-			value = block_offsets[block_idx];
-		}
+	#endif
 
-		const uint exclusive = subgroupExclusiveAdd(value);
-		const uint sum = subgroupAdd(value);
-
-		if (subgroupElect()) {
-			B_contour_desc.num_contour_edges = int(sum);
-		}
-		block_offsets[block_idx] = exclusive;
-	}
 	barrier();
+
 	if (is_participating_stage_2) {
-		const int block_offset = int(block_offsets[bd.block_idx]);
+		#ifndef DOWN_SWEEP
+			const int block_offset = int(block_offsets[gl_SubgroupID]);
+		#else
+			const int block_offset = int(block_offsets[0]);
+		#endif
+
 		for (uint element_idx = bd.first_element_idx; element_idx <= bd.final_element_idx; ++element_idx) {
 			const uint idx = element_idx * gl_SubgroupSize + gl_SubgroupInvocationID;
-			if (idx < B_mesh_desc.num_edges) {
-				B_edge_to_contour_edge.idx[idx] += block_offset;
+			if (idx < SRC_SIZE) {
+				SRC_TO_DST_MAP[idx] += block_offset;
 			}
 		}
 	}
-	barrier();
 }

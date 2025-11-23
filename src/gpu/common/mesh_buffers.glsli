@@ -38,17 +38,22 @@ layout(set = 2, binding = 6, std430) RESTRICT buffer EdgeToContourEdgeBuffer {
 	int idx[];
 } B_edge_to_contour_edge;
 
+layout(set = 2, binding = 7, std430) RESTRICT buffer AllocationColumnEdgeBuffer {
+	uint column_sum[8192];
+	uint column_offset[8192];
+} B_allocation_column_edge;
 
-layout(set = 2, binding = 7, std430) RESTRICT readonly buffer FaceToVertexBuffer {
+
+layout(set = 2, binding = 8, std430) RESTRICT readonly buffer FaceToVertexBuffer {
 	ivec4 idxs[];
 } B_face_to_vertex;
 
 // w component for padding
-layout(set = 2, binding = 8, std430) RESTRICT readonly buffer FaceNormalBuffer {
+layout(set = 2, binding = 9, std430) RESTRICT readonly buffer FaceNormalBuffer {
 	vec4 normal[];
 } B_face_normal;
 
-layout(set = 2, binding = 9, std430) RESTRICT buffer FaceBackfacingBuffer {
+layout(set = 2, binding = 10, std430) RESTRICT buffer FaceBackfacingBuffer {
 	bool backfacing[];
 } B_face_backfacing;
 

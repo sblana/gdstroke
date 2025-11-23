@@ -20,7 +20,9 @@ using namespace godot;
 #include "gen/dummy_debug.spv.h"
 #include "gen/cr__ced__face_orientation.spv.h"
 #include "gen/cr__ced__detection.spv.h"
-#include "gen/cr__ced__allocation.spv.h"
+#include "gen/cr__ced__allocation_l0_up.spv.h"
+#include "gen/cr__ced__allocation_l1_up.spv.h"
+#include "gen/cr__ced__allocation_l0_down.spv.h"
 #include "gen/cr__ced__scatter.spv.h"
 #include "gen/cr__fg__first_commander.spv.h"
 #include "gen/cr__fg__clipping.spv.h"
@@ -89,7 +91,9 @@ void const *GdstrokeEffect::shader_to_embedded_data[Shader::SHADER_MAX] = {
 	&SHADER_SPV_dummy_debug,
 	&SHADER_SPV_cr__ced__face_orientation,
 	&SHADER_SPV_cr__ced__detection,
-	&SHADER_SPV_cr__ced__allocation,
+	&SHADER_SPV_cr__ced__allocation_l0_up,
+	&SHADER_SPV_cr__ced__allocation_l1_up,
+	&SHADER_SPV_cr__ced__allocation_l0_down,
 	&SHADER_SPV_cr__ced__scatter,
 	&SHADER_SPV_cr__fg__first_commander,
 	&SHADER_SPV_cr__fg__clipping,
@@ -334,9 +338,21 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		rd->compute_list_end();
 
 		list = rd->compute_list_begin();
-		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CED_ALLOCATION]);
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CED_ALLOCATION_L0_UP]);
+		this->bind_sets(rd, list);
+		rd->compute_list_dispatch(list, udiv_ceil(num_edges, 1024), 1, 1);
+		rd->compute_list_end();
+
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CED_ALLOCATION_L1_UP]);
 		this->bind_sets(rd, list);
 		rd->compute_list_dispatch(list, 1, 1, 1);
+		rd->compute_list_end();
+
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CED_ALLOCATION_L0_DOWN]);
+		this->bind_sets(rd, list);
+		rd->compute_list_dispatch(list, udiv_ceil(num_edges, 1024), 1, 1);
 		rd->compute_list_end();
 
 		list = rd->compute_list_begin();
