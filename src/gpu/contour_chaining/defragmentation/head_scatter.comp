@@ -1,0 +1,24 @@
+#version 450
+#extension GL_ARB_shading_language_include : enable
+
+layout(local_size_x = 64) in;
+
+#include "common/buffers.glsli"
+
+void main() {
+	const uint pixel_edge_idx = gl_GlobalInvocationID.x;
+
+	const SparsePixelEdgeNeighboursData neighbours = B_sparse_pixel_edge_neighbours.data[pixel_edge_idx];
+	const uint associated_head_idx = B_sparse_pixel_edge_associated_head.associated_head[pixel_edge_idx];
+	if (is_sparse_pixel_edge_idx_valid(int(pixel_edge_idx)) && associated_head_idx == pixel_edge_idx) {
+		const int pixel_edge_loop_idx = B_sparse_pixel_edge_to_pixel_edge_loop.idx[pixel_edge_idx];
+		const int loop_len = B_sparse_pixel_edge_local_idx.local_idx[neighbours.prev_idx] + 1;
+
+		PixelEdgeLoopDescData data;
+		data.sparse_head_idx = int(pixel_edge_idx);
+		data.compacted_head_idx = -1;
+		data.loop_len = loop_len;
+
+		B_pixel_edge_loop_desc.data[pixel_edge_loop_idx] = data;
+	}
+}

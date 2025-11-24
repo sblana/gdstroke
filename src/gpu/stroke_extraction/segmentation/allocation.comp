@@ -1,7 +1,7 @@
 #version 450
 #extension GL_ARB_shading_language_include : enable
 
-layout(local_size_x = 512) in;
+layout(local_size_x = 1024) in;
 
 #include "common/buffers.glsli"
 #include "common/scans.glsli"
@@ -12,48 +12,34 @@ shared int block_num_segment_edges[gl_WorkGroupSize.x];
 shared int total_num_segments;
 shared int total_num_segment_edges;
 
+#define p0_fn_get_src_array(MP_idx_)                     B_pixel_edge_loop_segments_desc.data[MP_idx_].num_segments
+#define p0_fn_set_src_to_dst_map(MP_idx_, MP_value_)     B_allocation_segment.data[MP_idx_].loop_segment_key_offset  = MP_value_
+#define p0_fn_add_set_src_to_dst_map(MP_idx_, MP_value_) B_allocation_segment.data[MP_idx_].loop_segment_key_offset += MP_value_
+
+#define p1_fn_get_src_array(MP_idx_)                     B_pixel_edge_loop_segments_desc.data[MP_idx_].num_segment_edges
+#define p1_fn_set_src_to_dst_map(MP_idx_, MP_value_)     B_allocation_segment.data[MP_idx_].loop_num_segment_edges_offset  = MP_value_
+#define p1_fn_add_set_src_to_dst_map(MP_idx_, MP_value_) { \
+	B_allocation_segment.data[MP_idx_].loop_num_segment_edges_offset += MP_value_; \
+	B_pixel_edge_loop_segments_desc.data[MP_idx_].first_segment_edge_idx = B_allocation_segment.data[MP_idx_].loop_num_segment_edges_offset; \
+}
+
 void main() {
-	const BlockPartitionDesc bpd = create_block_partition_desc(gl_WorkGroupSize.x, B_pixel_edge_desc.num_pixel_edge_loops);
-	const BlockDesc bd = create_block_desc(bpd, gl_LocalInvocationID.x);
-
-	const bool is_participating_stage_0 = bd.block_idx < bpd.num_blocks;
-	const bool is_participating_stage_1 = gl_LocalInvocationID.x == 0;
-	const bool is_participating_stage_2 = bd.block_idx < bpd.num_blocks;
-	if (is_participating_stage_0) {
-		block_num_segments[bd.block_idx] = 0;
-		block_num_segment_edges[bd.block_idx] = 0;
-		for (uint element_idx = bd.first_element_idx; element_idx <= bd.final_element_idx; ++element_idx) {
-			const PixelEdgeLoopSegmentsDescData loop_segments_desc = B_pixel_edge_loop_segments_desc.data[element_idx];
-
-			B_allocation_segment.data[element_idx].loop_segment_key_offset = block_num_segments[bd.block_idx];
-			B_allocation_segment.data[element_idx].loop_num_segment_edges_offset = block_num_segment_edges[bd.block_idx];
-			block_num_segments[bd.block_idx] += loop_segments_desc.num_segments;
-			block_num_segment_edges[bd.block_idx] += loop_segments_desc.num_segment_edges;
-		}
-	}
-	barrier();
-	if (is_participating_stage_1) {
-		total_num_segments = 0;
-		total_num_segment_edges = 0;
-		for (int block_idx = 0; block_idx < bpd.num_blocks; ++block_idx) {
-			const int this_block_sum0 = block_num_segments[block_idx];
-			block_num_segments[block_idx] = total_num_segments;
-			total_num_segments += this_block_sum0;
-
-			const int this_block_sum1 = block_num_segment_edges[block_idx];
-			block_num_segment_edges[block_idx] = total_num_segment_edges;
-			total_num_segment_edges += this_block_sum1;
-		}
-		B_segment_desc.num_segments = total_num_segments;
-		B_segment_desc.num_segment_edges = total_num_segment_edges;
-	}
-	barrier();
-	if (is_participating_stage_2) {
-		for (uint element_idx = bd.first_element_idx; element_idx <= bd.final_element_idx; ++element_idx) {
-			B_allocation_segment.data[element_idx].loop_segment_key_offset += block_num_segments[bd.block_idx];
-			B_allocation_segment.data[element_idx].loop_num_segment_edges_offset += block_num_segment_edges[bd.block_idx];
-			B_pixel_edge_loop_segments_desc.data[element_idx].first_segment_edge_idx = B_allocation_segment.data[element_idx].loop_num_segment_edges_offset;
-		}
-	}
-	barrier();
+	M_SINGLE_WORKGROUP_ALLOCATION(
+		int,
+		block_num_segments,
+		B_pixel_edge_desc.num_pixel_edge_loops,
+		p0_fn_get_src_array,
+		B_segment_desc.num_segments,
+		p0_fn_set_src_to_dst_map,
+		p0_fn_add_set_src_to_dst_map
+	)
+	M_SINGLE_WORKGROUP_ALLOCATION(
+		int,
+		block_num_segment_edges,
+		B_pixel_edge_desc.num_pixel_edge_loops,
+		p1_fn_get_src_array,
+		B_segment_desc.num_segment_edges,
+		p1_fn_set_src_to_dst_map,
+		p1_fn_add_set_src_to_dst_map
+	)
 }

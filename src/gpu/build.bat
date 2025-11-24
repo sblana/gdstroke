@@ -54,6 +54,7 @@
 
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\contour_chaining\defragmentation\init.comp                 -o %compileshadersTEMPDIR%cc__d__init.spv
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\contour_chaining\defragmentation\head_allocation.comp      -o %compileshadersTEMPDIR%cc__d__head_allocation.spv
+	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\contour_chaining\defragmentation\head_scatter.comp         -o %compileshadersTEMPDIR%cc__d__head_scatter.spv
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\contour_chaining\defragmentation\compacted_allocation.comp -o %compileshadersTEMPDIR%cc__d__compacted_allocation.spv
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\contour_chaining\defragmentation\compacted_scatter.comp    -o %compileshadersTEMPDIR%cc__d__compacted_scatter.spv
 	glslang %compileshadersGODOTMINORVERSION% %compileshadersGLSLANGFLAGS% -V .\contour_chaining\defragmentation\first_commander.comp      -o %compileshadersTEMPDIR%cc__d__first_commander.spv
@@ -129,6 +130,7 @@ gcc embed.c -o %compileshadersEMBED%
 
 	%compileshadersEMBED% %compileshadersTEMPDIR%cc__d__init.spv                 %compileshadersOUTPUTDIR%cc__d__init.spv.h                 SHADER_SPV_cc__d__init
 	%compileshadersEMBED% %compileshadersTEMPDIR%cc__d__head_allocation.spv      %compileshadersOUTPUTDIR%cc__d__head_allocation.spv.h      SHADER_SPV_cc__d__head_allocation
+	%compileshadersEMBED% %compileshadersTEMPDIR%cc__d__head_scatter.spv         %compileshadersOUTPUTDIR%cc__d__head_scatter.spv.h         SHADER_SPV_cc__d__head_scatter
 	%compileshadersEMBED% %compileshadersTEMPDIR%cc__d__compacted_allocation.spv %compileshadersOUTPUTDIR%cc__d__compacted_allocation.spv.h SHADER_SPV_cc__d__compacted_allocation
 	%compileshadersEMBED% %compileshadersTEMPDIR%cc__d__compacted_scatter.spv    %compileshadersOUTPUTDIR%cc__d__compacted_scatter.spv.h    SHADER_SPV_cc__d__compacted_scatter
 	%compileshadersEMBED% %compileshadersTEMPDIR%cc__d__first_commander.spv      %compileshadersOUTPUTDIR%cc__d__first_commander.spv.h      SHADER_SPV_cc__d__first_commander

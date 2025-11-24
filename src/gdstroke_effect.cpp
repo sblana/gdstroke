@@ -48,6 +48,7 @@ using namespace godot;
 #include "gen/cc__lr__scatter.spv.h"
 #include "gen/cc__d__init.spv.h"
 #include "gen/cc__d__head_allocation.spv.h"
+#include "gen/cc__d__head_scatter.spv.h"
 #include "gen/cc__d__compacted_allocation.spv.h"
 #include "gen/cc__d__compacted_scatter.spv.h"
 #include "gen/cc__d__first_commander.spv.h"
@@ -118,6 +119,7 @@ void const *GdstrokeEffect::shader_to_embedded_data[Shader::SHADER_MAX] = {
 	&SHADER_SPV_cc__lr__scatter,
 	&SHADER_SPV_cc__d__init,
 	&SHADER_SPV_cc__d__head_allocation,
+	&SHADER_SPV_cc__d__head_scatter,
 	&SHADER_SPV_cc__d__compacted_allocation,
 	&SHADER_SPV_cc__d__compacted_scatter,
 	&SHADER_SPV_cc__d__first_commander,
@@ -536,6 +538,12 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CC_D_HEAD_ALLOCATION]);
 		this->bind_sets(rd, list);
 		rd->compute_list_dispatch(list, 1, 1, 1);
+		rd->compute_list_end();
+
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CC_D_HEAD_SCATTER]);
+		this->bind_sets(rd, list);
+		this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_SPARSE_PIXEL_EDGES);
 		rd->compute_list_end();
 
 		list = rd->compute_list_begin();

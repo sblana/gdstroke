@@ -1,48 +1,26 @@
 #version 450
 #extension GL_ARB_shading_language_include : enable
 
-layout(local_size_x = 512) in;
+layout(local_size_x = 1024) in;
 
 #include "common/buffers.glsli"
 #include "common/scans.glsli"
 
 
-shared int block_offsets[gl_WorkGroupSize.x + 1];
-shared int total_sum;
+shared int block_offsets[gl_WorkGroupSize.x];
+
+#define fn_get_src_array(MP_idx_)                     B_pixel_edge_loop_desc.data[MP_idx_].loop_len
+#define fn_set_src_to_dst_map(MP_idx_, MP_value_)     B_pixel_edge_loop_desc.data[MP_idx_].compacted_head_idx  = MP_value_
+#define fn_add_set_src_to_dst_map(MP_idx_, MP_value_) B_pixel_edge_loop_desc.data[MP_idx_].compacted_head_idx += MP_value_
 
 void main() {
-	const BlockPartitionDesc bpd = create_block_partition_desc(gl_WorkGroupSize.x, B_pixel_edge_desc.num_pixel_edge_loops);
-	const BlockDesc bd = create_block_desc(bpd, gl_LocalInvocationID.x);
-
-	const bool is_participating_stage_0 = bd.block_idx < bpd.num_blocks;
-	const bool is_participating_stage_1 = gl_LocalInvocationID.x == 0;
-	const bool is_participating_stage_2 = bd.block_idx < bpd.num_blocks;
-
-	if (is_participating_stage_0) {
-		int block_sum = 0;
-		for (uint element_idx = bd.first_element_idx; element_idx <= bd.final_element_idx; ++element_idx) {
-			B_pixel_edge_loop_desc.data[element_idx].compacted_head_idx = block_sum;
-			block_sum += B_pixel_edge_loop_desc.data[element_idx].loop_len;
-		}
-		block_offsets[bd.block_idx] = block_sum;
-	}
-	barrier();
-
-	if (is_participating_stage_1) {
-		total_sum = 0;
-		for (int block_idx = 0; block_idx < bpd.num_blocks; ++block_idx) {
-			const int this_block_sum = block_offsets[block_idx];
-			block_offsets[block_idx] = total_sum;
-			total_sum += this_block_sum;
-		}
-		B_pixel_edge_desc.num_pixel_edges = total_sum;
-	}
-	barrier();
-	if (is_participating_stage_2) {
-		const int block_offset = block_offsets[bd.block_idx];
-		for (uint element_idx = bd.first_element_idx; element_idx <= bd.final_element_idx; ++element_idx) {
-			B_pixel_edge_loop_desc.data[element_idx].compacted_head_idx += block_offset;
-		}
-	}
-	barrier();
+	M_SINGLE_WORKGROUP_ALLOCATION(
+		int,
+		block_offsets,
+		B_pixel_edge_desc.num_pixel_edge_loops,
+		fn_get_src_array,
+		B_pixel_edge_desc.num_pixel_edges,
+		fn_set_src_to_dst_map,
+		fn_add_set_src_to_dst_map
+	)
 }
