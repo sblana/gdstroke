@@ -29,6 +29,7 @@ compile_commands.json
 /temp
 
 # Binaries
+*.a
 *.o
 *.os
 *.so
