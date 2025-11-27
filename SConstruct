@@ -36,6 +36,7 @@ env.Append(CPPPATH=["src/"])
 env.Append(CXXFLAGS=["-std=c++20"])
 
 sources = Glob("src/*.cpp")
+sources.append("src/gen/shaders.cpp")
 
 if env["target"] in ["editor", "template_debug"]:
     try:

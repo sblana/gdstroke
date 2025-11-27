@@ -14,141 +14,6 @@
 
 using namespace godot;
 
-#ifndef _USING_EDITOR
-#include "gen/dummy.spv.h"
-#include "gen/dummy_commander.spv.h"
-#include "gen/dummy_debug.spv.h"
-#include "gen/cr__ced__face_orientation.spv.h"
-#include "gen/cr__ced__detection.spv.h"
-#include "gen/cr__ced__allocation_l0_up.spv.h"
-#include "gen/cr__ced__allocation_l1_up.spv.h"
-#include "gen/cr__ced__allocation_l0_down.spv.h"
-#include "gen/cr__ced__scatter.spv.h"
-#include "gen/cr__fg__first_commander.spv.h"
-#include "gen/cr__fg__clipping.spv.h"
-#include "gen/cr__fg__frag_counts.spv.h"
-#include "gen/cr__fg__allocation.spv.h"
-#include "gen/cr__fg__scatter.spv.h"
-#include "gen/cr__cpg__first_commander.spv.h"
-#include "gen/cr__cpg__soft_depth_test.spv.h"
-#include "gen/cr__cpg__pre_alloc.spv.h"
-#include "gen/cr__cpg__allocation.spv.h"
-#include "gen/cr__cpg__scatter.spv.h"
-#include "gen/cr__cpg__second_commander.spv.h"
-#include "gen/cr__cpg__hard_depth_test.vert.spv.h"
-#include "gen/cr__cpg__hard_depth_test.frag.spv.h"
-#include "gen/cr__cpg__decode.spv.h"
-#include "gen/cc__peg__first_commander.spv.h"
-#include "gen/cc__peg__generation.spv.h"
-#include "gen/cc__lb__init.spv.h"
-#include "gen/cc__lb__wyllie.spv.h"
-#include "gen/cc__lb__scatter.spv.h"
-#include "gen/cc__lr__init.spv.h"
-#include "gen/cc__lr__wyllie.spv.h"
-#include "gen/cc__lr__scatter.spv.h"
-#include "gen/cc__d__init.spv.h"
-#include "gen/cc__d__head_allocation.spv.h"
-#include "gen/cc__d__head_scatter.spv.h"
-#include "gen/cc__d__compacted_allocation.spv.h"
-#include "gen/cc__d__compacted_scatter.spv.h"
-#include "gen/cc__d__first_commander.spv.h"
-#include "gen/se__mf__init.spv.h"
-#include "gen/se__mf__smoothing.spv.h"
-#include "gen/se__of__curve_fitting.spv.h"
-#include "gen/se__iot__test.spv.h"
-#include "gen/se__iot__smoothing.spv.h"
-#include "gen/se__s__segment_head_id.spv.h"
-#include "gen/se__s__loop_local_segmentation.spv.h"
-#include "gen/se__s__allocation.spv.h"
-#include "gen/se__s__first_commander.spv.h"
-#include "gen/se__s__clear.spv.h"
-#include "gen/se__s__scatter_top.spv.h"
-#include "gen/se__s__scatter_bottom.spv.h"
-#include "gen/se__sg__allocation.spv.h"
-#include "gen/se__sg__first_commander.spv.h"
-#include "gen/se__sg__scatter.spv.h"
-#include "gen/sr__default_shader.vert.spv.h"
-#include "gen/sr__default_shader.frag.spv.h"
-#include "gen/debug__display_contour_fragments.spv.h"
-#include "gen/debug__display_contour_pixels.spv.h"
-#include "gen/debug__display_sparse_pixel_edges.spv.h"
-#include "gen/debug__display_compacted_pixel_edges.spv.h"
-#include "gen/debug__display_segment_edges.spv.h"
-
-
-void const *hard_depth_test_embedded_data_stages[2] = {
-	&SHADER_SPV_cr__cpg__hard_depth_test__vert,
-	&SHADER_SPV_cr__cpg__hard_depth_test__frag,
-};
-
-void const *stroke_rendering_default_shader_embedded_data_stages[2] = {
-	&SHADER_SPV_sr__default_shader__vert,
-	&SHADER_SPV_sr__default_shader__frag,
-};
-
-void const *GdstrokeEffect::shader_to_embedded_data[Shader::SHADER_MAX] = {
-	&SHADER_SPV_dummy,
-	&SHADER_SPV_dummy_commander,
-	&SHADER_SPV_dummy_debug,
-	&SHADER_SPV_cr__ced__face_orientation,
-	&SHADER_SPV_cr__ced__detection,
-	&SHADER_SPV_cr__ced__allocation_l0_up,
-	&SHADER_SPV_cr__ced__allocation_l1_up,
-	&SHADER_SPV_cr__ced__allocation_l0_down,
-	&SHADER_SPV_cr__ced__scatter,
-	&SHADER_SPV_cr__fg__first_commander,
-	&SHADER_SPV_cr__fg__clipping,
-	&SHADER_SPV_cr__fg__frag_counts,
-	&SHADER_SPV_cr__fg__allocation,
-	&SHADER_SPV_cr__fg__scatter,
-	&SHADER_SPV_cr__cpg__first_commander,
-	&SHADER_SPV_cr__cpg__soft_depth_test,
-	&SHADER_SPV_cr__cpg__pre_alloc,
-	&SHADER_SPV_cr__cpg__allocation,
-	&SHADER_SPV_cr__cpg__scatter,
-	&SHADER_SPV_cr__cpg__second_commander,
-	hard_depth_test_embedded_data_stages,
-	&SHADER_SPV_cr__cpg__decode,
-	&SHADER_SPV_cc__peg__first_commander,
-	&SHADER_SPV_cc__peg__generation,
-	&SHADER_SPV_cc__lb__init,
-	&SHADER_SPV_cc__lb__wyllie,
-	&SHADER_SPV_cc__lb__scatter,
-	&SHADER_SPV_cc__lr__init,
-	&SHADER_SPV_cc__lr__wyllie,
-	&SHADER_SPV_cc__lr__scatter,
-	&SHADER_SPV_cc__d__init,
-	&SHADER_SPV_cc__d__head_allocation,
-	&SHADER_SPV_cc__d__head_scatter,
-	&SHADER_SPV_cc__d__compacted_allocation,
-	&SHADER_SPV_cc__d__compacted_scatter,
-	&SHADER_SPV_cc__d__first_commander,
-	&SHADER_SPV_se__mf__init,
-	&SHADER_SPV_se__mf__smoothing,
-	&SHADER_SPV_se__of__curve_fitting,
-	&SHADER_SPV_se__iot__test,
-	&SHADER_SPV_se__iot__smoothing,
-	&SHADER_SPV_se__s__segment_head_id,
-	&SHADER_SPV_se__s__loop_local_segmentation,
-	&SHADER_SPV_se__s__allocation,
-	&SHADER_SPV_se__s__first_commander,
-	&SHADER_SPV_se__s__clear,
-	&SHADER_SPV_se__s__scatter_top,
-	&SHADER_SPV_se__s__scatter_bottom,
-	&SHADER_SPV_se__sg__allocation,
-	&SHADER_SPV_se__sg__first_commander,
-	&SHADER_SPV_se__sg__scatter,
-	stroke_rendering_default_shader_embedded_data_stages,
-	&SHADER_SPV_debug__display_contour_fragments,
-	&SHADER_SPV_debug__display_contour_pixels,
-	&SHADER_SPV_debug__display_sparse_pixel_edges,
-	&SHADER_SPV_debug__display_compacted_pixel_edges,
-	&SHADER_SPV_debug__display_segment_edges,
-};
-
-#endif // !_USING_EDITOR
-
-
 void GdstrokeEffect::bind_sets(RenderingDevice *p_rd, int64_t p_compute_list) const {
 	this->     scene_interface_set.bind_to_compute_list(p_rd, p_compute_list, this->_compiled_shaders[Shader::SHADER_DUMMY]);
 	this->      mesh_interface_set.bind_to_compute_list(p_rd, p_compute_list, this->_compiled_shaders[Shader::SHADER_DUMMY]);
@@ -165,18 +30,16 @@ void GdstrokeEffect::bind_sets_debug(RenderingDevice *p_rd, int64_t p_compute_li
 }
 
 void GdstrokeEffect::_compile_shader(RenderingDevice *p_rd, Shader p_shader, String const &p_name) {
-	this->_compiled_shaders[p_shader] = create_comp_shader_from_embedded_spirv(p_rd, *(EmbeddedData const*)shader_to_embedded_data[p_shader], p_name);
-}
-
-void GdstrokeEffect::_compile_draw_shader(RenderingDevice *p_rd, Shader p_shader, String const &p_name) {
-	this->_compiled_shaders[p_shader] = create_draw_shader_from_embedded_spirv(p_rd, *(((EmbeddedData const**)shader_to_embedded_data[p_shader])[0]), *(((EmbeddedData const**)shader_to_embedded_data[p_shader])[1]), p_name);
+	if (shader_to_shader_info_map.at(p_shader).shader_stages & M_SHADER_STAGE_COMPUTE_BIT) {
+		this->_compiled_shaders[p_shader] = create_comp_shader_from_embedded_spirv(p_rd, *shader_to_embedded_data_map[p_shader][M_SHADER_STAGE_COMPUTE], p_name);
+	}
+	else {
+		this->_compiled_shaders[p_shader] = create_draw_shader_from_embedded_spirv(p_rd, *shader_to_embedded_data_map[p_shader][M_SHADER_STAGE_VERTEX], *shader_to_embedded_data_map[p_shader][M_SHADER_STAGE_FRAGMENT], p_name);
+	}
 }
 
 #define COMPILE_SHADER(p_rd, p_shader) \
-	_compile_shader(p_rd, p_shader, _STR(p_shader))
-
-#define COMPILE_DRAW_SHADER(p_rd, p_shader) \
-	_compile_draw_shader(p_rd, p_shader, _STR(p_shader))
+	_compile_shader(p_rd, p_shader, shader_to_shader_info_map.at(p_shader).name)
 
 void GdstrokeEffect::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_config_depth_bias", "p_value"), &GdstrokeEffect::set_config_depth_bias);
@@ -261,15 +124,14 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		this->debug_interface_set.create_resources(rd, p_render_data);
 
 		for (int i = 0; i < Shader::SHADER_MAX; ++i) {
-			if (i != Shader::SHADER_CR_CPG_HARD_DEPTH_TEST && i != Shader::SHADER_SR_DEFAULT_SHADER) {
-				COMPILE_SHADER(rd, Shader(i));
+			COMPILE_SHADER(rd, Shader(i));
+		}
+		for (int i = 0; i < Shader::SHADER_MAX; ++i) {
+			if (shader_to_shader_info_map.at(Shader(i)).shader_stages & M_SHADER_STAGE_COMPUTE_BIT)
 				this->_pipelines[Shader(i)] = rd->compute_pipeline_create(this->_compiled_shaders[Shader(i)]);
-			}
 		}
 
-		COMPILE_DRAW_SHADER(rd, Shader::SHADER_CR_CPG_HARD_DEPTH_TEST);
 		_pipelines[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST] = hard_depth_test_resources.create_render_pipeline(rd, _compiled_shaders[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST]);
-		COMPILE_DRAW_SHADER(rd, Shader::SHADER_SR_DEFAULT_SHADER);
 		_pipelines[Shader::SHADER_SR_DEFAULT_SHADER] = stroke_rendering_resources.create_render_pipeline(rd, p_render_data, _compiled_shaders[Shader::SHADER_SR_DEFAULT_SHADER]);
 
 		_ready = true;
