@@ -2,59 +2,77 @@
 #define MESH_BUFFERS_GLSLI
 
 #include "common/sanity.glsli"
+#extension GL_EXT_buffer_reference : enable
 
-layout(set = 2, binding = 0, std430) RESTRICT readonly buffer MeshDescBuffer {
+layout(buffer_reference, buffer_reference_align = 4, std430) readonly buffer MeshDescBuffer {
 	int num_vertices;
 	int num_edges;
 	int num_faces;
 	int pad;
 	mat4 model_to_world;
-} B_mesh_desc;
+};
 
 
 // w component for padding
-layout(set = 2, binding = 1, std430) RESTRICT readonly buffer VertexBuffer {
+layout(buffer_reference, buffer_reference_align = 4, std430) readonly buffer VertexBuffer {
 	vec4 position[];
-} B_vertex;
+};
 
 
-layout(set = 2, binding = 2, std430) RESTRICT readonly buffer EdgeToVertexBuffer {
+layout(buffer_reference, buffer_reference_align = 4, std430) readonly buffer EdgeToVertexBuffer {
 	ivec2 vertex_idxs[];
-} B_edge_to_vertex;
+};
 
-layout(set = 2, binding = 3, std430) RESTRICT readonly buffer EdgeToFaceBuffer {
+layout(buffer_reference, buffer_reference_align = 4, std430) readonly buffer EdgeToFaceBuffer {
 	ivec2 face_idxs[];
-} B_edge_to_face;
+};
 
-layout(set = 2, binding = 4, std430) RESTRICT readonly buffer EdgeIsConcaveBuffer {
+layout(buffer_reference, buffer_reference_align = 4, std430) readonly buffer EdgeIsConcaveBuffer {
 	bool concave[];
-} B_edge_is_concave;
+};
 
-layout(set = 2, binding = 5, std430) RESTRICT buffer EdgeIsContourBuffer {
+layout(buffer_reference, buffer_reference_align = 4, std430) buffer EdgeIsContourBuffer {
 	bool contour[];
-} B_edge_is_contour;
+};
 
-layout(set = 2, binding = 6, std430) RESTRICT buffer EdgeToContourEdgeBuffer {
+layout(buffer_reference, buffer_reference_align = 4, std430) buffer EdgeToContourEdgeBuffer {
 	int idx[];
-} B_edge_to_contour_edge;
+};
 
-layout(set = 2, binding = 7, std430) RESTRICT buffer AllocationColumnEdgeBuffer {
+layout(buffer_reference, buffer_reference_align = 4, std430) buffer AllocationColumnEdgeBuffer {
 	uint column_sum[8192];
 	uint column_offset[8192];
-} B_allocation_column_edge;
+};
 
 
-layout(set = 2, binding = 8, std430) RESTRICT readonly buffer FaceToVertexBuffer {
+layout(buffer_reference, buffer_reference_align = 4, std430) readonly buffer FaceToVertexBuffer {
 	ivec4 idxs[];
-} B_face_to_vertex;
+};
 
 // w component for padding
-layout(set = 2, binding = 9, std430) RESTRICT readonly buffer FaceNormalBuffer {
+layout(buffer_reference, buffer_reference_align = 4, std430) readonly buffer FaceNormalBuffer {
 	vec4 normal[];
-} B_face_normal;
+};
 
-layout(set = 2, binding = 10, std430) RESTRICT buffer FaceBackfacingBuffer {
+layout(buffer_reference, buffer_reference_align = 4, std430) buffer FaceBackfacingBuffer {
 	bool backfacing[];
-} B_face_backfacing;
+};
+
+layout(set = 2, binding = 0, std430) readonly buffer MeshBuffers {
+	MeshDescBuffer             B_mesh_desc;
+
+	VertexBuffer               B_vertex;
+
+	EdgeToVertexBuffer         B_edge_to_vertex;
+	EdgeToFaceBuffer           B_edge_to_face;
+	EdgeIsConcaveBuffer        B_edge_is_concave;
+	EdgeIsContourBuffer        B_edge_is_contour;
+	EdgeToContourEdgeBuffer    B_edge_to_contour_edge;
+	AllocationColumnEdgeBuffer B_allocation_column_edge;
+
+	FaceToVertexBuffer         B_face_to_vertex;
+	FaceNormalBuffer           B_face_normal;
+	FaceBackfacingBuffer       B_face_backfacing;
+};
 
 #endif // !MESH_BUFFERS_GLSLI

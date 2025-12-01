@@ -2,11 +2,12 @@
 #define CONTOUR_BUFFERS_GLSLI
 
 #include "common/sanity.glsli"
+#extension GL_EXT_buffer_reference : enable
 
 #define MAX_NUM_CONTOUR_FRAGMENTS (1 << 20)
 #define MAX_NUM_CONTOUR_PIXELS    (1 << 20)
 
-layout(set = 3, binding = 0, std430) RESTRICT buffer ContourDescBuffer {
+layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourDescBuffer {
 	int num_contour_edges;
 	int buf_len_contour_edges;
 
@@ -15,78 +16,97 @@ layout(set = 3, binding = 0, std430) RESTRICT buffer ContourDescBuffer {
 
 	int num_contour_pixels;
 	int buf_len_contour_pixels;
-} B_contour_desc;
+};
 
-layout(set = 3, binding = 1, std430) RESTRICT buffer ContourEdgeToEdgeBuffer {
+layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourEdgeToEdgeBuffer {
 	int idx[]
 	/* length of array is equal to B_mesh_desc.num_edges */;
-} B_contour_edge_to_edge;
+};
 
-layout(set = 3, binding = 2, std430) RESTRICT buffer ContourEdgeIsDiscardedBuffer {
+layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourEdgeIsDiscardedBuffer {
 	bool discarded[];
-} B_contour_edge_is_discarded;
+};
 
-layout(set = 3, binding = 3, std430) RESTRICT buffer ContourEdgeClipTBuffer {
+layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourEdgeClipTBuffer {
 	float t[][2];
-} B_contour_edge_clip_t;
+};
 
 struct ContourEdgeToContourFragmentData {
 	int num_fragments;
 	int first_fragment_idx;
 };
 
-layout(set = 3, binding = 4, std430) RESTRICT buffer ContourEdgeToContourFragmentBuffer {
+layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourEdgeToContourFragmentBuffer {
 	ContourEdgeToContourFragmentData data[];
-} B_contour_edge_to_contour_fragment;
+};
 
-layout(set = 3, binding = 5, std430) RESTRICT buffer ContourFragmentPixelCoordBuffer {
+
+layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourFragmentPixelCoordBuffer {
 	ivec2 pixel_coord[MAX_NUM_CONTOUR_FRAGMENTS];
-} B_contour_fragment_pixel_coord;
+};
 
-layout(set = 3, binding = 6, std430) RESTRICT buffer ContourFragmentOrientationBuffer {
+layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourFragmentOrientationBuffer {
 	vec2 orientation[MAX_NUM_CONTOUR_FRAGMENTS];
-} B_contour_fragment_orientation;
+};
 
-layout(set = 3, binding = 7, std430) RESTRICT buffer ContourFragmentNormalDepthBuffer {
+layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourFragmentNormalDepthBuffer {
 	vec4 normal_depth[MAX_NUM_CONTOUR_FRAGMENTS];
-} B_contour_fragment_normal_depth;
+};
 
-layout(set = 3, binding = 8, std430) RESTRICT buffer ContourFragmentPseudoVisibleBuffer {
+layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourFragmentPseudoVisibleBuffer {
 	bool pseudo_visible[MAX_NUM_CONTOUR_FRAGMENTS];
-} B_contour_fragment_pseudo_visible;
-
-
-#if !defined(STAGE_FRAG) && !defined(STAGE_VERT)
-layout(set = 3, binding = 9) uniform sampler2D U_screen_depth_texture;
-
-layout(set = 3, binding = 10, r32ui) RESTRICT uniform uimage2D U_foremost_fragment_bitmap;
-#endif // !defined(STAGE_FRAG) && !defined(STAGE_VERT)
-
+};
 
 struct AllocationContourPixelData {
 	uint is_fragment_cluster_leader;
 	uint contour_pixel_idx;
 };
 
-layout(set = 3, binding = 11, std430) RESTRICT buffer AllocationContourPixelBuffer {
+layout(buffer_reference, buffer_reference_align = 4, std430) buffer AllocationContourPixelBuffer {
 	AllocationContourPixelData data[MAX_NUM_CONTOUR_FRAGMENTS];
-} B_allocation_contour_pixel;
+};
 
-layout(set = 3, binding = 12, std430) RESTRICT buffer ForemostContourFragmentToContourPixelBuffer {
+layout(buffer_reference, buffer_reference_align = 4, std430) buffer ForemostContourFragmentToContourPixelBuffer {
 	uint contour_pixel_idx[MAX_NUM_CONTOUR_FRAGMENTS];
-} B_foremost_contour_fragment_to_contour_pixel;
+};
 
 
-layout(set = 3, binding = 13, std430) RESTRICT buffer ContourPixelPixelCoordBuffer {
+layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourPixelPixelCoordBuffer {
 	ivec2 pixel_coord[MAX_NUM_CONTOUR_PIXELS];
-} B_contour_pixel_pixel_coord;
+};
 
-layout(set = 3, binding = 14, std430) RESTRICT buffer ContourPixelOrientationBuffer {
+layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourPixelOrientationBuffer {
 	vec2 orientation[MAX_NUM_CONTOUR_PIXELS];
-} B_contour_pixel_orientation;
+};
 
-layout(set = 3, binding = 15, std430) RESTRICT buffer ContourPixelNormalDepthBuffer {
+layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourPixelNormalDepthBuffer {
 	vec4 normal_depth[MAX_NUM_CONTOUR_PIXELS];
-} B_contour_pixel_normal_depth;
+};
+	
+
+layout(set = 3, binding = 0, std430) readonly buffer ContourBuffers {
+	ContourDescBuffer                           B_contour_desc;
+	ContourEdgeToEdgeBuffer                     B_contour_edge_to_edge;
+	ContourEdgeIsDiscardedBuffer                B_contour_edge_is_discarded;
+	ContourEdgeClipTBuffer                      B_contour_edge_clip_t;
+	ContourEdgeToContourFragmentBuffer          B_contour_edge_to_contour_fragment;
+	ContourFragmentPixelCoordBuffer             B_contour_fragment_pixel_coord;
+	ContourFragmentOrientationBuffer            B_contour_fragment_orientation;
+	ContourFragmentNormalDepthBuffer            B_contour_fragment_normal_depth;
+	ContourFragmentPseudoVisibleBuffer          B_contour_fragment_pseudo_visible;
+	AllocationContourPixelBuffer                B_allocation_contour_pixel;
+	ForemostContourFragmentToContourPixelBuffer B_foremost_contour_fragment_to_contour_pixel;
+	ContourPixelPixelCoordBuffer                B_contour_pixel_pixel_coord;
+	ContourPixelOrientationBuffer               B_contour_pixel_orientation;
+	ContourPixelNormalDepthBuffer               B_contour_pixel_normal_depth;
+};
+
+
+#if !defined(STAGE_FRAG) && !defined(STAGE_VERT)
+layout(set = 3, binding = 1) uniform sampler2D U_screen_depth_texture;
+
+layout(set = 3, binding = 2, r32ui) uniform uimage2D U_foremost_fragment_bitmap;
+#endif // !defined(STAGE_FRAG) && !defined(STAGE_VERT)
+
 
 #endif // !CONTOUR_BUFFERS_GLSLI
