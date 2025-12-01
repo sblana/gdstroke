@@ -40,6 +40,10 @@ void main() {
 		if (U_config.use_soft_depth_test_modification > 0)
 			is_pseudo_visible = is_pseudo_visible || passes_average;
 
+		// HACK: issue with rasterization: some fragments lie on the bottom and right screen/window borders. probably an NDC → screen-space transformation issue.
+		if (!is_within_screen(B_contour_fragment_pixel_coord.pixel_coord[fragment_idx], imageSize(U_foremost_fragment_bitmap))) {
+			is_pseudo_visible = false;
+		}
 		B_contour_fragment_pseudo_visible.pseudo_visible[fragment_idx] = is_pseudo_visible;
 	}
 }
