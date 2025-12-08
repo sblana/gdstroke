@@ -169,6 +169,17 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 	uint32_t num_edges = GdstrokeServer::get_singleton()->get_contour_mesh().edge_to_vertex_buffer.size();
 	uint32_t num_faces = GdstrokeServer::get_singleton()->get_contour_mesh().face_to_vertex_buffer.size();
 
+	// HACK: rethink abstractions to avoid this pls
+	using      MeshBuffers  = GdstrokeShaderInterface::     MeshInterfaceSet::Buffer;
+	using      MeshBindings = GdstrokeShaderInterface::     MeshInterfaceSet::Binding;
+	using   ContourBuffers  = GdstrokeShaderInterface::  ContourInterfaceSet::Buffer;
+	using   ContourBindings = GdstrokeShaderInterface::  ContourInterfaceSet::Binding;
+	using PixelEdgeBuffers  = GdstrokeShaderInterface::PixelEdgeInterfaceSet::Buffer;
+	using PixelEdgeBindings = GdstrokeShaderInterface::PixelEdgeInterfaceSet::Binding;
+	uint64_t       mesh_buffers_ptr = rd->buffer_get_device_address(this->      mesh_interface_set.resources[     MeshBuffers::BUFFER_MAX +      MeshBindings::BINDING_MESH_BUFFERS]);
+	uint64_t    contour_buffers_ptr = rd->buffer_get_device_address(this->   contour_interface_set.resources[  ContourBuffers::BUFFER_MAX +   ContourBindings::BINDING_CONTOUR_BUFFERS]);
+	uint64_t pixel_edge_buffers_ptr = rd->buffer_get_device_address(this->pixel_edge_interface_set.resources[PixelEdgeBuffers::BUFFER_MAX + PixelEdgeBindings::BINDING_PIXEL_EDGE_BUFFERS]);
+
 	int64_t list;
 	rd->draw_command_begin_label("dummy", Color(0.3, 0.3, 0.3));
 	{
@@ -201,22 +212,50 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		rd->compute_list_dispatch(list, udiv_ceil(num_edges, 64), 1, 1);
 		rd->compute_list_end();
 
+		PackedByteArray push = PackedInt64Array({
+			// B_edge_is_contour.contour[idx],
+			int64_t(sizeof(uint64_t) * MeshBuffers::BUFFER_EDGE_IS_CONTOUR_BUFFER + mesh_buffers_ptr),
+			int64_t(0 * sizeof(int32_t)),
+			int64_t(1 * sizeof(int32_t)),
+			// B_mesh_desc.num_edges,
+			int64_t(sizeof(uint64_t) * MeshBuffers::BUFFER_MESH_DESC_BUFFER + mesh_buffers_ptr),
+			int64_t(1 * sizeof(int32_t)),
+			// B_contour_desc.num_contour_edges,
+			int64_t(sizeof(uint64_t) * ContourBuffers::BUFFER_CONTOUR_DESC_BUFFER + contour_buffers_ptr),
+			int64_t(0 * sizeof(int32_t)),
+			// B_edge_to_contour_edge.idx[idx],
+			int64_t(sizeof(uint64_t) * MeshBuffers::BUFFER_EDGE_TO_CONTOUR_EDGE_BUFFER + mesh_buffers_ptr),
+			int64_t(0 * sizeof(int32_t)),
+			int64_t(1 * sizeof(int32_t)),
+		}).to_byte_array();
+
 		list = rd->compute_list_begin();
-		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CED_ALLOCATION_L0_UP]);
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_REUSABLE_ALLOCATION_COMMANDER]);
+		rd->compute_list_set_push_constant(list, push, 80);
 		this->bind_sets(rd, list);
-		rd->compute_list_dispatch(list, udiv_ceil(num_edges, 1024), 1, 1);
+		this->bind_sets_commander(rd, list);
+		rd->compute_list_dispatch(list, 1, 1, 1);
 		rd->compute_list_end();
 
 		list = rd->compute_list_begin();
-		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CED_ALLOCATION_L1_UP]);
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_REUSABLE_ALLOCATION_L0_UP]);
+		rd->compute_list_set_push_constant(list, push, 80);
+		this->bind_sets(rd, list);
+		this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_REUSABLE_ALLOCATION_L0);
+		rd->compute_list_end();
+
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_REUSABLE_ALLOCATION_L1_UP]);
+		rd->compute_list_set_push_constant(list, push, 80);
 		this->bind_sets(rd, list);
 		rd->compute_list_dispatch(list, 1, 1, 1);
 		rd->compute_list_end();
 
 		list = rd->compute_list_begin();
-		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CED_ALLOCATION_L0_DOWN]);
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_REUSABLE_ALLOCATION_L0_DOWN]);
+		rd->compute_list_set_push_constant(list, push, 80);
 		this->bind_sets(rd, list);
-		rd->compute_list_dispatch(list, udiv_ceil(num_edges, 1024), 1, 1);
+		this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_REUSABLE_ALLOCATION_L0);
 		rd->compute_list_end();
 
 		list = rd->compute_list_begin();
@@ -249,7 +288,23 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		rd->compute_list_end();
 
 		list = rd->compute_list_begin();
-		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_FG_ALLOCATION]);
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_REUSABLE_WG_ALLOCATION]);
+		rd->compute_list_set_push_constant(list, PackedInt64Array({
+			// B_contour_edge_to_contour_fragment.data[idx].num_fragments,
+			int64_t(sizeof(uint64_t) * ContourBuffers::BUFFER_CONTOUR_EDGE_TO_CONTOUR_FRAGMENT_BUFFER + contour_buffers_ptr),
+			int64_t(0 * sizeof(int32_t)),
+			int64_t(2 * sizeof(int32_t)),
+			// B_contour_desc.num_contour_edges,
+			int64_t(sizeof(uint64_t) * ContourBuffers::BUFFER_CONTOUR_DESC_BUFFER + contour_buffers_ptr),
+			int64_t(0 * sizeof(int32_t)),
+			// B_contour_desc.num_contour_fragments,
+			int64_t(sizeof(uint64_t) * ContourBuffers::BUFFER_CONTOUR_DESC_BUFFER + contour_buffers_ptr),
+			int64_t(2 * sizeof(int32_t)),
+			// B_contour_edge_to_contour_fragment.data[idx].first_fragment_idx,
+			int64_t(sizeof(uint64_t) * ContourBuffers::BUFFER_CONTOUR_EDGE_TO_CONTOUR_FRAGMENT_BUFFER + contour_buffers_ptr),
+			int64_t(1 * sizeof(int32_t)),
+			int64_t(2 * sizeof(int32_t)),
+		}).to_byte_array(), 80);
 		this->bind_sets(rd, list);
 		rd->compute_list_dispatch(list, 1, 1, 1);
 		rd->compute_list_end();

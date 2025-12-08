@@ -1,0 +1,38 @@
+#version 450
+#extension GL_ARB_shading_language_include : enable
+
+layout(local_size_x = 1024) in;
+
+#include "common/buffers.glsli"
+#include "common/scans.glsli"
+
+
+layout(push_constant) RESTRICT readonly uniform PushConstants {
+	AllocationPushData U_push;
+};
+
+
+shared int block_offsets[gl_WorkGroupSize.x];
+
+#define fn_get_src_array(MP_idx_)                     (i32ref_index_into_buffer(src_buffer_ptr, U_push.src_offset, U_push.src_stride, (MP_idx_)).value)
+#define fn_set_src_to_dst_map(MP_idx_, MP_value_)     (i32ref_index_into_buffer(src_to_dst_map_buffer_ptr, U_push.src_to_dst_map_offset, U_push.src_to_dst_map_stride, (MP_idx_)).value  = MP_value_)
+#define fn_add_set_src_to_dst_map(MP_idx_, MP_value_) (i32ref_index_into_buffer(src_to_dst_map_buffer_ptr, U_push.src_to_dst_map_offset, U_push.src_to_dst_map_stride, (MP_idx_)).value += MP_value_)
+
+void main() {
+	UInt64 src_buffer_ptr            = UInt64Reference(U_push.src_buffer_indirect_ptr).value;
+	UInt64 src_to_dst_map_buffer_ptr = UInt64Reference(U_push.src_to_dst_map_buffer_indirect_ptr).value;
+	UInt64 src_num_elements_ptr      = UInt64Reference(U_push.src_num_elements_indirect_ptr).value;
+	UInt64 dst_num_elements_ptr      = UInt64Reference(U_push.dst_num_elements_indirect_ptr).value;
+	readonly  Int32Reference src_num_elements = Int32Reference(src_num_elements_ptr + U_push.src_num_elements_offset);
+	writeonly Int32Reference dst_num_elements = Int32Reference(dst_num_elements_ptr + U_push.dst_num_elements_offset);
+
+	M_SINGLE_WORKGROUP_ALLOCATION(
+		int,
+		block_offsets,
+		src_num_elements.value,
+		fn_get_src_array,
+		dst_num_elements.value,
+		fn_set_src_to_dst_map,
+		fn_add_set_src_to_dst_map
+	)
+}

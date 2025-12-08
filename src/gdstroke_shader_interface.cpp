@@ -198,7 +198,7 @@ Error GdstrokeShaderInterface::MeshInterfaceSet::create_resources(RenderingDevic
 		buffers_addresses_data.encode_u64(i * 8, p_rd->buffer_get_device_address(resources[i]));
 	}
 
-	resources[Buffer::BUFFER_MAX + Binding::BINDING_MESH_BUFFERS] = p_rd->storage_buffer_create(Buffer::BUFFER_MAX * 8, buffers_addresses_data);
+	resources[Buffer::BUFFER_MAX + Binding::BINDING_MESH_BUFFERS] = p_rd->storage_buffer_create(Buffer::BUFFER_MAX * 8, buffers_addresses_data, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
 	return Error::OK;
 }
@@ -261,7 +261,7 @@ Error GdstrokeShaderInterface::ContourInterfaceSet::create_resources(RenderingDe
 		buffers_addresses_data.encode_u64(i * 8, p_rd->buffer_get_device_address(resources[i]));
 	}
 
-	resources[Buffer::BUFFER_MAX + Binding::BINDING_CONTOUR_BUFFERS] = p_rd->storage_buffer_create(Buffer::BUFFER_MAX * 8, buffers_addresses_data);
+	resources[Buffer::BUFFER_MAX + Binding::BINDING_CONTOUR_BUFFERS] = p_rd->storage_buffer_create(Buffer::BUFFER_MAX * 8, buffers_addresses_data, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
 	Ref<RDSamplerState> nearest_sampler_state = Ref(memnew(RDSamplerState));
 	nearest_sampler = p_rd->sampler_create(nearest_sampler_state);
@@ -351,7 +351,7 @@ Error GdstrokeShaderInterface::PixelEdgeInterfaceSet::create_resources(Rendering
 		buffers_addresses_data.encode_u64(i * 8, p_rd->buffer_get_device_address(resources[i]));
 	}
 
-	resources[Buffer::BUFFER_MAX + Binding::BINDING_PIXEL_EDGE_BUFFERS] = p_rd->storage_buffer_create(Buffer::BUFFER_MAX * 8, buffers_addresses_data);
+	resources[Buffer::BUFFER_MAX + Binding::BINDING_PIXEL_EDGE_BUFFERS] = p_rd->storage_buffer_create(Buffer::BUFFER_MAX * 8, buffers_addresses_data, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
 	return Error::OK;
 }

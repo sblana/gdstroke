@@ -30,6 +30,11 @@ enum Shader : int32_t {
 	SHADER_DUMMY = 0,
 	SHADER_DUMMY_COMMANDER,
 	SHADER_DUMMY_DEBUG,
+	SHADER_REUSABLE_WG_ALLOCATION,
+	SHADER_REUSABLE_ALLOCATION_COMMANDER,
+	SHADER_REUSABLE_ALLOCATION_L0_UP,
+	SHADER_REUSABLE_ALLOCATION_L1_UP,
+	SHADER_REUSABLE_ALLOCATION_L0_DOWN,
 	SHADER_CR_CED_FACE_ORIENTATION,
 	SHADER_CR_CED_DETECTION,
 	SHADER_CR_CED_ALLOCATION_L0_UP,
@@ -105,6 +110,13 @@ std::map<Shader, ShaderBuildInfo> shader_to_shader_info_map = {{
 	{ SHADER_DUMMY,           ShaderBuildInfo{"dummy",           "./test/dummy.comp" ,          M_SHADER_STAGE_COMPUTE_BIT} },
 	{ SHADER_DUMMY_COMMANDER, ShaderBuildInfo{"dummy_commander", "./test/dummy_commander.comp", M_SHADER_STAGE_COMPUTE_BIT} },
 	{ SHADER_DUMMY_DEBUG,     ShaderBuildInfo{"dummy_debug",     "./test/dummy_debug.comp",     M_SHADER_STAGE_COMPUTE_BIT} },
+
+	{ SHADER_REUSABLE_WG_ALLOCATION, ShaderBuildInfo{"reusable__wg_allocation", "./reusable/wg_allocation.comp", M_SHADER_STAGE_COMPUTE_BIT} },
+
+	{ SHADER_REUSABLE_ALLOCATION_COMMANDER, ShaderBuildInfo{"reusable__allocation_commander", "./reusable/allocation.comp", M_SHADER_STAGE_COMPUTE_BIT, "-DCOMMANDER"} },
+	{ SHADER_REUSABLE_ALLOCATION_L0_UP,     ShaderBuildInfo{"reusable__allocation_l0_up",     "./reusable/allocation.comp", M_SHADER_STAGE_COMPUTE_BIT, "-DLEVEL_0 -DUP_SWEEP"} },
+	{ SHADER_REUSABLE_ALLOCATION_L1_UP,     ShaderBuildInfo{"reusable__allocation_l1_up",     "./reusable/allocation.comp", M_SHADER_STAGE_COMPUTE_BIT, "-DLEVEL_1 -DUP_SWEEP"} },
+	{ SHADER_REUSABLE_ALLOCATION_L0_DOWN,   ShaderBuildInfo{"reusable__allocation_l0_down",   "./reusable/allocation.comp", M_SHADER_STAGE_COMPUTE_BIT, "-DLEVEL_0 -DDOWN_SWEEP"} },
 
 	{ SHADER_CR_CED_FACE_ORIENTATION,   ShaderBuildInfo{"cr__ced__face_orientation",   "./contour_rasterization/contour_edge_detection/face_orientation.comp", M_SHADER_STAGE_COMPUTE_BIT} },
 	{ SHADER_CR_CED_DETECTION,          ShaderBuildInfo{"cr__ced__detection",          "./contour_rasterization/contour_edge_detection/detection.comp",        M_SHADER_STAGE_COMPUTE_BIT} },

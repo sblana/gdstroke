@@ -2,8 +2,11 @@
 #define SCANS_GLSLI
 
 #extension GL_ARB_shading_language_include : enable
+#extension GL_EXT_scalar_block_layout : enable
 
 #include "common/math.glsli"
+#include "common/ext/explicit_arithmetic_types.glsli"
+#include "common/ext/subgroup.glsli"
 
 
 struct BlockPartitionDesc {
@@ -36,72 +39,256 @@ BlockDesc create_block_desc(in const BlockPartitionDesc i_bpd, in const uint i_b
 }
 
 
-#include "common/ext/subgroup.glsli"
+struct AllocationPushData {
+	UInt64 src_buffer_indirect_ptr;
+	UInt64 src_offset;
+	UInt64 src_stride;
+	UInt64 src_num_elements_indirect_ptr;
+	UInt64 src_num_elements_offset;
+	UInt64 dst_num_elements_indirect_ptr;
+	UInt64 dst_num_elements_offset;
+	UInt64 src_to_dst_map_buffer_indirect_ptr;
+	UInt64 src_to_dst_map_offset;
+	UInt64 src_to_dst_map_stride;
+};
 
-#define M_SINGLE_WORKGROUP_ALLOCATION( \
-	MP_type_,						\
-	MP_block_offsets_,				\
-	MP_src_size_,					\
-	MP_fn_get_src_array_,			\
-	MP_dst_size_,					\
-	MP_fn_set_src_to_dst_map_,		\
-	MP_fn_add_set_src_to_dst_map_	\
+layout(buffer_reference, buffer_reference_align = 4, scalar) buffer Int32Reference {
+	Int32 value;
+};
+
+layout(buffer_reference, buffer_reference_align = 4, scalar) buffer UInt64Reference {
+	UInt64 value;
+};
+
+Int32Reference i32ref_index_into_buffer(in const UInt64 i_buffer_ptr, in const UInt64 i_offset, in const UInt64 i_stride, in const UInt64 i_index) {
+	return Int32Reference(i_buffer_ptr + i_offset + i_stride * i_index);
+}
+
+
+#define _M_ALLOCATION_BLOCK(	\
+	MP_src_size_,				\
+	MP_bpd_name_,				\
+	MP_bd_name_,				\
+	MP_num_workgroups_,			\
+	MP_workgroup_idx_			\
+) \
+	const BlockPartitionDesc MP_bpd_name_ = create_block_partition_desc(gl_NumSubgroups * MP_num_workgroups_, udiv_ceil(MP_src_size_, gl_SubgroupSize));	\
+	const BlockDesc MP_bd_name_ = create_block_desc(MP_bpd_name_, gl_SubgroupID + gl_NumSubgroups * MP_workgroup_idx_);
+
+
+#define _M_ALLOCATION_SUBGROUP_STAGE_2_BASE(	\
+	MP_type_,									\
+	MP_src_size_,								\
+	MP_fn_add_set_src_to_dst_map_,				\
+	MP_load_block_offset_,						\
+	MP_bd_name_									\
 ) \
 {																															\
-	const BlockPartitionDesc bpd = create_block_partition_desc(gl_NumSubgroups, udiv_ceil(MP_src_size_, gl_SubgroupSize));	\
-	const BlockDesc bd = create_block_desc(bpd, gl_SubgroupID);																\
-																															\
-	const bool is_participating_stage_0 = bd.block_idx < bpd.num_blocks;													\
-	const bool is_participating_stage_1 = gl_SubgroupID == 0;																\
-	const bool is_participating_stage_2 = bd.block_idx < bpd.num_blocks;													\
-																															\
-	if (is_participating_stage_0) {																							\
-		MP_block_offsets_[bd.block_idx] = 0;																				\
-		for (uint element_idx = bd.first_element_idx; element_idx <= bd.final_element_idx; ++element_idx) {					\
-			const uint idx = element_idx * gl_SubgroupSize + gl_SubgroupInvocationID;										\
-																															\
-			MP_type_ value = 0;																								\
-			if (idx < MP_src_size_) {																						\
-				value = MP_fn_get_src_array_(idx);																			\
-			}																												\
-			const MP_type_ exclusive = subgroupExclusiveAdd(value) + MP_block_offsets_[bd.block_idx];						\
-			const MP_type_ element_sum = subgroupAdd(value);																\
-																															\
-			if (subgroupElect()) {																							\
-				MP_block_offsets_[bd.block_idx] += element_sum;																\
-			}																												\
-			if (idx < MP_src_size_) {																						\
-				MP_fn_set_src_to_dst_map_(idx, exclusive);																	\
-			}																												\
+	const MP_type_ block_offset = MP_load_block_offset_;																	\
+	for (uint element_idx = MP_bd_name_.first_element_idx; element_idx <= MP_bd_name_.final_element_idx; ++element_idx) {	\
+		const uint idx = element_idx * gl_SubgroupSize + gl_SubgroupInvocationID;											\
+		if (idx < MP_src_size_) {																							\
+			MP_fn_add_set_src_to_dst_map_(idx, block_offset);																\
 		}																													\
 	}																														\
-	barrier();																												\
-	if (is_participating_stage_1) {																							\
-		const uint block_idx = gl_SubgroupInvocationID;																		\
-		MP_type_ value = 0;																									\
-		if (block_idx < bpd.num_blocks) {																					\
-			value = MP_block_offsets_[block_idx];																			\
-		}																													\
-																															\
-		const MP_type_ exclusive = subgroupExclusiveAdd(value);																\
-		const MP_type_ sum = subgroupAdd(value);																			\
-																															\
-		if (subgroupElect()) {																								\
-			MP_dst_size_ = sum;																								\
-		}																													\
-		MP_block_offsets_[block_idx] = exclusive;																			\
-	}																														\
-	barrier();																												\
-	if (is_participating_stage_2) {																							\
-		const MP_type_ block_offset = MP_block_offsets_[bd.block_idx];														\
-		for (uint element_idx = bd.first_element_idx; element_idx <= bd.final_element_idx; ++element_idx) {					\
-			const uint idx = element_idx * gl_SubgroupSize + gl_SubgroupInvocationID;										\
-			if (idx < MP_src_size_) {																						\
-				MP_fn_add_set_src_to_dst_map_(idx, block_offset);															\
-			}																												\
-		}																													\
-	}																														\
-	barrier();																												\
+}
+
+
+#define _M_ALLOCATION_SUBGROUP_BASE(	\
+	MP_type_,							\
+	MP_block_offsets_,					\
+	MP_src_size_,						\
+	MP_fn_get_src_array_,				\
+	MP_dst_size_,						\
+	MP_fn_set_src_to_dst_map_,			\
+	MP_fn_add_set_src_to_dst_map_,		\
+	MP_num_workgroups_,					\
+	MP_workgroup_idx_					\
+) \
+{																											\
+	_M_ALLOCATION_BLOCK(																					\
+		MP_src_size_,																						\
+		bpd,																								\
+		bd,																									\
+		MP_num_workgroups_,																					\
+		MP_workgroup_idx_																					\
+	)																										\
+																											\
+	const bool is_participating_stage_0 = bd.block_idx < bpd.num_blocks;									\
+	const bool is_participating_stage_1 = gl_SubgroupID == 0;												\
+	const bool is_participating_stage_2 = bd.block_idx < bpd.num_blocks;									\
+																											\
+	MP_block_offsets_[gl_SubgroupID] = 0;																	\
+	if (is_participating_stage_0) {																			\
+		for (uint element_idx = bd.first_element_idx; element_idx <= bd.final_element_idx; ++element_idx) {	\
+			const uint idx = element_idx * gl_SubgroupSize + gl_SubgroupInvocationID;						\
+																											\
+			MP_type_ value = 0;																				\
+			if (idx < MP_src_size_) {																		\
+				value = MP_fn_get_src_array_(idx);															\
+			}																								\
+			const MP_type_ exclusive = subgroupExclusiveAdd(value) + MP_block_offsets_[gl_SubgroupID];		\
+			const MP_type_ element_sum = subgroupAdd(value);												\
+																											\
+			if (subgroupElect()) {																			\
+				MP_block_offsets_[gl_SubgroupID] += element_sum;											\
+			}																								\
+			if (idx < MP_src_size_) {																		\
+				MP_fn_set_src_to_dst_map_(idx, exclusive);													\
+			}																								\
+		}																									\
+	}																										\
+	barrier();																								\
+	if (is_participating_stage_1) {																			\
+		const uint block_idx = gl_SubgroupInvocationID;														\
+		MP_type_ value = MP_block_offsets_[block_idx];														\
+																											\
+		const MP_type_ exclusive = subgroupExclusiveAdd(value);												\
+		const MP_type_ sum = subgroupAdd(value);															\
+																											\
+		if (subgroupElect()) {																				\
+			MP_dst_size_ = sum;																				\
+		}																									\
+		MP_block_offsets_[block_idx] = exclusive;															\
+	}																										\
+	barrier();																								\
+	if (is_participating_stage_2) {																			\
+		_M_ALLOCATION_SUBGROUP_STAGE_2_BASE(																\
+			MP_type_,																						\
+			MP_src_size_,																					\
+			MP_fn_add_set_src_to_dst_map_,																	\
+			MP_block_offsets_[gl_SubgroupID],																\
+			bd																								\
+		)																									\
+	}																										\
+	barrier();																								\
+}
+
+#define _M_ALLOCATION_SUBGROUP_DOWNSWEEP_BASE(	\
+	MP_type_,									\
+	MP_src_size_,								\
+	MP_fn_load_workgroup_offset_,				\
+	MP_shared_storage_workgroup_offset_,		\
+	MP_fn_add_set_src_to_dst_map_,				\
+	MP_num_workgroups_,							\
+	MP_workgroup_idx_							\
+) \
+{																									\
+	_M_ALLOCATION_BLOCK(																			\
+		MP_src_size_,																				\
+		bpd,																						\
+		bd,																							\
+		MP_num_workgroups_,																			\
+		MP_workgroup_idx_																			\
+	)																								\
+																									\
+	const bool is_participating_stage_1 = gl_SubgroupID == 0;										\
+	const bool is_participating_stage_2 = bd.block_idx < bpd.num_blocks;							\
+																									\
+	if (is_participating_stage_1) {																	\
+		if (subgroupElect()) {																		\
+			MP_shared_storage_workgroup_offset_ = MP_fn_load_workgroup_offset_(MP_workgroup_idx_);	\
+		}																							\
+	}																								\
+	barrier();																						\
+	if (is_participating_stage_2) {																	\
+		_M_ALLOCATION_SUBGROUP_STAGE_2_BASE(														\
+			MP_type_,																				\
+			MP_src_size_,																			\
+			MP_fn_add_set_src_to_dst_map_,															\
+			MP_shared_storage_workgroup_offset_,													\
+			bd																						\
+		)																							\
+	}																								\
+	barrier();																						\
+}
+
+
+#define M_SINGLE_WORKGROUP_ALLOCATION(	\
+	MP_type_,							\
+	MP_block_offsets_,					\
+	MP_src_size_,						\
+	MP_fn_get_src_array_,				\
+	MP_dst_size_,						\
+	MP_fn_set_src_to_dst_map_,			\
+	MP_fn_add_set_src_to_dst_map_		\
+) \
+{										\
+	_M_ALLOCATION_SUBGROUP_BASE(		\
+		MP_type_,						\
+		MP_block_offsets_,				\
+		MP_src_size_,					\
+		MP_fn_get_src_array_,			\
+		MP_dst_size_,					\
+		MP_fn_set_src_to_dst_map_,		\
+		MP_fn_add_set_src_to_dst_map_,	\
+		1u,								\
+		0u								\
+	)									\
+}
+
+#define M_GLOBAL_ALLOCATION(				\
+	MP_type_,								\
+	MP_block_offsets_,						\
+	MP_src_size_,							\
+	MP_fn_get_src_array_,					\
+	MP_dst_size_,							\
+	MP_fn_get_intermediate_sums_,			\
+	MP_fn_set_intermediate_sums_,			\
+	MP_fn_get_intermediate_offsets_,		\
+	MP_fn_set_intermediate_offsets_,		\
+	MP_fn_add_set_intermediate_offsets_,	\
+	MP_fn_set_src_to_dst_map_,				\
+	MP_fn_add_set_src_to_dst_map_,			\
+	MP_level_0_num_workgroups_,				\
+	MP_is_level_0_,							\
+	MP_is_upsweep_							\
+) \
+{																					\
+	if (bool(MP_is_upsweep_) && bool(MP_is_level_0_)) {								\
+		MP_type_ my_intermediate_sum = 0;											\
+		_M_ALLOCATION_SUBGROUP_BASE(												\
+			MP_type_,																\
+			MP_block_offsets_,														\
+			MP_src_size_,															\
+			MP_fn_get_src_array_,													\
+			my_intermediate_sum,													\
+			MP_fn_set_src_to_dst_map_,												\
+			MP_fn_add_set_src_to_dst_map_,											\
+			gl_NumWorkGroups.x,														\
+			gl_WorkGroupID.x														\
+		)																			\
+		if (gl_LocalInvocationID.x == 0) {											\
+			MP_fn_set_intermediate_sums_(gl_WorkGroupID.x, my_intermediate_sum);	\
+		}																			\
+		barrier();																	\
+	}																				\
+																					\
+	if (bool(MP_is_upsweep_) && !bool(MP_is_level_0_)) {							\
+		_M_ALLOCATION_SUBGROUP_BASE(												\
+			MP_type_,																\
+			MP_block_offsets_,														\
+			MP_level_0_num_workgroups_,												\
+			MP_fn_get_intermediate_sums_,											\
+			MP_dst_size_,															\
+			MP_fn_set_intermediate_offsets_,										\
+			MP_fn_add_set_intermediate_offsets_,									\
+			1u,																		\
+			0u																		\
+		)																			\
+	}																				\
+																					\
+	if (!bool(MP_is_upsweep_) && bool(MP_is_level_0_)) {							\
+		_M_ALLOCATION_SUBGROUP_DOWNSWEEP_BASE(										\
+			MP_type_,																\
+			MP_src_size_,															\
+			MP_fn_get_intermediate_offsets_,										\
+			MP_block_offsets_[0],													\
+			MP_fn_add_set_src_to_dst_map_,											\
+			gl_NumWorkGroups.x,														\
+			gl_WorkGroupID.x														\
+		)																			\
+	}																				\
 }
 
 #endif // !SCANS_GLSLI
