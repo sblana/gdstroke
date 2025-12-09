@@ -5,7 +5,6 @@
 
 @SET "compileshadersTEMPDIR=..\..\temp\"
 
-gcc embed.c -o %compileshadersTEMPDIR%embed.exe
 g++ shaders_build_main.cpp -std=c++20 -o %compileshadersTEMPDIR%shaders_build_main.exe
 %compileshadersTEMPDIR%shaders_build_main.exe
 

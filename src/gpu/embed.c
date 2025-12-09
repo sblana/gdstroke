@@ -33,11 +33,8 @@ char *read_entire_file(char const *filename, int *out_length) {
 
 
 // embed <input file> <output file> <variable name>
-int main(int argc, char **argv) {
-	assert(argc == 4);
-	char const *   input_file = argv[1];
-	char const *  output_file = argv[2];
-	char const *variable_name = argv[3];
+int embed(char const *input_file, char const * output_file, char const * variable_name) {
+
 	int input_size;
 	char *input_data = read_entire_file(input_file, &input_size);
 	FILE *fp = fopen(output_file, "wb");
@@ -61,5 +58,19 @@ int main(int argc, char **argv) {
 	fprintf(fp, "\n\t}\n};");
 
 	fclose(fp);
+	return 0;
 }
+
+#ifdef EMBED_MAIN
+
+int main(int argc, char **argv) {
+	assert(argc == 4);
+	char const *   input_file = argv[1];
+	char const *  output_file = argv[2];
+	char const *variable_name = argv[3];
+	return embed(input_file, output_file, variable_name);
+}
+
+#endif
+
 #endif

@@ -1,3 +1,4 @@
+#include "embed.c"
 #include "shaders.hpp"
 
 std::unordered_map<int, char const *> shader_stage_bit_to_stage_affix_lower{{
@@ -34,14 +35,16 @@ void build_shader(ShaderBuildInfo shader_build_info, int godot_version_minor) {
 		std::string glc_stage_flags = shader_stage_bit_to_glc_stage_flags.at(1 << i);
 		std::string stage_affix = shader_stage_bit_to_stage_affix_lower.at(1 << i);
 
-		constexpr std::string_view glc_fmt = "glslang -DGODOT_VERSION_MINOR={} {} {} -gV -I. --target-env vulkan1.3 -V {} -o ../../temp/{}.{}.spv";
+		constexpr std::string_view glc_fmt = "glslang -DGODOT_VERSION_MINOR={} -g -I. --target-env vulkan1.2 --spirv-val {} {} {} -o ../../temp/{}.{}.spv";
 		std::system(std::format(glc_fmt, godot_version_minor, glc_stage_flags, shader_build_info.glc_flags, shader_build_info.src_file_path, shader_build_info.name, stage_affix).c_str());
 
 		std::string stage_affix_upper = shader_stage_bit_to_stage_affix_upper.at(1 << i);
 
-		// TODO: embed as function instead of a program.
-		constexpr std::string_view embed_fmt = "..\\..\\temp\\embed.exe ../../temp/{}.{}.spv ../gen/{}.{}.spv.h SHADER_{}_SPV_{}";
-		std::system(std::format(embed_fmt, shader_build_info.name, stage_affix, shader_build_info.name, stage_affix, stage_affix_upper, shader_build_info.name).c_str());
+		embed(
+			std::format("../../temp/{}.{}.spv", shader_build_info.name, stage_affix).c_str(),
+			std::format("../gen/{}.{}.spv.h", shader_build_info.name, stage_affix).c_str(),
+			std::format("SHADER_{}_SPV_{}", stage_affix_upper, shader_build_info.name).c_str()
+		);
 	}
 }
 
