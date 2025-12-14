@@ -1,10 +1,8 @@
+#[vertex]
 #version 450
 #extension GL_ARB_shading_language_include : enable
+#include "../src/gpu/api/gdstroke_stroke.glsli"
 
-#include "api/gdstroke_stroke.glsli"
-
-
-#ifdef STAGE_VERT
 void main() {
 	const uint stroke_vertex_idx = gl_VertexIndex;
 	const uint segment_edge_idx = gdstroke_get_segment_edge_from_stroke_vertex(stroke_vertex_idx);
@@ -14,7 +12,7 @@ void main() {
 
 	const vec2 stroke_coord = gdstroke_get_stroke_coord(stroke_vertex_idx);
 
-	const float width = 5.0 * mix(1.0, 0.1, stroke_coord.x);
+	const float width = 5.0 * mix(1.0, 0.25, stroke_coord.x);
 
 	const vec2 aspect = vec2(1.0, gdstroke_get_viewport_size().x / gdstroke_get_viewport_size().y);
 
@@ -23,14 +21,14 @@ void main() {
 
 	gl_Position = vec4(frag_coord, 0.5, 1.0);
 }
-#endif // STAGE_VERT
 
+#[fragment]
+#version 450
+#extension GL_ARB_shading_language_include : enable
+#include "../src/gpu/api/gdstroke_stroke.glsli"
 
-#ifdef STAGE_FRAG
 layout(location = 0) out vec4 AO_color;
 
 void main() {
-	AO_color = vec4(1.0);
+	AO_color = vec4(vec3(0.7, 0.1, 0.3), 0.2);
 }
-
-#endif // STAGE_FRAG

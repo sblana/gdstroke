@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://xoibui2iss0f"
+path="res://.godot/imported/basic_stroke_shader.glsl-e03d92fd7ae4a648f2f70c7ff5065266.res"
+
+[deps]
+
+source_file="res://basic_stroke_shader.glsl"
+dest_files=["res://.godot/imported/basic_stroke_shader.glsl-e03d92fd7ae4a648f2f70c7ff5065266.res"]
+
+[params]
+

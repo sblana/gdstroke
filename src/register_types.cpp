@@ -12,13 +12,14 @@
 using namespace godot;
 
 void initialize_gdextension_types(ModuleInitializationLevel p_level) {
-	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
-		return;
+	if (p_level == MODULE_INITIALIZATION_LEVEL_SERVERS) {
+		GDREGISTER_CLASS(GdstrokeServer);
+		GdstrokeServer::create_singleton();
 	}
-	GDREGISTER_CLASS(GdstrokeEffect);
-	GDREGISTER_CLASS(GdstrokeServer);
-	GdstrokeServer::create_singleton();
-	GDREGISTER_CLASS(GdstrokeShaderInterface);
+	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE) {
+		GDREGISTER_CLASS(GdstrokeEffect);
+		GDREGISTER_CLASS(GdstrokeShaderInterface);
+	}
 }
 
 void uninitialize_gdextension_types(ModuleInitializationLevel p_level) {

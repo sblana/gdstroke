@@ -1,14 +1,29 @@
-[gd_scene load_steps=6 format=3 uid="uid://dh0oj81pufivs"]
+[gd_scene load_steps=8 format=3 uid="uid://dh0oj81pufivs"]
 
 [ext_resource type="Script" uid="uid://beish714ac71p" path="res://mesh_instance_3d.gd" id="1_2jas5"]
-[ext_resource type="ArrayMesh" uid="uid://bsq0jyb1px54k" path="res://suzanne.obj" id="1_n51mc"]
+[ext_resource type="Script" uid="uid://ddww4yri6u53p" path="res://basic_stroke_effect.gd" id="1_8lvy3"]
+[ext_resource type="ArrayMesh" uid="uid://duwnrm6vqtp0r" path="res://lucy125k.obj" id="1_n51mc"]
 
 [sub_resource type="Environment" id="Environment_2jas5"]
+ambient_light_source = 2
+ambient_light_color = Color(0.26793805, 0.21335998, 0.35556924, 1)
 
 [sub_resource type="GdstrokeEffect" id="GdstrokeEffect_2jas5"]
 
+[sub_resource type="CompositorEffect" id="CompositorEffect_8lvy3"]
+resource_local_to_scene = false
+resource_name = ""
+enabled = true
+effect_callback_type = 1
+access_resolved_color = false
+access_resolved_depth = false
+needs_motion_vectors = false
+needs_normal_roughness = false
+script = ExtResource("1_8lvy3")
+metadata/_custom_type_script = "uid://ddww4yri6u53p"
+
 [sub_resource type="Compositor" id="Compositor_n51mc"]
-compositor_effects = Array[CompositorEffect]([SubResource("GdstrokeEffect_2jas5")])
+compositor_effects = Array[CompositorEffect]([SubResource("GdstrokeEffect_2jas5"), SubResource("CompositorEffect_8lvy3")])
 
 [node name="Node" type="Node"]
 
@@ -16,10 +31,20 @@ compositor_effects = Array[CompositorEffect]([SubResource("GdstrokeEffect_2jas5"
 environment = SubResource("Environment_2jas5")
 compositor = SubResource("Compositor_n51mc")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+[node name="Node3D" type="Node3D" parent="."]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Node3D"]
 mesh = ExtResource("1_n51mc")
 script = ExtResource("1_2jas5")
 
 [node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(0.70710665, 0.3535534, -0.6123724, -1.0908405e-08, 0.8660254, 0.49999997, 0.7071068, -0.35355344, 0.61237246, -4.4494896, 3.5, 4.4494896)
+transform = Transform3D(0.70710665, 0.3535534, -0.6123724, -1.0908405e-08, 0.8660254, 0.49999997, 0.7071068, -0.35355344, 0.61237246, -1.9254792, 3.308018, 1.9254789)
 fov = 46.2
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.17364976, 0.69636375, -0.6963645, 6.603794e-07, 0.70710737, 0.70710635, 0.98480767, 0.12278836, -0.12278947, 0, 0, 0)
+light_color = Color(0.96740526, 0.78095883, 0.4259963, 1)
+shadow_enabled = true
+directional_shadow_split_1 = 0.12
+directional_shadow_split_2 = 0.25
+directional_shadow_blend_splits = true

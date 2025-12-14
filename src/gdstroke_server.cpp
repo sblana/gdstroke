@@ -10,15 +10,18 @@ using namespace godot;
 GdstrokeServer *GdstrokeServer::singleton = nullptr;
 GdstrokeServer::ContourMesh *GdstrokeServer::contour_mesh = nullptr;
 MeshInstance3D *GdstrokeServer::contour_instance = nullptr;
+std::unordered_map<int64_t, Ref<GdstrokeEffect>> *GdstrokeServer::id_to_gdstroke_effect_map = nullptr;
 
 void GdstrokeServer::_bind_methods() {
 	ClassDB::bind_static_method("GdstrokeServer", D_METHOD("get_singleton"), &GdstrokeServer::get_singleton);
 	ClassDB::bind_method(D_METHOD("register_contour_instance", "p_node"), &GdstrokeServer::register_contour_instance);
+	ClassDB::bind_method(D_METHOD("get_gdstroke_effect", "p_id"), &GdstrokeServer::get_gdstroke_effect);
 }
 
 void GdstrokeServer::create_singleton() {
 	singleton = memnew(GdstrokeServer);
 	contour_mesh = new ContourMesh;
+	id_to_gdstroke_effect_map = new std::unordered_map<int64_t, Ref<GdstrokeEffect>>;
 }
 
 GdstrokeServer *GdstrokeServer::get_singleton() {
@@ -179,4 +182,18 @@ void GdstrokeServer::register_contour_instance(MeshInstance3D *p_node) {
 	}
 
 	// TODO: rebuild data with only concave edges and related
+}
+
+void GdstrokeServer::register_gdstroke_effect(int64_t p_id, Ref<GdstrokeEffect> p_gdstroke_effect) {
+	ERR_FAIL_NULL_EDMSG(p_gdstroke_effect, "p_gdstroke_effect is null.");
+	ERR_FAIL_COND_EDMSG(id_to_gdstroke_effect_map->contains(p_id), "p_id is already registered.");
+
+	id_to_gdstroke_effect_map->insert({ p_id, p_gdstroke_effect });
+}
+
+Ref<GdstrokeEffect> GdstrokeServer::get_gdstroke_effect(int64_t p_id) {
+	if (id_to_gdstroke_effect_map->contains(p_id)) {
+		return id_to_gdstroke_effect_map->at(p_id);
+	}
+	return nullptr;
 }

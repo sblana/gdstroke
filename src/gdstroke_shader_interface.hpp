@@ -211,6 +211,18 @@ public:
 		inline virtual uint32_t get_slot() const override { return 4; }
 	};
 
+	struct ShaderAPIInterfaceSet : InterfaceSet {
+		enum Binding : uint32_t {
+			BINDING_BUFFER_PTR_TABLE_BUFFER = 0,
+			BINDING_MAX,
+		};
+
+		virtual Error create_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
+		virtual Error update_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
+		virtual void make_bindings() override;
+		inline virtual uint32_t get_slot() const override { return 7; }
+	};
+
 	struct DebugInterfaceSet : InterfaceSet {
 		enum Binding : uint32_t {
 			BINDING_CONTOUR_SCREEN_COLOR_IMAGE = 0,

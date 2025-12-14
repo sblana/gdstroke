@@ -83,6 +83,7 @@ enum Shader : int32_t {
 	SHADER_SE_SG_ALLOCATION,
 	SHADER_SE_SG_FIRST_COMMANDER,
 	SHADER_SE_SG_SCATTER,
+	SHADER_SR_UPDATE_API,
 	SHADER_SR_DEFAULT_SHADER,
 	SHADER_DEBUG_DISPLAY_CONTOUR_FRAGMENTS,
 	SHADER_DEBUG_DISPLAY_CONTOUR_PIXELS,
@@ -178,6 +179,7 @@ std::map<Shader, ShaderBuildInfo> shader_to_shader_info_map = {{
 	{ SHADER_SE_SG_FIRST_COMMANDER, ShaderBuildInfo{"se_sg_first_commander", "./stroke_extraction/stroke_generation/first_commander.comp", M_SHADER_STAGE_COMPUTE_BIT} },
 	{ SHADER_SE_SG_SCATTER,         ShaderBuildInfo{"se_sg_scatter",         "./stroke_extraction/stroke_generation/scatter.comp",         M_SHADER_STAGE_COMPUTE_BIT} },
 
+	{ SHADER_SR_UPDATE_API,     ShaderBuildInfo{"sr__update_api",     "./stroke_rendering/update_api.comp",     M_SHADER_STAGE_COMPUTE_BIT} },
 	{ SHADER_SR_DEFAULT_SHADER, ShaderBuildInfo{"sr__default_shader", "./stroke_rendering/default_shader.glsl", M_SHADER_STAGE_VERTEX_BIT | M_SHADER_STAGE_FRAGMENT_BIT} },
 
 	{ SHADER_DEBUG_DISPLAY_CONTOUR_FRAGMENTS,     ShaderBuildInfo{"debug__display_contour_fragments",     "./debug/display_contour_fragments.comp",     M_SHADER_STAGE_COMPUTE_BIT} },

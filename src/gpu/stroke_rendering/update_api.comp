@@ -1,0 +1,30 @@
+#version 450
+#extension GL_ARB_shading_language_include : enable
+
+layout(local_size_x = 1) in;
+
+#include "api/gdstroke_stroke.glsli"
+#include "common/buffers.glsli"
+#include "common/ext/explicit_arithmetic_types.glsli"
+
+
+void main() {
+	_GdstrokeAPI_buffer_ptr_table.stroke_vertex_to_stroke_vertex_kind_map_buffer_ptr          = UInt64(B_stroke_vertex_kind);
+	_GdstrokeAPI_buffer_ptr_table.stroke_vertex_to_stroke_vertex_kind_map_buffer_stride       = UInt64(4);
+	_GdstrokeAPI_buffer_ptr_table.stroke_vertex_to_segment_edge_map_buffer_ptr                = UInt64(B_stroke_vertex_to_segment_edge);
+	_GdstrokeAPI_buffer_ptr_table.stroke_vertex_to_segment_edge_map_buffer_stride             = UInt64(4);
+	_GdstrokeAPI_buffer_ptr_table.segment_edge_to_compacted_pixel_edge_map_buffer_ptr         = UInt64(B_segment_edge_to_compacted_pixel_edge);
+	_GdstrokeAPI_buffer_ptr_table.segment_edge_to_compacted_pixel_edge_map_buffer_stride      = UInt64(4);
+	_GdstrokeAPI_buffer_ptr_table.compacted_pixel_edge_to_orientation_map_buffer_ptr          = UInt64(B_compacted_pixel_edge_filtered_orientation);
+	_GdstrokeAPI_buffer_ptr_table.compacted_pixel_edge_to_orientation_map_buffer_stride       = UInt64(8);
+	_GdstrokeAPI_buffer_ptr_table.compacted_pixel_edge_to_filtered_midpoint_map_buffer_ptr    = UInt64(B_compacted_pixel_edge_filtered_midpoint);
+	_GdstrokeAPI_buffer_ptr_table.compacted_pixel_edge_to_filtered_midpoint_map_buffer_stride = UInt64(8);
+	_GdstrokeAPI_buffer_ptr_table.compacted_pixel_edge_to_segment_id_map_buffer_ptr           = UInt64(B_compacted_pixel_edge_segment_key);
+	_GdstrokeAPI_buffer_ptr_table.compacted_pixel_edge_to_segment_id_map_buffer_stride        = UInt64(4);
+	_GdstrokeAPI_buffer_ptr_table.segment_id_to_segment_head_edge_map_buffer_ptr              = UInt64(B_segment_range) + 0;
+	_GdstrokeAPI_buffer_ptr_table.segment_id_to_segment_head_edge_map_buffer_stride           = UInt64(8);
+	_GdstrokeAPI_buffer_ptr_table.segment_id_to_segment_length_map_buffer_ptr                 = UInt64(B_segment_range) + 4;
+	_GdstrokeAPI_buffer_ptr_table.segment_id_to_segment_length_map_buffer_stride              = UInt64(8);
+	_GdstrokeAPI_buffer_ptr_table.viewport_size = vec2(U_scene_data.cur.viewport_size);
+	_GdstrokeAPI_buffer_ptr_table.time = float(U_scene_data.cur.time);
+}

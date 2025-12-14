@@ -367,6 +367,25 @@ void GdstrokeShaderInterface::PixelEdgeInterfaceSet::make_bindings() {
 }
 
 
+Error GdstrokeShaderInterface::ShaderAPIInterfaceSet::create_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
+
+	resources.clear();
+	resources.resize(Binding::BINDING_MAX);
+	resources[Binding::BINDING_BUFFER_PTR_TABLE_BUFFER] = p_rd->storage_buffer_create(sizeof(uint64_t) * 16 + sizeof(float) * 4);
+	return Error::OK;
+}
+
+Error GdstrokeShaderInterface::ShaderAPIInterfaceSet::update_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
+	return Error::OK;
+}
+
+void GdstrokeShaderInterface::ShaderAPIInterfaceSet::make_bindings() {
+	bindings.clear();
+	ERR_FAIL_COND(resources.size() != Binding::BINDING_MAX);
+	bindings.append(new_uniform(Binding::BINDING_BUFFER_PTR_TABLE_BUFFER, RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Binding::BINDING_BUFFER_PTR_TABLE_BUFFER]));
+}
+
+
 Error GdstrokeShaderInterface::DebugInterfaceSet::create_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
 	ERR_FAIL_COND_V(p_render_data == nullptr, Error::FAILED);
 	Ref<RenderSceneBuffersRD> render_scene_buffers = (Ref<RenderSceneBuffersRD>)p_render_data->get_render_scene_buffers();

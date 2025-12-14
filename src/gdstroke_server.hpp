@@ -2,11 +2,13 @@
 
 #include <godot_cpp/classes/mesh_instance3d.hpp>
 #include <godot_cpp/classes/ref_counted.hpp>
+#include "gdstroke_effect.hpp"
+#include <unordered_map>
 
 using namespace godot;
 
-class GdstrokeServer : public RefCounted {
-	GDCLASS(GdstrokeServer, RefCounted)
+class GdstrokeServer : public Object {
+	GDCLASS(GdstrokeServer, Object)
 
 public:
 	struct ContourMesh {
@@ -30,9 +32,14 @@ public:
 
 	void register_contour_instance(MeshInstance3D *p_node);
 
+	void register_gdstroke_effect(int64_t p_id, Ref<GdstrokeEffect> p_gdstroke_effect);
+	Ref<GdstrokeEffect> get_gdstroke_effect(int64_t p_id);
+
 private:
 	static GdstrokeServer *singleton;
 
 	static ContourMesh* contour_mesh;
 	static MeshInstance3D *contour_instance;
+
+	static std::unordered_map<int64_t, Ref<GdstrokeEffect>> *id_to_gdstroke_effect_map;
 };
