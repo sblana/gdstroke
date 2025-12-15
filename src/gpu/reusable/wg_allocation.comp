@@ -7,7 +7,7 @@ layout(local_size_x = 1024) in;
 #include "common/scans.glsli"
 
 
-layout(push_constant) RESTRICT readonly uniform PushConstants {
+layout(push_constant) RESTRICT uniform PushConstants {
 	AllocationPushData U_push;
 };
 

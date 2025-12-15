@@ -120,7 +120,7 @@ void GdstrokeShaderInterface::CommandInterfaceSet::make_bindings() {
 
 Error GdstrokeShaderInterface::MeshInterfaceSet::create_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
 	resources.clear();
-	resources.resize(Buffer::BUFFER_MAX + Binding::BINDING_MAX);
+	resources.resize(int(Buffer::BUFFER_MAX) + int(Binding::BINDING_MAX));
 
 	GdstrokeServer::ContourMesh const &contour_mesh = GdstrokeServer::get_singleton()->get_contour_mesh();
 	Transform3D contour_instance_transform = GdstrokeServer::get_singleton()->get_contour_instance()->get_global_transform().affine_inverse();
@@ -198,7 +198,7 @@ Error GdstrokeShaderInterface::MeshInterfaceSet::create_resources(RenderingDevic
 		buffers_addresses_data.encode_u64(i * 8, p_rd->buffer_get_device_address(resources[i]));
 	}
 
-	resources[Buffer::BUFFER_MAX + Binding::BINDING_MESH_BUFFERS] = p_rd->storage_buffer_create(Buffer::BUFFER_MAX * 8, buffers_addresses_data, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_MESH_BUFFERS)] = p_rd->storage_buffer_create(Buffer::BUFFER_MAX * 8, buffers_addresses_data, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
 	return Error::OK;
 }
@@ -218,13 +218,13 @@ Error GdstrokeShaderInterface::MeshInterfaceSet::update_resources(RenderingDevic
 
 void GdstrokeShaderInterface::MeshInterfaceSet::make_bindings() {
 	bindings.clear();
-	ERR_FAIL_COND(resources.size() != Buffer::BUFFER_MAX + Binding::BINDING_MAX);
-	bindings.append(new_uniform(Binding::BINDING_MESH_BUFFERS, RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Buffer::BUFFER_MAX + Binding::BINDING_MESH_BUFFERS]));
+	ERR_FAIL_COND(resources.size() != int(Buffer::BUFFER_MAX) + int(Binding::BINDING_MAX));
+	bindings.append(new_uniform(Binding::BINDING_MESH_BUFFERS, RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_MESH_BUFFERS)]));
 }
 
 
 void GdstrokeShaderInterface::ContourInterfaceSet::receive_hard_depth_test_attachments(TypedArray<RID> p_attachments) {
-	resources[Buffer::BUFFER_MAX + Binding::BINDING_FOREMOST_FRAGMENT_BITMAP] = p_attachments[0];
+	resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_FOREMOST_FRAGMENT_BITMAP)] = p_attachments[0];
 }
 
 Error GdstrokeShaderInterface::ContourInterfaceSet::create_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
@@ -233,7 +233,7 @@ Error GdstrokeShaderInterface::ContourInterfaceSet::create_resources(RenderingDe
 	uint32_t num_edges = GdstrokeServer::get_singleton()->get_contour_mesh().edge_to_vertex_buffer.size();
 
 	resources.clear();
-	resources.resize(Buffer::BUFFER_MAX + Binding::BINDING_MAX);
+	resources.resize(int(Buffer::BUFFER_MAX) + int(Binding::BINDING_MAX));
 	resources[Buffer::BUFFER_CONTOUR_DESC_BUFFER                    ] = p_rd->storage_buffer_create(sizeof(int32_t) * 6, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 	resources[Buffer::BUFFER_CONTOUR_EDGE_TO_EDGE_BUFFER            ] = p_rd->storage_buffer_create(sizeof(int32_t) * 1 * num_edges, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 	resources[Buffer::BUFFER_CONTOUR_EDGE_IS_DISCARDED_BUFFER       ] = p_rd->storage_buffer_create(sizeof(int32_t) * 1 * num_edges, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
@@ -253,7 +253,7 @@ Error GdstrokeShaderInterface::ContourInterfaceSet::create_resources(RenderingDe
 	resources[Buffer::BUFFER_CONTOUR_PIXEL_ORIENTATION_BUFFER ] = p_rd->storage_buffer_create(sizeof(float)   * 2 * max_num_contour_pixels, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 	resources[Buffer::BUFFER_CONTOUR_PIXEL_NORMAL_DEPTH_BUFFER] = p_rd->storage_buffer_create(sizeof(float)   * 4 * max_num_contour_pixels, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
-	resources[Buffer::BUFFER_MAX + Binding::BINDING_SCREEN_DEPTH_TEXTURE] = render_scene_buffers->get_depth_texture();
+	resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_SCREEN_DEPTH_TEXTURE)] = render_scene_buffers->get_depth_texture();
 
 	PackedByteArray buffers_addresses_data;
 	buffers_addresses_data.resize(Buffer::BUFFER_MAX * 8);
@@ -261,7 +261,7 @@ Error GdstrokeShaderInterface::ContourInterfaceSet::create_resources(RenderingDe
 		buffers_addresses_data.encode_u64(i * 8, p_rd->buffer_get_device_address(resources[i]));
 	}
 
-	resources[Buffer::BUFFER_MAX + Binding::BINDING_CONTOUR_BUFFERS] = p_rd->storage_buffer_create(Buffer::BUFFER_MAX * 8, buffers_addresses_data, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_CONTOUR_BUFFERS)] = p_rd->storage_buffer_create(Buffer::BUFFER_MAX * 8, buffers_addresses_data, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
 	Ref<RDSamplerState> nearest_sampler_state = Ref(memnew(RDSamplerState));
 	nearest_sampler = p_rd->sampler_create(nearest_sampler_state);
@@ -273,19 +273,19 @@ Error GdstrokeShaderInterface::ContourInterfaceSet::update_resources(RenderingDe
 	ERR_FAIL_COND_V(p_render_data == nullptr, Error::FAILED);
 	Ref<RenderSceneBuffersRD> render_scene_buffers = (Ref<RenderSceneBuffersRD>)p_render_data->get_render_scene_buffers();
 
-	resources[Buffer::BUFFER_MAX + Binding::BINDING_SCREEN_DEPTH_TEXTURE] = render_scene_buffers->get_depth_texture();
+	resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_SCREEN_DEPTH_TEXTURE)] = render_scene_buffers->get_depth_texture();
 
 	return Error::OK;
 }
 
 void GdstrokeShaderInterface::ContourInterfaceSet::make_bindings() {
 	bindings.clear();
-	ERR_FAIL_COND(resources.size() != Buffer::BUFFER_MAX + Binding::BINDING_MAX);
+	ERR_FAIL_COND(resources.size() != int(Buffer::BUFFER_MAX) + int(Binding::BINDING_MAX));
 
 	ERR_FAIL_COND(!nearest_sampler.is_valid());
-	bindings.append(new_uniform(Binding::BINDING_CONTOUR_BUFFERS,          RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER,                        resources[Buffer::BUFFER_MAX + Binding::BINDING_CONTOUR_BUFFERS]));
-	bindings.append(new_uniform(Binding::BINDING_SCREEN_DEPTH_TEXTURE,     RenderingDevice::UniformType::UNIFORM_TYPE_SAMPLER_WITH_TEXTURE, nearest_sampler, resources[Buffer::BUFFER_MAX + Binding::BINDING_SCREEN_DEPTH_TEXTURE]));
-	bindings.append(new_uniform(Binding::BINDING_FOREMOST_FRAGMENT_BITMAP, RenderingDevice::UniformType::UNIFORM_TYPE_IMAGE,                                 resources[Buffer::BUFFER_MAX + Binding::BINDING_FOREMOST_FRAGMENT_BITMAP]));
+	bindings.append(new_uniform(Binding::BINDING_CONTOUR_BUFFERS,          RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER,                        resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_CONTOUR_BUFFERS)]));
+	bindings.append(new_uniform(Binding::BINDING_SCREEN_DEPTH_TEXTURE,     RenderingDevice::UniformType::UNIFORM_TYPE_SAMPLER_WITH_TEXTURE, nearest_sampler, resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_SCREEN_DEPTH_TEXTURE)]));
+	bindings.append(new_uniform(Binding::BINDING_FOREMOST_FRAGMENT_BITMAP, RenderingDevice::UniformType::UNIFORM_TYPE_IMAGE,                                 resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_FOREMOST_FRAGMENT_BITMAP)]));
 }
 
 TypedArray<Ref<RDUniform>> GdstrokeShaderInterface::ContourInterfaceSet::get_draw_bindings() const {
@@ -298,7 +298,7 @@ TypedArray<Ref<RDUniform>> GdstrokeShaderInterface::ContourInterfaceSet::get_dra
 
 Error GdstrokeShaderInterface::PixelEdgeInterfaceSet::create_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
 	resources.clear();
-	resources.resize(Buffer::BUFFER_MAX + Binding::BINDING_MAX);
+	resources.resize(int(Buffer::BUFFER_MAX) + int(Binding::BINDING_MAX));
 
 	resources[Buffer::BUFFER_PIXEL_EDGE_DESC_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 4, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
@@ -351,7 +351,7 @@ Error GdstrokeShaderInterface::PixelEdgeInterfaceSet::create_resources(Rendering
 		buffers_addresses_data.encode_u64(i * 8, p_rd->buffer_get_device_address(resources[i]));
 	}
 
-	resources[Buffer::BUFFER_MAX + Binding::BINDING_PIXEL_EDGE_BUFFERS] = p_rd->storage_buffer_create(Buffer::BUFFER_MAX * 8, buffers_addresses_data, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_PIXEL_EDGE_BUFFERS)] = p_rd->storage_buffer_create(Buffer::BUFFER_MAX * 8, buffers_addresses_data, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
 	return Error::OK;
 }
@@ -362,13 +362,12 @@ Error GdstrokeShaderInterface::PixelEdgeInterfaceSet::update_resources(Rendering
 
 void GdstrokeShaderInterface::PixelEdgeInterfaceSet::make_bindings() {
 	bindings.clear();
-	ERR_FAIL_COND(resources.size() != Buffer::BUFFER_MAX + Binding::BINDING_MAX);
-	bindings.append(new_uniform(Binding::BINDING_PIXEL_EDGE_BUFFERS, RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[Buffer::BUFFER_MAX + Binding::BINDING_PIXEL_EDGE_BUFFERS]));
+	ERR_FAIL_COND(resources.size() != int(Buffer::BUFFER_MAX) + int(Binding::BINDING_MAX));
+	bindings.append(new_uniform(Binding::BINDING_PIXEL_EDGE_BUFFERS, RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_PIXEL_EDGE_BUFFERS)]));
 }
 
 
 Error GdstrokeShaderInterface::ShaderAPIInterfaceSet::create_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
-
 	resources.clear();
 	resources.resize(Binding::BINDING_MAX);
 	resources[Binding::BINDING_BUFFER_PTR_TABLE_BUFFER] = p_rd->storage_buffer_create(sizeof(uint64_t) * 16 + sizeof(float) * 4);

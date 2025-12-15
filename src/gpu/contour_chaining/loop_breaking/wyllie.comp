@@ -6,7 +6,7 @@ layout(local_size_x = 64) in;
 #include "common/buffers.glsli"
 
 
-layout(push_constant) RESTRICT readonly uniform PushConstants {
+layout(push_constant) RESTRICT uniform PushConstants {
 	int  read_layer;
 	int write_layer;
 } U_push_constants;
