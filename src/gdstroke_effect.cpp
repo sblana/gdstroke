@@ -168,9 +168,9 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 	using   ContourBindings = GdstrokeShaderInterface::  ContourInterfaceSet::Binding;
 	using PixelEdgeBuffers  = GdstrokeShaderInterface::PixelEdgeInterfaceSet::Buffer;
 	using PixelEdgeBindings = GdstrokeShaderInterface::PixelEdgeInterfaceSet::Binding;
-	uint64_t       mesh_buffers_ptr = rd->buffer_get_device_address(this->      mesh_interface_set.resources[     MeshBuffers::BUFFER_MAX +      MeshBindings::BINDING_MESH_BUFFERS]);
-	uint64_t    contour_buffers_ptr = rd->buffer_get_device_address(this->   contour_interface_set.resources[  ContourBuffers::BUFFER_MAX +   ContourBindings::BINDING_CONTOUR_BUFFERS]);
-	uint64_t pixel_edge_buffers_ptr = rd->buffer_get_device_address(this->pixel_edge_interface_set.resources[PixelEdgeBuffers::BUFFER_MAX + PixelEdgeBindings::BINDING_PIXEL_EDGE_BUFFERS]);
+	uint64_t       mesh_buffers_ptr = rd->buffer_get_device_address(this->      mesh_interface_set.resources[int(     MeshBuffers::BUFFER_MAX) + int(     MeshBindings::BINDING_MESH_BUFFERS)]);
+	uint64_t    contour_buffers_ptr = rd->buffer_get_device_address(this->   contour_interface_set.resources[int(  ContourBuffers::BUFFER_MAX) + int(  ContourBindings::BINDING_CONTOUR_BUFFERS)]);
+	uint64_t pixel_edge_buffers_ptr = rd->buffer_get_device_address(this->pixel_edge_interface_set.resources[int(PixelEdgeBuffers::BUFFER_MAX) + int(PixelEdgeBindings::BINDING_PIXEL_EDGE_BUFFERS)]);
 
 	int64_t list;
 	rd->draw_command_begin_label("dummy", Color(0.3, 0.3, 0.3));
