@@ -35,14 +35,14 @@ void build_shader(ShaderBuildInfo shader_build_info, int godot_version_minor) {
 		std::string glc_stage_flags = shader_stage_bit_to_glc_stage_flags.at(1 << i);
 		std::string stage_affix = shader_stage_bit_to_stage_affix_lower.at(1 << i);
 
-		constexpr std::string_view glc_fmt = "glslang -DGODOT_VERSION_MINOR={} -g -I. --target-env vulkan1.2 --spirv-val {} {} {} -o ../../temp/{}.{}.spv";
+		constexpr std::string_view glc_fmt = "glslang -DGODOT_VERSION_MINOR={} -g -Isrc/gpu/ --target-env vulkan1.2 --spirv-val {} {} src/gpu/{} -o temp/{}.{}.spv";
 		std::system(std::format(glc_fmt, godot_version_minor, glc_stage_flags, shader_build_info.glc_flags, shader_build_info.src_file_path, shader_build_info.name, stage_affix).c_str());
 
 		std::string stage_affix_upper = shader_stage_bit_to_stage_affix_upper.at(1 << i);
 
 		embed(
-			std::format("../../temp/{}.{}.spv", shader_build_info.name, stage_affix).c_str(),
-			std::format("../gen/{}.{}.spv.h", shader_build_info.name, stage_affix).c_str(),
+			std::format("temp/{}.{}.spv", shader_build_info.name, stage_affix).c_str(),
+			std::format("src/gen/{}.{}.spv.h", shader_build_info.name, stage_affix).c_str(),
 			std::format("SHADER_{}_SPV_{}", stage_affix_upper, shader_build_info.name).c_str()
 		);
 	}
@@ -50,7 +50,7 @@ void build_shader(ShaderBuildInfo shader_build_info, int godot_version_minor) {
 
 
 void generate_header() {
-	FILE *fp = fopen("../gen/shaders.cpp", "wb");
+	FILE *fp = fopen("src/gen/shaders.cpp", "wb");
 	assert(fp);
 	std::fprintf(fp, "#include \"../gpu/shaders.hpp\"\n");
 	std::fprintf(fp, "\n");
