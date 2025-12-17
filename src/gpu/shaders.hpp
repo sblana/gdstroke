@@ -80,6 +80,7 @@ enum Shader : int32_t {
 	SHADER_SE_S_CLEAR,
 	SHADER_SE_S_SCATTER_TOP,
 	SHADER_SE_S_SCATTER_BOTTOM,
+	SHADER_SE_SG_INIT,
 	SHADER_SE_SG_ALLOCATION,
 	SHADER_SE_SG_FIRST_COMMANDER,
 	SHADER_SE_SG_SCATTER,
@@ -175,6 +176,7 @@ std::map<Shader, ShaderBuildInfo> shader_to_shader_info_map = {{
 	{ SHADER_SE_S_SCATTER_TOP,             ShaderBuildInfo{"se_s_scatter_top",             "./stroke_extraction/segmentation/scatter_top.comp",             M_SHADER_STAGE_COMPUTE_BIT} },
 	{ SHADER_SE_S_SCATTER_BOTTOM,          ShaderBuildInfo{"se_s_scatter_bottom",          "./stroke_extraction/segmentation/scatter_bottom.comp",          M_SHADER_STAGE_COMPUTE_BIT} },
 
+	{ SHADER_SE_SG_INIT,            ShaderBuildInfo{"se_sg_init",            "./stroke_extraction/stroke_generation/init.comp",            M_SHADER_STAGE_COMPUTE_BIT} },
 	{ SHADER_SE_SG_ALLOCATION,      ShaderBuildInfo{"se_sg_allocation",      "./stroke_extraction/stroke_generation/allocation.comp",      M_SHADER_STAGE_COMPUTE_BIT} },
 	{ SHADER_SE_SG_FIRST_COMMANDER, ShaderBuildInfo{"se_sg_first_commander", "./stroke_extraction/stroke_generation/first_commander.comp", M_SHADER_STAGE_COMPUTE_BIT} },
 	{ SHADER_SE_SG_SCATTER,         ShaderBuildInfo{"se_sg_scatter",         "./stroke_extraction/stroke_generation/scatter.comp",         M_SHADER_STAGE_COMPUTE_BIT} },

@@ -568,6 +568,12 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 	rd->draw_command_begin_label("Stroke Generation", Color(1.0, 0.3, 1.0));
 	{
 		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_SE_SG_INIT]);
+		this->bind_sets(rd, list);
+		this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_SEGMENTS);
+		rd->compute_list_end();
+
+		list = rd->compute_list_begin();
 		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_SE_SG_ALLOCATION]);
 		this->bind_sets(rd, list);
 		rd->compute_list_dispatch(list, 1, 1, 1);

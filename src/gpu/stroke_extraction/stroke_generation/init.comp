@@ -1,0 +1,15 @@
+#version 450
+#extension GL_ARB_shading_language_include : enable
+
+layout(local_size_x = 64) in;
+
+#include "common/buffers.glsli"
+
+
+void main() {
+	const uint segment_key = gl_GlobalInvocationID.x;
+	if (segment_key < B_segment_desc.num_segments) {
+		const SegmentRangeData segment_range = B_segment_range.data[segment_key];
+		B_segment_stroke_vertex_range.data[segment_key].num_vertices = max(segment_range.num_segment_edges - 1, 1) * 2 * 3;
+	}
+}
