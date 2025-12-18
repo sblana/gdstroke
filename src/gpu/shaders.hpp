@@ -1,15 +1,7 @@
 #pragma once
 
-#include <cassert>
-#include <cstdio>
-#include <cstdlib>
 #include <cstdint>
 #include <map>
-#include <unordered_map>
-#include <string>
-#include <format>
-#include <algorithm>
-#include <thread>
 
 #define DEFINE_EMBEDDED_DATA_TYPE
 #include "embed.c"

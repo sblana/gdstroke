@@ -1,6 +1,11 @@
 #include "embed.c"
 #include "shaders.hpp"
 
+#include <unordered_map>
+#include <string>
+#include <format>
+#include <thread>
+
 std::unordered_map<int, char const *> shader_stage_bit_to_stage_affix_lower{{
 	{ M_SHADER_STAGE_VERTEX_BIT,                 "vert" },
 	{ M_SHADER_STAGE_FRAGMENT_BIT,               "frag" },
@@ -66,7 +71,7 @@ void generate_header() {
 	std::fprintf(fp, "\n");
 	std::fprintf(fp, "EmbeddedData const *shader_to_embedded_data_map[][%d] = {\n", M_SHADER_STAGE_MAX);
 	for (auto kvp : shader_to_shader_info_map) {
-		std::fprintf(fp, "\t{ ", kvp.first);
+		std::fprintf(fp, "\t{ ");
 		for (int i = 0; i < M_SHADER_STAGE_MAX; ++i) {
 			if ((kvp.second.shader_stages & (1 << i)) == 0) {
 				std::fprintf(fp, "nullptr, ");
@@ -83,9 +88,12 @@ void generate_header() {
 int main(int argc, char **argv) {
 	using namespace std::chrono_literals;
 	{
-		std::map<Shader, std::jthread> shader_to_jthread;
+		std::map<Shader, std::thread> shader_to_thread;
 		for (auto kvp : shader_to_shader_info_map) {
-			shader_to_jthread.insert({ kvp.first, std::jthread(build_shader, kvp.second, 5) });
+			shader_to_thread.insert({ kvp.first, std::thread(build_shader, kvp.second, 5) });
+		}
+		for (auto kvp : shader_to_shader_info_map) {
+			shader_to_thread.at(kvp.first).join();
 		}
 	}
 	generate_header();
