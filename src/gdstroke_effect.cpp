@@ -44,6 +44,8 @@ void GdstrokeEffect::_compile_shader(RenderingDevice *p_rd, Shader p_shader, Str
 void GdstrokeEffect::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_id", "p_value"), &GdstrokeEffect::set_id);
 	ClassDB::bind_method(D_METHOD("get_id"),            &GdstrokeEffect::get_id);
+	ClassDB::bind_method(D_METHOD("set_raster_method", "p_value"), &GdstrokeEffect::set_raster_method);
+	ClassDB::bind_method(D_METHOD("get_raster_method"),            &GdstrokeEffect::get_raster_method);
 	ClassDB::bind_method(D_METHOD("set_config_depth_bias", "p_value"), &GdstrokeEffect::set_config_depth_bias);
 	ClassDB::bind_method(D_METHOD("get_config_depth_bias"),            &GdstrokeEffect::get_config_depth_bias);
 	ClassDB::bind_method(D_METHOD("set_config_use_soft_depth_test_modification", "p_value"), &GdstrokeEffect::set_config_use_soft_depth_test_modification);
@@ -54,12 +56,24 @@ void GdstrokeEffect::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_stroke_shader_uniform_set_slot"), &GdstrokeEffect::get_stroke_shader_uniform_set_slot);
 	ClassDB::bind_method(D_METHOD("draw_indirect_stroke_shader", "p_rd", "p_draw_list"), &GdstrokeEffect::draw_indirect_stroke_shader);
 
+	BIND_ENUM_CONSTANT(RASTER_METHOD_BRESENHAM);
+	BIND_ENUM_CONSTANT(RASTER_METHOD_DDA);
+	BIND_ENUM_CONSTANT(RASTER_METHOD_MAX);
+
 	ADD_PROPERTY(
 		PropertyInfo(
 			Variant::INT, "id"
 		),
 		"set_id",
 		"get_id"
+	);
+	ADD_PROPERTY(
+		PropertyInfo(
+			Variant::INT, "raster_method",
+			PropertyHint::PROPERTY_HINT_ENUM, "Bresenham,DDA"
+		),
+		"set_raster_method",
+		"get_raster_method"
 	);
 	ADD_PROPERTY(
 		PropertyInfo(
@@ -88,6 +102,7 @@ void GdstrokeEffect::_bind_methods() {
 GdstrokeEffect::GdstrokeEffect() {
 	this->set_effect_callback_type(EffectCallbackType::EFFECT_CALLBACK_TYPE_POST_OPAQUE);
 	this->_id = 0;
+	this->_raster_method = RasterMethod::RASTER_METHOD_BRESENHAM;
 	this->_ready = false;
 	this->scene_interface_set = {};
 	this->command_interface_set = {};
@@ -301,11 +316,20 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		rd->compute_list_dispatch(list, 1, 1, 1);
 		rd->compute_list_end();
 
-		list = rd->compute_list_begin();
-		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_FG_SCATTER]);
-		this->bind_sets(rd, list);
-		this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_WORKGROUP_TO_CONTOUR_EDGES);
-		rd->compute_list_end();
+		if (_raster_method == RasterMethod::RASTER_METHOD_BRESENHAM) {
+			list = rd->compute_list_begin();
+			rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_FG_SCATTER_BRESENHAM]);
+			this->bind_sets(rd, list);
+			this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_WORKGROUP_TO_CONTOUR_EDGES);
+			rd->compute_list_end();
+		}
+		else if (_raster_method == RasterMethod::RASTER_METHOD_DDA) {
+			list = rd->compute_list_begin();
+			rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_FG_SCATTER_DDA]);
+			this->bind_sets(rd, list);
+			this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_WORKGROUP_TO_CONTOUR_EDGES);
+			rd->compute_list_end();
+		}
 	}
 	rd->draw_command_end_label();
 
@@ -618,6 +642,14 @@ int64_t GdstrokeEffect::get_id() const {
 void    GdstrokeEffect::set_id(int64_t p_value) {
 	ERR_FAIL_COND(_ready);
 	_id = p_value;
+}
+
+GdstrokeEffect::RasterMethod GdstrokeEffect::get_raster_method() const {
+	return _raster_method;
+}
+
+void                         GdstrokeEffect::set_raster_method(RasterMethod p_value) {
+	_raster_method = p_value;
 }
 
 float GdstrokeEffect::get_config_depth_bias() const {

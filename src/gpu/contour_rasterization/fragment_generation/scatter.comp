@@ -28,6 +28,7 @@ void main() {
 
 	const vec2 contour_orientation = normalize(verts_clipped_screen[1] - verts_clipped_screen[0]);
 
+#ifdef RASTER_METHOD_BRESENHAM
 	const bool is_y_dominant = line_determine_axis_dominance(ivec2(verts_clipped_screen[0]), ivec2(verts_clipped_screen[1]));
 	const bool is_first_point_smallest = (
 		int(verts_clipped_screen[0][int(is_y_dominant)]) <
@@ -37,6 +38,15 @@ void main() {
 	const ivec2 diff = ivec2(verts_clipped_screen[int(is_first_point_smallest)]) - ivec2(verts_clipped_screen[int(!is_first_point_smallest)]);
 	const bool is_non_dominant_axis_negative = diff[int(!is_y_dominant)] < 0;
 	const ivec2 abs_diff = abs(diff);
+#endif
+
+#ifdef RASTER_METHOD_DDA
+	const bool f_is_y_dominant = abs(contour_orientation.x) < abs(contour_orientation.y);
+	const vec2 f_diff = verts_clipped_screen[1] - verts_clipped_screen[0];
+	const float f_sign = sign(f_diff[int(f_is_y_dominant)]);
+	const float f_slope = f_diff[int(!f_is_y_dominant)] / f_diff[int(f_is_y_dominant)];
+	const float f_non_dominant_intercept = verts_clipped_screen[0][int(!f_is_y_dominant)] - verts_clipped_screen[0][int(f_is_y_dominant)] * f_slope;
+#endif
 
 	const uint first_fragment_global_idx = B_contour_edge_to_contour_fragment.data[contour_edge_idx].first_fragment_idx;
 	const uint num_fragments = B_contour_edge_to_contour_fragment.data[contour_edge_idx].num_fragments;
@@ -45,7 +55,6 @@ void main() {
 	num_blocks = udiv_ceil(num_fragments, fragments_per_block);
 
 	if (gl_LocalInvocationID.x < num_blocks) {
-
 		const uint block_idx = gl_LocalInvocationID.x;
 		const int start_frag_idx = int(fragments_per_block * block_idx);
 		const int final_frag_idx = int(min(start_frag_idx + fragments_per_block, num_fragments)) - 1;
@@ -53,6 +62,8 @@ void main() {
 		// perhaps processors could be mapped to fragments directly instead of to contour edges
 		for (int frag_idx = start_frag_idx; frag_idx <= final_frag_idx; ++frag_idx) {
 			ivec2 pixel_coord = ivec2(0,0);
+
+			#ifdef RASTER_METHOD_BRESENHAM
 			if (!is_y_dominant) {
 				pixel_coord.x = smallest_point.x + frag_idx;
 				if (!is_non_dominant_axis_negative) {
@@ -72,6 +83,14 @@ void main() {
 				}
 			}
 			const float interpolation_weight = (frag_idx + 0.5) / float(num_fragments) * (int(is_first_point_smallest) * 2 - 1) + int(!is_first_point_smallest);
+			#endif
+
+			#ifdef RASTER_METHOD_DDA
+			pixel_coord[int( f_is_y_dominant)] = int(verts_clipped_screen[0][int( f_is_y_dominant)] + frag_idx * f_sign);
+			pixel_coord[int(!f_is_y_dominant)] = int((verts_clipped_screen[0][int(f_is_y_dominant)] + frag_idx * f_sign) * f_slope + f_non_dominant_intercept);
+			const float interpolation_weight = (frag_idx + 0.5) / float(num_fragments);
+			#endif
+
 			const vec4 interpolated_ndc = perspective_interpolate_edge(verts_clipped_ndc, interpolation_weight);
 			const float godot_depth = interpolated_ndc.z;
 			B_contour_fragment_pixel_coord.pixel_coord[first_fragment_global_idx + frag_idx] = pixel_coord;

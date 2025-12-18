@@ -9,6 +9,9 @@ ambient_light_source = 2
 ambient_light_color = Color(0.26793805, 0.21335998, 0.35556924, 1)
 
 [sub_resource type="GdstrokeEffect" id="GdstrokeEffect_2jas5"]
+raster_method = 1
+use_soft_depth_test_modification = true
+min_segment_length = 24
 
 [sub_resource type="CompositorEffect" id="CompositorEffect_8lvy3"]
 resource_local_to_scene = false

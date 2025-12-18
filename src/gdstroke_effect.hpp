@@ -11,8 +11,16 @@ using namespace godot;
 class GdstrokeEffect : public CompositorEffect {
 	GDCLASS(GdstrokeEffect, CompositorEffect)
 
+public:
+	enum RasterMethod : int64_t {
+		RASTER_METHOD_BRESENHAM = 0,
+		RASTER_METHOD_DDA,
+		RASTER_METHOD_MAX
+	};
+
 private:
 	int64_t _id;
+	RasterMethod _raster_method;
 	bool _ready;
 	bool _debug_enabled = true;
 	RID _compiled_shaders[Shader::SHADER_MAX];
@@ -51,6 +59,8 @@ public:
 	int64_t get_id() const;
 	void    set_id(int64_t p_value);
 
+	RasterMethod get_raster_method() const;
+	void         set_raster_method(RasterMethod p_value);
 	float get_config_depth_bias() const;
 	void  set_config_depth_bias(float p_value);
 	bool get_config_use_soft_depth_test_modification() const;
@@ -63,3 +73,5 @@ public:
 
 	void draw_indirect_stroke_shader(RenderingDevice *p_rd, int64_t p_draw_list);
 };
+
+VARIANT_ENUM_CAST(GdstrokeEffect::RasterMethod)
