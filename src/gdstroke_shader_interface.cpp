@@ -240,10 +240,11 @@ Error GdstrokeShaderInterface::ContourInterfaceSet::create_resources(RenderingDe
 	resources[Buffer::BUFFER_CONTOUR_EDGE_CLIP_T_BUFFER             ] = p_rd->storage_buffer_create(sizeof(int32_t) * 2 * num_edges, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 	resources[Buffer::BUFFER_CONTOUR_EDGE_TO_CONTOUR_FRAGMENT_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 2 * num_edges, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
-	resources[Buffer::BUFFER_CONTOUR_FRAGMENT_PIXEL_COORD_BUFFER   ] = p_rd->storage_buffer_create(sizeof(int32_t)  * 2 * max_num_contour_fragments, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
-	resources[Buffer::BUFFER_CONTOUR_FRAGMENT_ORIENTATION_BUFFER   ] = p_rd->storage_buffer_create(sizeof(float)    * 2 * max_num_contour_fragments, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
-	resources[Buffer::BUFFER_CONTOUR_FRAGMENT_NORMAL_DEPTH_BUFFER  ] = p_rd->storage_buffer_create(sizeof(float)    * 4 * max_num_contour_fragments, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
-	resources[Buffer::BUFFER_CONTOUR_FRAGMENT_PSEUDO_VISIBLE_BUFFER] = p_rd->storage_buffer_create(sizeof(uint32_t) * 1 * max_num_contour_fragments, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_CONTOUR_FRAGMENT_TO_CONTOUR_EDGE_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t)  * 1 * max_num_contour_fragments, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_CONTOUR_FRAGMENT_PIXEL_COORD_BUFFER    ] = p_rd->storage_buffer_create(sizeof(int32_t)  * 2 * max_num_contour_fragments, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_CONTOUR_FRAGMENT_ORIENTATION_BUFFER    ] = p_rd->storage_buffer_create(sizeof(float)    * 2 * max_num_contour_fragments, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_CONTOUR_FRAGMENT_NORMAL_DEPTH_BUFFER   ] = p_rd->storage_buffer_create(sizeof(float)    * 4 * max_num_contour_fragments, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_CONTOUR_FRAGMENT_PSEUDO_VISIBLE_BUFFER ] = p_rd->storage_buffer_create(sizeof(uint32_t) * 1 * max_num_contour_fragments, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
 	resources[Buffer::BUFFER_ALLOCATION_CONTOUR_PIXEL_BUFFER] = p_rd->storage_buffer_create(sizeof(uint32_t) * 2 * max_num_contour_fragments, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 

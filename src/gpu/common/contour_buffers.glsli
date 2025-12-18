@@ -41,6 +41,10 @@ layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourEdgeT
 };
 
 
+layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourFragmentToContourEdgeBuffer {
+	int idx[MAX_NUM_CONTOUR_FRAGMENTS];
+};
+
 layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourFragmentPixelCoordBuffer {
 	ivec2 pixel_coord[MAX_NUM_CONTOUR_FRAGMENTS];
 };
@@ -90,6 +94,7 @@ layout(set = 3, binding = 0, std430) readonly buffer ContourBuffers {
 	ContourEdgeIsDiscardedBuffer                B_contour_edge_is_discarded;
 	ContourEdgeClipTBuffer                      B_contour_edge_clip_t;
 	ContourEdgeToContourFragmentBuffer          B_contour_edge_to_contour_fragment;
+	ContourFragmentToContourEdgeBuffer          B_contour_fragment_to_contour_edge;
 	ContourFragmentPixelCoordBuffer             B_contour_fragment_pixel_coord;
 	ContourFragmentOrientationBuffer            B_contour_fragment_orientation;
 	ContourFragmentNormalDepthBuffer            B_contour_fragment_normal_depth;

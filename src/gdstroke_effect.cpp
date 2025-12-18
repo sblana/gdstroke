@@ -316,18 +316,31 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		rd->compute_list_dispatch(list, 1, 1, 1);
 		rd->compute_list_end();
 
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_FG_SECOND_COMMANDER]);
+		this->bind_sets(rd, list);
+		this->bind_sets_commander(rd, list);
+		rd->compute_list_dispatch(list, 1, 1, 1);
+		rd->compute_list_end();
+
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_FG_SCATTER]);
+		this->bind_sets(rd, list);
+		this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_WORKGROUP_TO_CONTOUR_EDGES);
+		rd->compute_list_end();
+
 		if (_raster_method == RasterMethod::RASTER_METHOD_BRESENHAM) {
 			list = rd->compute_list_begin();
-			rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_FG_SCATTER_BRESENHAM]);
+			rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_FG_RASTERIZE_BRESENHAM]);
 			this->bind_sets(rd, list);
-			this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_WORKGROUP_TO_CONTOUR_EDGES);
+			this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_FRAGMENTS);
 			rd->compute_list_end();
 		}
 		else if (_raster_method == RasterMethod::RASTER_METHOD_DDA) {
 			list = rd->compute_list_begin();
-			rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_FG_SCATTER_DDA]);
+			rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_FG_RASTERIZE_DDA]);
 			this->bind_sets(rd, list);
-			this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_WORKGROUP_TO_CONTOUR_EDGES);
+			this->command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_FRAGMENTS);
 			rd->compute_list_end();
 		}
 	}
@@ -335,13 +348,6 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 
 	rd->draw_command_begin_label("Contour Pixel Generation", Color(1.0, 0.3, 1.0));
 	{
-		list = rd->compute_list_begin();
-		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CPG_FIRST_COMMANDER]);
-		this->bind_sets(rd, list);
-		this->bind_sets_commander(rd, list);
-		rd->compute_list_dispatch(list, 1, 1, 1);
-		rd->compute_list_end();
-
 		list = rd->compute_list_begin();
 		rd->compute_list_bind_compute_pipeline(list, this->_pipelines[Shader::SHADER_CR_CPG_SOFT_DEPTH_TEST]);
 		this->bind_sets(rd, list);
