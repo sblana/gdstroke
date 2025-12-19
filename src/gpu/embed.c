@@ -13,7 +13,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
-#include <malloc.h>
+#include <stdlib.h>
 
 
 char *read_entire_file(char const *filename, int *out_length) {
@@ -56,6 +56,8 @@ int embed(char const *input_file, char const * output_file, char const * variabl
 		fprintf(fp, "%s0x%02hhx,", ( (i % 32) ? (" ") : ("\n\t\t") ), input_data[i]);
 	}
 	fprintf(fp, "\n\t}\n};");
+
+	free(input_data);
 
 	fclose(fp);
 	return 0;
