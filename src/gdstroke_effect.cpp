@@ -140,7 +140,7 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		_ready = true;
 	}
 
-	this->hard_depth_test_resources.clear_attachments(rd, p_render_data);
+	this->hard_depth_test_resources.clear_color_attachments(rd, p_render_data);
 
 	this->scene_interface_set.update_resources(rd, p_render_data);
 	this->scene_interface_set.make_bindings();

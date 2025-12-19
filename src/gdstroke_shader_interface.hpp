@@ -249,7 +249,7 @@ public:
 		RID get_framebuffer(RenderingDevice *p_rd, RenderData *p_render_data);
 		RID create_render_pipeline(RenderingDevice *p_rd, RID const &p_shader);
 
-		void clear_attachments(RenderingDevice *p_rd, RenderData *p_render_data);
+		void clear_color_attachments(RenderingDevice *p_rd, RenderData *p_render_data);
 	};
 
 	struct StrokeRenderingResources {

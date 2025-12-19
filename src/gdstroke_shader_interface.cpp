@@ -500,10 +500,9 @@ RID GdstrokeShaderInterface::HardDepthTestResources::create_render_pipeline(Rend
 	return p_rd->render_pipeline_create(p_shader, get_framebuffer_format(p_rd), RenderingDevice::INVALID_FORMAT_ID, RenderingDevice::RenderPrimitive::RENDER_PRIMITIVE_POINTS, pipeline_rasterization_state, pipeline_multisample_state, pipeline_depth_stencil_state, pipeline_color_blend_state);
 }
 
-void GdstrokeShaderInterface::HardDepthTestResources::clear_attachments(RenderingDevice *p_rd, RenderData *p_render_data) {
+void GdstrokeShaderInterface::HardDepthTestResources::clear_color_attachments(RenderingDevice *p_rd, RenderData *p_render_data) {
 	TypedArray<RID> attachments = get_attachments(p_rd, p_render_data);
 	p_rd->texture_clear(attachments[0], Color(0, 0, 0, 0), 0, 1, 0, 1);
-	p_rd->texture_clear(attachments[1], Color(0, 0, 0, 0), 0, 1, 0, 1);
 }
 
 
