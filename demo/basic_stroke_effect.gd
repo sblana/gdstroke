@@ -64,7 +64,7 @@ func init_resources() -> void:
 func _render_callback(_callback_type: int, render_data: RenderData) -> void:
 	var rd := RenderingServer.get_rendering_device()
 	var scene_buffers: RenderSceneBuffersRD = render_data.get_render_scene_buffers()
-	var gdstroke_effect: GdstrokeEffect = GdstrokeServer.get_singleton().get_gdstroke_effect(gdstroke_effect_id)
+	var gdstroke_effect: GdstrokeEffect = GdstrokeServer.get_gdstroke_effect(gdstroke_effect_id)
 
 	if not pipeline.is_valid():
 		make_pipelines(scene_buffers.get_color_texture(), scene_buffers.get_depth_texture())

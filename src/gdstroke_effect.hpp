@@ -19,31 +19,31 @@ public:
 	};
 
 private:
-	int64_t _id;
-	RasterMethod _raster_method;
-	bool _ready;
+	int64_t _id = 0;
+	RasterMethod _raster_method = RasterMethod::RASTER_METHOD_BRESENHAM;
+	bool _ready = false;
 	bool _debug_enabled = true;
 	RID _compiled_shaders[Shader::SHADER_MAX];
 	RID _pipelines[Shader::SHADER_MAX];
-	GdstrokeShaderInterface::SceneInterfaceSet scene_interface_set = {};
-	GdstrokeShaderInterface::CommandInterfaceSet command_interface_set = {};
-	GdstrokeShaderInterface::MeshInterfaceSet mesh_interface_set = {};
-	GdstrokeShaderInterface::ContourInterfaceSet contour_interface_set = {};
-	GdstrokeShaderInterface::PixelEdgeInterfaceSet pixel_edge_interface_set = {};
+	GdstrokeShaderInterface::SceneInterfaceSet _scene_interface_set = {};
+	GdstrokeShaderInterface::CommandInterfaceSet _command_interface_set = {};
+	GdstrokeShaderInterface::MeshInterfaceSet _mesh_interface_set = {};
+	GdstrokeShaderInterface::ContourInterfaceSet _contour_interface_set = {};
+	GdstrokeShaderInterface::PixelEdgeInterfaceSet _pixel_edge_interface_set = {};
 
-	GdstrokeShaderInterface::ShaderAPIInterfaceSet shader_api_interface_set = {};
+	GdstrokeShaderInterface::ShaderAPIInterfaceSet _shader_api_interface_set = {};
 
-	GdstrokeShaderInterface::DebugInterfaceSet debug_interface_set = {};
+	GdstrokeShaderInterface::DebugInterfaceSet _debug_interface_set = {};
 
-	GdstrokeShaderInterface::HardDepthTestResources hard_depth_test_resources = {};
-	GdstrokeShaderInterface::StrokeRenderingResources stroke_rendering_resources = {};
+	GdstrokeShaderInterface::HardDepthTestResources _hard_depth_test_resources = {};
+	GdstrokeShaderInterface::StrokeRenderingResources _stroke_rendering_resources = {};
 
 	using DispatchIndirectCommands = GdstrokeShaderInterface::CommandInterfaceSet::DispatchIndirectCommands;
 	using DrawIndirectCommands = GdstrokeShaderInterface::CommandInterfaceSet::DrawIndirectCommands;
 
-	void bind_sets(RenderingDevice *p_rd, int64_t p_compute_list) const;
-	void bind_sets_commander(RenderingDevice *p_rd, int64_t p_compute_list) const;
-	void bind_sets_debug(RenderingDevice *p_rd, int64_t p_compute_list) const;
+	void _bind_sets(RenderingDevice *p_rd, int64_t p_compute_list) const;
+	void _bind_sets_commander(RenderingDevice *p_rd, int64_t p_compute_list) const;
+	void _bind_sets_debug(RenderingDevice *p_rd, int64_t p_compute_list) const;
 
 	void _compile_shader(RenderingDevice *p_rd, Shader p_shader, String const &p_name);
 

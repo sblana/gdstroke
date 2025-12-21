@@ -24,21 +24,18 @@ protected:
 	static void _bind_methods();
 
 public:
-	static void create_singleton();
-	static GdstrokeServer *get_singleton();
+	static void init_static();
 
-	ContourMesh const &get_contour_mesh() const;
-	MeshInstance3D const *get_contour_instance() const;
+	static ContourMesh const &get_contour_mesh();
+	static MeshInstance3D const *get_contour_instance();
 
-	void register_contour_instance(MeshInstance3D *p_node);
+	static void register_contour_instance(MeshInstance3D *p_node);
 
-	void register_gdstroke_effect(int64_t p_id, Ref<GdstrokeEffect> p_gdstroke_effect);
-	Ref<GdstrokeEffect> get_gdstroke_effect(int64_t p_id);
+	static void register_gdstroke_effect(int64_t p_id, Ref<GdstrokeEffect> p_gdstroke_effect);
+	static Ref<GdstrokeEffect> get_gdstroke_effect(int64_t p_id);
 
 private:
-	static GdstrokeServer *singleton;
-
-	static ContourMesh* contour_mesh;
+	static ContourMesh *contour_mesh;
 	static MeshInstance3D *contour_instance;
 
 	static std::unordered_map<int64_t, Ref<GdstrokeEffect>> *id_to_gdstroke_effect_map;

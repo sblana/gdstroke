@@ -14,7 +14,7 @@ using namespace godot;
 void initialize_gdextension_types(ModuleInitializationLevel p_level) {
 	if (p_level == MODULE_INITIALIZATION_LEVEL_SERVERS) {
 		GDREGISTER_CLASS(GdstrokeServer);
-		GdstrokeServer::create_singleton();
+		GdstrokeServer::init_static();
 	}
 	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE) {
 		GDREGISTER_CLASS(GdstrokeEffect);

@@ -122,8 +122,8 @@ Error GdstrokeShaderInterface::MeshInterfaceSet::create_resources(RenderingDevic
 	resources.clear();
 	resources.resize(int(Buffer::BUFFER_MAX) + int(Binding::BINDING_MAX));
 
-	GdstrokeServer::ContourMesh const &contour_mesh = GdstrokeServer::get_singleton()->get_contour_mesh();
-	Transform3D contour_instance_transform = GdstrokeServer::get_singleton()->get_contour_instance()->get_global_transform().affine_inverse();
+	GdstrokeServer::ContourMesh const &contour_mesh = GdstrokeServer::get_contour_mesh();
+	Transform3D contour_instance_transform = GdstrokeServer::get_contour_instance()->get_global_transform().affine_inverse();
 	PackedByteArray mesh_desc_buffer_data = PackedByteArray();
 	mesh_desc_buffer_data.resize(4 * sizeof(int32_t));
 	mesh_desc_buffer_data.encode_s32(0, contour_mesh.vertex_buffer.size());
@@ -204,8 +204,8 @@ Error GdstrokeShaderInterface::MeshInterfaceSet::create_resources(RenderingDevic
 }
 
 Error GdstrokeShaderInterface::MeshInterfaceSet::update_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
-	GdstrokeServer::ContourMesh const &contour_mesh = GdstrokeServer::get_singleton()->get_contour_mesh();
-	Transform3D contour_instance_transform = GdstrokeServer::get_singleton()->get_contour_instance()->get_global_transform().affine_inverse();
+	GdstrokeServer::ContourMesh const &contour_mesh = GdstrokeServer::get_contour_mesh();
+	Transform3D contour_instance_transform = GdstrokeServer::get_contour_instance()->get_global_transform().affine_inverse();
 	PackedByteArray mesh_desc_buffer_transform_data = PackedByteArray();
 	mesh_desc_buffer_transform_data.append_array(PackedVector4Array({
 		ctor_vec3_f(contour_instance_transform.get_basis()[0]),
@@ -230,7 +230,7 @@ void GdstrokeShaderInterface::ContourInterfaceSet::receive_hard_depth_test_attac
 Error GdstrokeShaderInterface::ContourInterfaceSet::create_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
 	ERR_FAIL_COND_V(p_render_data == nullptr, Error::FAILED);
 	Ref<RenderSceneBuffersRD> render_scene_buffers = (Ref<RenderSceneBuffersRD>)p_render_data->get_render_scene_buffers();
-	uint32_t num_edges = GdstrokeServer::get_singleton()->get_contour_mesh().edge_to_vertex_buffer.size();
+	uint32_t num_edges = GdstrokeServer::get_contour_mesh().edge_to_vertex_buffer.size();
 
 	resources.clear();
 	resources.resize(int(Buffer::BUFFER_MAX) + int(Binding::BINDING_MAX));

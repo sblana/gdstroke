@@ -7,32 +7,25 @@
 
 using namespace godot;
 
-GdstrokeServer *GdstrokeServer::singleton = nullptr;
 GdstrokeServer::ContourMesh *GdstrokeServer::contour_mesh = nullptr;
 MeshInstance3D *GdstrokeServer::contour_instance = nullptr;
 std::unordered_map<int64_t, Ref<GdstrokeEffect>> *GdstrokeServer::id_to_gdstroke_effect_map = nullptr;
 
 void GdstrokeServer::_bind_methods() {
-	ClassDB::bind_static_method("GdstrokeServer", D_METHOD("get_singleton"), &GdstrokeServer::get_singleton);
-	ClassDB::bind_method(D_METHOD("register_contour_instance", "p_node"), &GdstrokeServer::register_contour_instance);
-	ClassDB::bind_method(D_METHOD("get_gdstroke_effect", "p_id"), &GdstrokeServer::get_gdstroke_effect);
+	ClassDB::bind_static_method("GdstrokeServer", D_METHOD("register_contour_instance", "p_node"), &GdstrokeServer::register_contour_instance);
+	ClassDB::bind_static_method("GdstrokeServer", D_METHOD("get_gdstroke_effect", "p_id"), &GdstrokeServer::get_gdstroke_effect);
 }
 
-void GdstrokeServer::create_singleton() {
-	singleton = memnew(GdstrokeServer);
+void GdstrokeServer::init_static() {
 	contour_mesh = new ContourMesh;
 	id_to_gdstroke_effect_map = new std::unordered_map<int64_t, Ref<GdstrokeEffect>>;
 }
 
-GdstrokeServer *GdstrokeServer::get_singleton() {
-	return singleton;
-}
-
-GdstrokeServer::ContourMesh const &GdstrokeServer::get_contour_mesh() const {
+GdstrokeServer::ContourMesh const &GdstrokeServer::get_contour_mesh() {
 	return *contour_mesh;
 }
 
-MeshInstance3D const *GdstrokeServer::get_contour_instance() const {
+MeshInstance3D const *GdstrokeServer::get_contour_instance() {
 	return contour_instance;
 }
 
