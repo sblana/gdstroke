@@ -31,7 +31,14 @@ Run the following command to download godot-cpp:
 
 env = SConscript("godot-cpp/SConstruct", {"env": env, "customs": customs})
 
-env.Append(CXXFLAGS=["-std=c++20"])
+if env.get("is_msvc", False):
+    if (env["CXXFLAGS"].count("/std:c++17")):
+        env["CXXFLAGS"].remove("/std:c++17")
+    env.Append(CXXFLAGS=["/std:c++20"])
+else:
+    if (env["CXXFLAGS"].count("-std=c++17")):
+        env["CXXFLAGS"].remove("-std=c++17")
+    env.Append(CXXFLAGS=["-std=c++20"])
 
 shaders_env = env.Clone()
 shaders_build_program = shaders_env.Program("temp/shaders_build_main", "src/gpu/shaders_build_main.cpp")
