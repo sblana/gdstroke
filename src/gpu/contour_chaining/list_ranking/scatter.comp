@@ -13,8 +13,7 @@ void main() {
 		// initialize
 		B_sparse_pixel_edge_local_idx.local_idx[pixel_edge_idx] = -1;
 
-		const SparsePixelEdgeNeighboursData neighbours = B_sparse_pixel_edge_neighbours.data[pixel_edge_idx];
-		if (neighbours != SparsePixelEdgeNeighboursData(-1, -1)) {
+		if (is_sparse_pixel_edge_idx_valid(int(pixel_edge_idx))) {
 			const SparsePixelEdgeListRankingData data = B_sparse_pixel_edge_list_ranking.data[pixel_edge_idx][0];
 
 			B_sparse_pixel_edge_local_idx.local_idx[pixel_edge_idx] = data.value - 1;

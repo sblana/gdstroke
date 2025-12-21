@@ -9,9 +9,8 @@ void main() {
 	const uint pixel_edge_idx = gl_GlobalInvocationID.x;
 
 	if (pixel_edge_idx < B_pixel_edge_desc.buf_len_sparse_pixel_edge) {
-		const SparsePixelEdgeNeighboursData neighbours = B_sparse_pixel_edge_neighbours.data[pixel_edge_idx];
-
-		if (neighbours != SparsePixelEdgeNeighboursData(-1, -1)) {
+		if (is_sparse_pixel_edge_idx_valid(int(pixel_edge_idx))) {
+			const SparsePixelEdgeNeighboursData neighbours = B_sparse_pixel_edge_neighbours.data[pixel_edge_idx];
 			const int associated_head_idx = B_sparse_pixel_edge_associated_head.associated_head[pixel_edge_idx];
 			const int pixel_edge_loop_idx = B_sparse_pixel_edge_to_pixel_edge_loop.idx[associated_head_idx];
 			const int local_idx = B_sparse_pixel_edge_local_idx.local_idx[pixel_edge_idx];

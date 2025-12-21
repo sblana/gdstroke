@@ -14,8 +14,7 @@ void main() {
 		B_sparse_pixel_edge_associated_head.associated_head[pixel_edge_idx] = -1;
 		B_sparse_pixel_edge_is_head.is_head[pixel_edge_idx] = false;
 
-		const SparsePixelEdgeNeighboursData neighbours = B_sparse_pixel_edge_neighbours.data[pixel_edge_idx];
-		if (neighbours != SparsePixelEdgeNeighboursData(-1, -1)) {
+		if (is_sparse_pixel_edge_idx_valid(int(pixel_edge_idx))) {
 			const SparsePixelEdgeLoopBreakingData data = B_sparse_pixel_edge_loop_breaking.data[pixel_edge_idx][0];
 
 			B_sparse_pixel_edge_associated_head.associated_head[pixel_edge_idx] = data.max_key;
