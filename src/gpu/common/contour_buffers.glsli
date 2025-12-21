@@ -86,7 +86,7 @@ layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourPixel
 layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourPixelNormalDepthBuffer {
 	vec4 normal_depth[MAX_NUM_CONTOUR_PIXELS];
 };
-	
+
 
 layout(set = 3, binding = 0, std430) readonly buffer ContourBuffers {
 	ContourDescBuffer                           B_contour_desc;

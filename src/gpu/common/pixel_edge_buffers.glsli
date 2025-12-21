@@ -74,6 +74,10 @@ layout(buffer_reference, buffer_reference_align = 4, std430) buffer SparsePixelE
 	int associated_head[MAX_NUM_SPARSE_PIXEL_EDGES];
 };
 
+layout(buffer_reference, buffer_reference_align = 4, std430) buffer SparsePixelEdgeIsHeadBuffer {
+	bool is_head[MAX_NUM_SPARSE_PIXEL_EDGES];
+};
+
 // loop-local
 layout(buffer_reference, buffer_reference_align = 4, std430) buffer SparsePixelEdgeLocalIdxBuffer {
 	int local_idx[MAX_NUM_SPARSE_PIXEL_EDGES];
@@ -264,6 +268,7 @@ layout(set = 4, binding = 0, std430) readonly buffer PixelEdgeBuffers {
 	SparsePixelEdgeLoopBreakingBuffer           B_sparse_pixel_edge_loop_breaking;
 	SparsePixelEdgeListRankingBuffer            B_sparse_pixel_edge_list_ranking;
 	SparsePixelEdgeAssociatedHeadBuffer         B_sparse_pixel_edge_associated_head;
+	SparsePixelEdgeIsHeadBuffer                 B_sparse_pixel_edge_is_head;
 	SparsePixelEdgeLocalIdxBuffer               B_sparse_pixel_edge_local_idx;
 	SparsePixelEdgeToPixelEdgeLoopBuffer        B_sparse_pixel_edge_to_pixel_edge_loop;
 	PixelEdgeLoopDescBuffer                     B_pixel_edge_loop_desc;
