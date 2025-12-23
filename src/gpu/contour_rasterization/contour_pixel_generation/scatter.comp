@@ -10,8 +10,8 @@ void main() {
 	if (fragment_idx < B_contour_desc.num_contour_fragments) {
 		if (B_allocation_contour_pixel.data[fragment_idx].is_fragment_cluster_leader > 0) {
 			const uint contour_pixel_idx = B_allocation_contour_pixel.data[fragment_idx].contour_pixel_idx;
-			const ivec2 pixel_coord = B_contour_fragment_pixel_coord.pixel_coord[fragment_idx];
-			B_contour_pixel_pixel_coord.pixel_coord[contour_pixel_idx] = pixel_coord;
+			const ivec2 pixel_coord = B_contour_fragment_attribs.data[fragment_idx].pixel_coord;
+			B_contour_pixel_attribs.data[contour_pixel_idx].pixel_coord = pixel_coord;
 		}
 	}
 }

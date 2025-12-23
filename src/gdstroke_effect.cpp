@@ -582,12 +582,6 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 	rd->draw_command_begin_label("Midpoints Filtering", Color(1.0, 0.3, 1.0));
 	{
 		list = rd->compute_list_begin();
-		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_SE_MF_INIT]);
-		_bind_sets(rd, list);
-		_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_COMPACTED_PIXEL_EDGES);
-		rd->compute_list_end();
-
-		list = rd->compute_list_begin();
 		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_SE_MF_SMOOTHING]);
 		_bind_sets(rd, list);
 		_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_COMPACTED_PIXEL_EDGES);

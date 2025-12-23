@@ -16,7 +16,7 @@ void main() {
 
 	if (is_sparse_pixel_edge_idx_valid(int(pixel_edge_idx))) {
 		const ivec4 local_axes = get_orientation_local_axes(orientation);
-		const ivec2 contour_pixel_coord = B_contour_pixel_pixel_coord.pixel_coord[contour_pixel_idx];
+		const ivec2 contour_pixel_coord = B_contour_pixel_attribs.data[contour_pixel_idx].pixel_coord;
 		const ivec2 left_pixel_coord = contour_pixel_coord + mult_axes(local_axes, ivec2(-1, 0));
 
 		const uint associated_head_idx = B_sparse_pixel_edge_associated_head.associated_head[pixel_edge_idx];

@@ -45,16 +45,14 @@ layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourFragm
 	int idx[MAX_NUM_CONTOUR_FRAGMENTS];
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourFragmentPixelCoordBuffer {
-	ivec2 pixel_coord[MAX_NUM_CONTOUR_FRAGMENTS];
+struct ContourFragmentAttribsData {
+	ivec2 pixel_coord;
+	vec2 orientation;
+	vec4 normal_depth;
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourFragmentOrientationBuffer {
-	vec2 orientation[MAX_NUM_CONTOUR_FRAGMENTS];
-};
-
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourFragmentNormalDepthBuffer {
-	vec4 normal_depth[MAX_NUM_CONTOUR_FRAGMENTS];
+layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourFragmentAttribsBuffer {
+	ContourFragmentAttribsData data[MAX_NUM_CONTOUR_FRAGMENTS];
 };
 
 layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourFragmentPseudoVisibleBuffer {
@@ -75,16 +73,14 @@ layout(buffer_reference, buffer_reference_align = 4, std430) buffer ForemostCont
 };
 
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourPixelPixelCoordBuffer {
-	ivec2 pixel_coord[MAX_NUM_CONTOUR_PIXELS];
+struct ContourPixelAttribsData {
+	ivec2 pixel_coord;
+	vec2 orientation;
+	vec4 normal_depth;
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourPixelOrientationBuffer {
-	vec2 orientation[MAX_NUM_CONTOUR_PIXELS];
-};
-
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourPixelNormalDepthBuffer {
-	vec4 normal_depth[MAX_NUM_CONTOUR_PIXELS];
+layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourPixelAttribsBuffer {
+	ContourPixelAttribsData data[MAX_NUM_CONTOUR_PIXELS];
 };
 
 
@@ -95,15 +91,11 @@ layout(set = 3, binding = 0, std430) readonly buffer ContourBuffers {
 	ContourEdgeClipTBuffer                      B_contour_edge_clip_t;
 	ContourEdgeToContourFragmentBuffer          B_contour_edge_to_contour_fragment;
 	ContourFragmentToContourEdgeBuffer          B_contour_fragment_to_contour_edge;
-	ContourFragmentPixelCoordBuffer             B_contour_fragment_pixel_coord;
-	ContourFragmentOrientationBuffer            B_contour_fragment_orientation;
-	ContourFragmentNormalDepthBuffer            B_contour_fragment_normal_depth;
+	ContourFragmentAttribsBuffer                B_contour_fragment_attribs;
 	ContourFragmentPseudoVisibleBuffer          B_contour_fragment_pseudo_visible;
 	AllocationContourPixelBuffer                B_allocation_contour_pixel;
 	ForemostContourFragmentToContourPixelBuffer B_foremost_contour_fragment_to_contour_pixel;
-	ContourPixelPixelCoordBuffer                B_contour_pixel_pixel_coord;
-	ContourPixelOrientationBuffer               B_contour_pixel_orientation;
-	ContourPixelNormalDepthBuffer               B_contour_pixel_normal_depth;
+	ContourPixelAttribsBuffer                   B_contour_pixel_attribs;
 };
 
 

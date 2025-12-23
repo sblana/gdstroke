@@ -10,14 +10,14 @@ layout(local_size_x = 64) in;
 void main() {
 	const uint fragment_idx = gl_GlobalInvocationID.x;
 	if (fragment_idx < B_contour_desc.num_contour_fragments) {
-		float raw_depth = B_contour_fragment_normal_depth.normal_depth[fragment_idx].w;
+		float raw_depth = B_contour_fragment_attribs.data[fragment_idx].normal_depth.w;
 
 		uint num_times_tried = 0;
 		uint num_times_success = 0;
 		float average_sample_depth = 0.0;
 		for (int iy = -1; iy <= 1; ++iy) {
 			for (int ix = -1; ix <= 1; ++ix) {
-				ivec2 sample_point = B_contour_fragment_pixel_coord.pixel_coord[fragment_idx] + ivec2(ix, iy);
+				ivec2 sample_point = B_contour_fragment_attribs.data[fragment_idx].pixel_coord + ivec2(ix, iy);
 				if (!is_within_screen(sample_point, uvec2(U_scene_data.cur.viewport_size))) {
 					continue;
 				}
@@ -41,7 +41,7 @@ void main() {
 			is_pseudo_visible = is_pseudo_visible || passes_average;
 
 		// HACK: issue with rasterization: some fragments lie on the bottom and right screen/window borders. probably an NDC → screen-space transformation issue.
-		if (!is_within_screen(B_contour_fragment_pixel_coord.pixel_coord[fragment_idx], imageSize(U_foremost_fragment_bitmap))) {
+		if (!is_within_screen(B_contour_fragment_attribs.data[fragment_idx].pixel_coord, imageSize(U_foremost_fragment_bitmap))) {
 			is_pseudo_visible = false;
 		}
 		B_contour_fragment_pseudo_visible.pseudo_visible[fragment_idx] = is_pseudo_visible;

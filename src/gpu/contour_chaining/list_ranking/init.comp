@@ -12,14 +12,14 @@ void main() {
 
 	if (pixel_edge_idx < B_pixel_edge_desc.buf_len_sparse_pixel_edge) {
 		// init
-		B_sparse_pixel_edge_list_ranking.data[pixel_edge_idx][0] = SparsePixelEdgeListRankingData(-1, 1);
-		B_sparse_pixel_edge_list_ranking.data[pixel_edge_idx][1] = SparsePixelEdgeListRankingData(-1, 1);
+		B_sparse_pixel_edge_wyllie.data[pixel_edge_idx][0] = SparsePixelEdgeWyllieData(-1, -1, 0, 1);
+		B_sparse_pixel_edge_wyllie.data[pixel_edge_idx][1] = SparsePixelEdgeWyllieData(-1, -1, 0, 1);
 
 		if (is_sparse_pixel_edge_idx_valid(int(pixel_edge_idx))) {
 			const SparsePixelEdgeNeighboursData neighbours = B_sparse_pixel_edge_neighbours.data[pixel_edge_idx];
 			if (!B_sparse_pixel_edge_is_head.is_head[pixel_edge_idx]) {
-				B_sparse_pixel_edge_list_ranking.data[pixel_edge_idx][0] = SparsePixelEdgeListRankingData(neighbours.prev_idx, 1);
-				B_sparse_pixel_edge_list_ranking.data[pixel_edge_idx][1] = SparsePixelEdgeListRankingData(neighbours.prev_idx, 1);
+				B_sparse_pixel_edge_wyllie.data[pixel_edge_idx][0] = SparsePixelEdgeWyllieData(neighbours.next_idx, neighbours.prev_idx, 0, 1);
+				B_sparse_pixel_edge_wyllie.data[pixel_edge_idx][1] = SparsePixelEdgeWyllieData(neighbours.next_idx, neighbours.prev_idx, 0, 1);
 			}
 		}
 	}

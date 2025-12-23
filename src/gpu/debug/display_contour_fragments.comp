@@ -11,11 +11,11 @@ layout(local_size_x = 64) in;
 void main() {
 	const uint fragment_idx = gl_GlobalInvocationID.x;
 	if (fragment_idx < B_contour_desc.num_contour_fragments) {
-		const ivec2 pixel_coord = B_contour_fragment_pixel_coord.pixel_coord[fragment_idx];
+		const ivec2 pixel_coord = B_contour_fragment_attribs.data[fragment_idx].pixel_coord;
 		if (is_within_screen(pixel_coord, imageSize(U_screen_color_image))) {
 			const vec4 output_data = vec4(
-				B_contour_fragment_normal_depth.normal_depth[fragment_idx].w,
-				float(B_contour_fragment_pseudo_visible.pseudo_visible[fragment_idx]),
+				B_contour_fragment_attribs.data[fragment_idx].normal_depth.w,
+				B_contour_fragment_pseudo_visible.pseudo_visible[fragment_idx],
 				0.0,
 				1.0
 			);

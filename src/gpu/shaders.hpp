@@ -62,7 +62,6 @@ enum Shader : int32_t {
 	SHADER_CC_D_COMPACTED_ALLOCATION,
 	SHADER_CC_D_COMPACTED_SCATTER,
 	SHADER_CC_D_FIRST_COMMANDER,
-	SHADER_SE_MF_INIT,
 	SHADER_SE_MF_SMOOTHING,
 	SHADER_SE_OF_CURVE_FITTING,
 	SHADER_SE_IOT_TEST,
@@ -156,7 +155,6 @@ std::map<Shader, ShaderBuildInfo> shader_to_shader_info_map = {{
 	{ SHADER_CC_D_COMPACTED_SCATTER,    ShaderBuildInfo{"cc_d_compacted_scatter",    "./contour_chaining/defragmentation/compacted_scatter.comp",    M_SHADER_STAGE_COMPUTE_BIT} },
 	{ SHADER_CC_D_FIRST_COMMANDER,      ShaderBuildInfo{"cc_d_first_commander",      "./contour_chaining/defragmentation/first_commander.comp",      M_SHADER_STAGE_COMPUTE_BIT} },
 
-	{ SHADER_SE_MF_INIT,      ShaderBuildInfo{"se_mf_init",      "./stroke_extraction/midpoints_filtering/init.comp",      M_SHADER_STAGE_COMPUTE_BIT} },
 	{ SHADER_SE_MF_SMOOTHING, ShaderBuildInfo{"se_mf_smoothing", "./stroke_extraction/midpoints_filtering/smoothing.comp", M_SHADER_STAGE_COMPUTE_BIT} },
 
 	{ SHADER_SE_OF_CURVE_FITTING, ShaderBuildInfo{"se_of_curve_fitting", "./stroke_extraction/orientations_filtering/curve_fitting.comp",      M_SHADER_STAGE_COMPUTE_BIT} },

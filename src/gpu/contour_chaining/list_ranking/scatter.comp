@@ -14,9 +14,9 @@ void main() {
 		B_sparse_pixel_edge_local_idx.local_idx[pixel_edge_idx] = -1;
 
 		if (is_sparse_pixel_edge_idx_valid(int(pixel_edge_idx))) {
-			const SparsePixelEdgeListRankingData data = B_sparse_pixel_edge_list_ranking.data[pixel_edge_idx][0];
+			const SparsePixelEdgeWyllieData data = B_sparse_pixel_edge_wyllie.data[pixel_edge_idx][0];
 
-			B_sparse_pixel_edge_local_idx.local_idx[pixel_edge_idx] = data.value - 1;
+			B_sparse_pixel_edge_local_idx.local_idx[pixel_edge_idx] = int(data.value) - 1;
 		}
 	}
 }

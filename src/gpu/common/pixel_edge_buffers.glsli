@@ -6,7 +6,7 @@
 #extension GL_EXT_buffer_reference : enable
 
 #define MAX_NUM_SPARSE_PIXEL_EDGES (MAX_NUM_CONTOUR_PIXELS * 4)
-#define MAX_NUM_COMPACTED_PIXEL_EDGES (MAX_NUM_SPARSE_PIXEL_EDGES)
+#define MAX_NUM_COMPACTED_PIXEL_EDGES (MAX_NUM_SPARSE_PIXEL_EDGES / 2)
 #define MAX_NUM_PIXEL_EDGE_LOOPS (MAX_NUM_COMPACTED_PIXEL_EDGES / 4)
 #define MAX_NUM_SEGMENTS_PER_LOOP (1024)
 #define MAX_NUM_SEGMENTS (MAX_NUM_COMPACTED_PIXEL_EDGES / 8)
@@ -46,28 +46,15 @@ layout(buffer_reference, buffer_reference_align = 4, std430) buffer SparsePixelE
 	SparsePixelEdgeNeighboursData data[MAX_NUM_SPARSE_PIXEL_EDGES];
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer SparsePixelEdgeMortonCodeBuffer {
-	uint morton_code[MAX_NUM_SPARSE_PIXEL_EDGES];
-};
-
-struct SparsePixelEdgeLoopBreakingData {
+struct SparsePixelEdgeWyllieData {
 	int next_idx;
-	int max_key;
-	uint max_value;
-	uint pad;
-};
-
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer SparsePixelEdgeLoopBreakingBuffer {
-	SparsePixelEdgeLoopBreakingData data[MAX_NUM_SPARSE_PIXEL_EDGES][2];
-};
-
-struct SparsePixelEdgeListRankingData {
 	int prev_idx;
-	int value;
+	int key;
+	uint value;
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer SparsePixelEdgeListRankingBuffer {
-	SparsePixelEdgeListRankingData data[MAX_NUM_SPARSE_PIXEL_EDGES][2];
+layout(buffer_reference, buffer_reference_align = 4, std430) buffer SparsePixelEdgeWyllieBuffer {
+	SparsePixelEdgeWyllieData data[MAX_NUM_SPARSE_PIXEL_EDGES][2];
 };
 
 layout(buffer_reference, buffer_reference_align = 4, std430) buffer SparsePixelEdgeAssociatedHeadBuffer {
@@ -122,10 +109,6 @@ layout(buffer_reference, buffer_reference_align = 4, std430) buffer CompactedPix
 
 layout(buffer_reference, buffer_reference_align = 4, std430) buffer CompactedPixelEdgeToPixelEdgeLoopBuffer {
 	int idx[MAX_NUM_COMPACTED_PIXEL_EDGES];
-};
-
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer CompactedPixelEdgeMidpointsFilteringBuffer {
-	vec2 midpoint[MAX_NUM_COMPACTED_PIXEL_EDGES];
 };
 
 layout(buffer_reference, buffer_reference_align = 4, std430) buffer CompactedPixelEdgeFilteredMidpointBuffer {
@@ -264,9 +247,7 @@ layout(buffer_reference, buffer_reference_align = 4, std430) buffer StrokeVertex
 layout(set = 4, binding = 0, std430) readonly buffer PixelEdgeBuffers {
 	PixelEdgeDescBuffer                         B_pixel_edge_desc;
 	SparsePixelEdgeNeighboursBuffer             B_sparse_pixel_edge_neighbours;
-	SparsePixelEdgeMortonCodeBuffer             B_sparse_pixel_edge_morton_code;
-	SparsePixelEdgeLoopBreakingBuffer           B_sparse_pixel_edge_loop_breaking;
-	SparsePixelEdgeListRankingBuffer            B_sparse_pixel_edge_list_ranking;
+	SparsePixelEdgeWyllieBuffer                 B_sparse_pixel_edge_wyllie;
 	SparsePixelEdgeAssociatedHeadBuffer         B_sparse_pixel_edge_associated_head;
 	SparsePixelEdgeIsHeadBuffer                 B_sparse_pixel_edge_is_head;
 	SparsePixelEdgeLocalIdxBuffer               B_sparse_pixel_edge_local_idx;
@@ -277,7 +258,6 @@ layout(set = 4, binding = 0, std430) readonly buffer PixelEdgeBuffers {
 	CompactedPixelEdgeOrientationBuffer         B_compacted_pixel_edge_orientation;
 	CompactedPixelEdgeAssociatedHeadBuffer      B_compacted_pixel_edge_associated_head;
 	CompactedPixelEdgeToPixelEdgeLoopBuffer     B_compacted_pixel_edge_to_pixel_edge_loop;
-	CompactedPixelEdgeMidpointsFilteringBuffer  B_compacted_pixel_edge_midpoints_filtering;
 	CompactedPixelEdgeFilteredMidpointBuffer    B_compacted_pixel_edge_filtered_midpoint;
 	CompactedPixelEdgeFilteredOrientationBuffer B_compacted_pixel_edge_filtered_orientation;
 	CompactedPixelEdgeIsInsideBuffer            B_compacted_pixel_edge_is_inside;

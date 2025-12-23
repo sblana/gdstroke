@@ -4,6 +4,7 @@
 layout(local_size_x = 64) in;
 
 #include "common/buffers.glsli"
+#include "common/math.glsli"
 
 
 layout(push_constant) RESTRICT uniform PushConstants {
@@ -14,22 +15,21 @@ layout(push_constant) RESTRICT uniform PushConstants {
 void main() {
 	const uint pixel_edge_idx = gl_GlobalInvocationID.x;
 	if (pixel_edge_idx < B_pixel_edge_desc.buf_len_sparse_pixel_edge) {
-		const SparsePixelEdgeNeighboursData neighbours = B_sparse_pixel_edge_neighbours.data[pixel_edge_idx];
-		if (neighbours != SparsePixelEdgeNeighboursData(-1, -1)) {
-			const SparsePixelEdgeLoopBreakingData curr_data = B_sparse_pixel_edge_loop_breaking.data[pixel_edge_idx][U_push_constants.read_layer];
-			SparsePixelEdgeLoopBreakingData next_data = curr_data;
+		const SparsePixelEdgeWyllieData curr_data = B_sparse_pixel_edge_wyllie.data[pixel_edge_idx][U_push_constants.read_layer];
+		if (curr_data.prev_idx != -1) {
+			SparsePixelEdgeWyllieData next_data = curr_data;
 
 			if (curr_data.next_idx == -1) {
-				B_sparse_pixel_edge_loop_breaking.data[pixel_edge_idx][U_push_constants.write_layer] = curr_data;
+				B_sparse_pixel_edge_wyllie.data[pixel_edge_idx][U_push_constants.write_layer] = curr_data;
 				return;
 			}
 
-			if (B_sparse_pixel_edge_loop_breaking.data[curr_data.next_idx][U_push_constants.read_layer].max_value > curr_data.max_value) {
-				next_data = B_sparse_pixel_edge_loop_breaking.data[curr_data.next_idx][U_push_constants.read_layer];
+			if (B_sparse_pixel_edge_wyllie.data[curr_data.next_idx][U_push_constants.read_layer].value > curr_data.value) {
+				next_data = B_sparse_pixel_edge_wyllie.data[curr_data.next_idx][U_push_constants.read_layer];
 			}
-			next_data.next_idx = B_sparse_pixel_edge_loop_breaking.data[curr_data.next_idx][U_push_constants.read_layer].next_idx;
+			next_data.next_idx = B_sparse_pixel_edge_wyllie.data[curr_data.next_idx][U_push_constants.read_layer].next_idx;
 
-			B_sparse_pixel_edge_loop_breaking.data[pixel_edge_idx][U_push_constants.write_layer] = next_data;
+			B_sparse_pixel_edge_wyllie.data[pixel_edge_idx][U_push_constants.write_layer] = next_data;
 		}
 	}
 }

@@ -14,21 +14,18 @@ layout(push_constant) RESTRICT uniform PushConstants {
 void main() {
 	const uint pixel_edge_idx = gl_GlobalInvocationID.x;
 	if (pixel_edge_idx < B_pixel_edge_desc.buf_len_sparse_pixel_edge) {
-		const SparsePixelEdgeNeighboursData neighbours = B_sparse_pixel_edge_neighbours.data[pixel_edge_idx];
-		if (neighbours != SparsePixelEdgeNeighboursData(-1, -1)) {
-			const SparsePixelEdgeListRankingData curr_data = B_sparse_pixel_edge_list_ranking.data[pixel_edge_idx][U_push_constants.read_layer];
-			SparsePixelEdgeListRankingData next_data = curr_data;
+		const SparsePixelEdgeWyllieData curr_data = B_sparse_pixel_edge_wyllie.data[pixel_edge_idx][U_push_constants.read_layer];
+		if (curr_data.next_idx != -1) {
+			int prev_idx = curr_data.prev_idx;
+			uint value = curr_data.value;
 
-			if (curr_data.prev_idx == -1) {
-				B_sparse_pixel_edge_list_ranking.data[pixel_edge_idx][U_push_constants.write_layer] = curr_data;
-				return;
+			if (curr_data.prev_idx != -1) {
+				prev_idx = B_sparse_pixel_edge_wyllie.data[curr_data.prev_idx][U_push_constants.read_layer].prev_idx;
+				value += B_sparse_pixel_edge_wyllie.data[curr_data.prev_idx][U_push_constants.read_layer].value;
 			}
 
-			const SparsePixelEdgeListRankingData prev_node_data = B_sparse_pixel_edge_list_ranking.data[curr_data.prev_idx][U_push_constants.read_layer];
-			
-			next_data.prev_idx = prev_node_data.prev_idx;
-			next_data.value += prev_node_data.value;
-			B_sparse_pixel_edge_list_ranking.data[pixel_edge_idx][U_push_constants.write_layer] = next_data;
+			B_sparse_pixel_edge_wyllie.data[pixel_edge_idx][(U_push_constants.write_layer)].prev_idx = prev_idx;
+			B_sparse_pixel_edge_wyllie.data[pixel_edge_idx][(U_push_constants.write_layer)].value = value;
 		}
 	}
 }

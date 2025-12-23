@@ -89,9 +89,9 @@ void main() {
 
 		const vec4 interpolated_ndc = perspective_interpolate_edge(verts_clipped_ndc, interpolation_weight);
 		const float godot_depth = interpolated_ndc.z;
-		B_contour_fragment_pixel_coord.pixel_coord[fragment_idx] = pixel_coord;
-		B_contour_fragment_orientation.orientation[fragment_idx] = contour_orientation;
-		B_contour_fragment_normal_depth.normal_depth[fragment_idx].xyz = front_face_view_normal;
-		B_contour_fragment_normal_depth.normal_depth[fragment_idx].w = godot_depth;
+		B_contour_fragment_attribs.data[fragment_idx].pixel_coord = pixel_coord;
+		B_contour_fragment_attribs.data[fragment_idx].orientation = contour_orientation;
+		B_contour_fragment_attribs.data[fragment_idx].normal_depth.xyz = front_face_view_normal;
+		B_contour_fragment_attribs.data[fragment_idx].normal_depth.w = godot_depth;
 	}
 }

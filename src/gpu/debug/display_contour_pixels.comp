@@ -11,10 +11,10 @@ layout(local_size_x = 64) in;
 void main() {
 	const uint contour_pixel_idx = gl_GlobalInvocationID.x;
 	if (contour_pixel_idx < B_contour_desc.num_contour_pixels) {
-		const ivec2 pixel_coord = B_contour_pixel_pixel_coord.pixel_coord[contour_pixel_idx];
+		const ivec2 pixel_coord = B_contour_pixel_attribs.data[contour_pixel_idx].pixel_coord;
 		if (is_within_screen(pixel_coord, imageSize(U_screen_color_image))) {
-			vec2 orientation = B_contour_pixel_orientation.orientation[contour_pixel_idx];
-			float depth = B_contour_pixel_normal_depth.normal_depth[contour_pixel_idx].w;
+			vec2 orientation = B_contour_pixel_attribs.data[contour_pixel_idx].orientation;
+			float depth = B_contour_pixel_attribs.data[contour_pixel_idx].normal_depth.w;
 			const vec4 output_data = vec4(
 				orientation.x * 0.5 + 0.5,
 				orientation.y * 0.5 + 0.5,

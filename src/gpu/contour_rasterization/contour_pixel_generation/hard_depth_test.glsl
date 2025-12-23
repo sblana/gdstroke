@@ -13,9 +13,9 @@
 		AO_contour_fragment_idx = gl_InstanceIndex;
 		AO_is_pseudo_visible = uint(B_contour_fragment_pseudo_visible.pseudo_visible[AO_contour_fragment_idx]);
 
-		ivec2 pixel_coord = B_contour_fragment_pixel_coord.pixel_coord[AO_contour_fragment_idx];
+		ivec2 pixel_coord = B_contour_fragment_attribs.data[AO_contour_fragment_idx].pixel_coord;
 		vec2 frag_coord = (pixel_coord + 0.5) / U_scene_data.cur.viewport_size * 2.0 - 1.0;
-		float depth = B_contour_fragment_normal_depth.normal_depth[AO_contour_fragment_idx].w;
+		float depth = B_contour_fragment_attribs.data[AO_contour_fragment_idx].normal_depth.w;
 		gl_Position = vec4(frag_coord, depth, 1.0);
 	}
 

@@ -23,7 +23,7 @@ void main() {
 
 			// load contour pixel orientations
 			vec2 contour_pixel_orientations_stack[INSIDE_OUTSIDE_TEST_MAX_WINDOW_SIZE];
-			contour_pixel_orientations_stack[num_neighbours] = B_contour_pixel_orientation.orientation[contour_pixel_idx];
+			contour_pixel_orientations_stack[num_neighbours] = B_contour_pixel_attribs.data[contour_pixel_idx].orientation;
 
 			for (int forward = 0; forward < 2; ++forward) {
 				const int direction = (forward * 2 - 1);
@@ -33,7 +33,7 @@ void main() {
 					const uint cur_idx = (forward > 0) ? neighbours.next_idx : neighbours.prev_idx;
 					const int k = i * direction;
 					const int cur_contour_pixel_idx = B_compacted_pixel_edge_to_contour_pixel.contour_pixel_idx[cur_idx];
-					contour_pixel_orientations_stack[num_neighbours + k] = B_contour_pixel_orientation.orientation[cur_contour_pixel_idx];
+					contour_pixel_orientations_stack[num_neighbours + k] = B_contour_pixel_attribs.data[cur_contour_pixel_idx].orientation;
 					prev_idx = cur_idx;
 				}
 			}

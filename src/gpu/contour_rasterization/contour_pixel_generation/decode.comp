@@ -8,10 +8,10 @@ layout(local_size_x = 64) in;
 void main() {
 	const uint contour_pixel_idx = gl_GlobalInvocationID.x;
 	if (contour_pixel_idx < B_contour_desc.num_contour_pixels) {
-		const ivec2 pixel_coord = B_contour_pixel_pixel_coord.pixel_coord[contour_pixel_idx];
+		const ivec2 pixel_coord = B_contour_pixel_attribs.data[contour_pixel_idx].pixel_coord;
 		const int fragment_idx = int(imageLoad(U_foremost_fragment_bitmap, pixel_coord).x) - 1;
-		B_contour_pixel_orientation.orientation[contour_pixel_idx] = B_contour_fragment_orientation.orientation[fragment_idx];
-		B_contour_pixel_normal_depth.normal_depth[contour_pixel_idx] = B_contour_fragment_normal_depth.normal_depth[fragment_idx];
+		B_contour_pixel_attribs.data[contour_pixel_idx].orientation  = B_contour_fragment_attribs.data[fragment_idx].orientation;
+		B_contour_pixel_attribs.data[contour_pixel_idx].normal_depth = B_contour_fragment_attribs.data[fragment_idx].normal_depth;
 		B_foremost_contour_fragment_to_contour_pixel.contour_pixel_idx[fragment_idx] = contour_pixel_idx;
 	}
 }

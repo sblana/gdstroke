@@ -11,10 +11,15 @@ void main() {
 	const uint pixel_edge_idx = gl_GlobalInvocationID.x;
 
 	if (pixel_edge_idx < B_pixel_edge_desc.buf_len_sparse_pixel_edge) {
-		const SparsePixelEdgeNeighboursData neighbours = B_sparse_pixel_edge_neighbours.data[pixel_edge_idx];
-		const uint morton_code = B_sparse_pixel_edge_morton_code.morton_code[pixel_edge_idx];
+		B_sparse_pixel_edge_wyllie.data[pixel_edge_idx][0] = SparsePixelEdgeWyllieData(-1, -1, 0, get_invalid_morton_code());
+		B_sparse_pixel_edge_wyllie.data[pixel_edge_idx][1] = SparsePixelEdgeWyllieData(-1, -1, 0, get_invalid_morton_code());
 
-		B_sparse_pixel_edge_loop_breaking.data[pixel_edge_idx][0] = SparsePixelEdgeLoopBreakingData(neighbours.next_idx, int(pixel_edge_idx), morton_code, 0);
-		B_sparse_pixel_edge_loop_breaking.data[pixel_edge_idx][1] = SparsePixelEdgeLoopBreakingData(neighbours.next_idx, int(pixel_edge_idx), morton_code, 0);
+		if (is_sparse_pixel_edge_idx_valid(int(pixel_edge_idx))) {
+			const SparsePixelEdgeNeighboursData neighbours = B_sparse_pixel_edge_neighbours.data[pixel_edge_idx];
+			const uint contour_pixel_idx = get_sparse_pixel_edge_contour_pixel_idx(pixel_edge_idx);
+			const uint morton_code = calc_sparse_pixel_edge_morton_code(get_sparse_pixel_edge_orientation(pixel_edge_idx), B_contour_pixel_attribs.data[contour_pixel_idx].pixel_coord);
+			B_sparse_pixel_edge_wyllie.data[pixel_edge_idx][0] = SparsePixelEdgeWyllieData(neighbours.next_idx, neighbours.prev_idx, int(pixel_edge_idx), morton_code);
+			B_sparse_pixel_edge_wyllie.data[pixel_edge_idx][1] = SparsePixelEdgeWyllieData(neighbours.next_idx, neighbours.prev_idx, int(pixel_edge_idx), morton_code);
+		}
 	}
 }

@@ -7,6 +7,14 @@ layout(local_size_x = 64) in;
 #include "common/math.glsli"
 
 
+vec2 calc_midpoint(in const int i_compacted_pixel_edge_idx) {
+	const ivec2 contour_pixel_coord = B_contour_pixel_attribs.data[B_compacted_pixel_edge_to_contour_pixel.contour_pixel_idx[i_compacted_pixel_edge_idx]].pixel_coord;
+	const ivec2 left_pixel_coord = contour_pixel_coord + mult_axes(get_orientation_local_axes(B_compacted_pixel_edge_orientation.orientation[i_compacted_pixel_edge_idx]), ivec2(-1, 0));
+	const vec2 midpoint = vec2(contour_pixel_coord + left_pixel_coord) / 2.0 + 0.5;
+	return midpoint;
+}
+
+
 void main() {
 	const uint pixel_edge_idx = gl_GlobalInvocationID.x;
 
@@ -14,9 +22,9 @@ void main() {
 		const CompactedPixelEdgeNeighboursData neighbours = B_compacted_pixel_edge_neighbours.data[pixel_edge_idx];
 
 		B_compacted_pixel_edge_filtered_midpoint.midpoint[pixel_edge_idx] = laplacian(
-			B_compacted_pixel_edge_midpoints_filtering.midpoint[neighbours.prev_idx],
-			B_compacted_pixel_edge_midpoints_filtering.midpoint[pixel_edge_idx],
-			B_compacted_pixel_edge_midpoints_filtering.midpoint[neighbours.next_idx]
+			calc_midpoint(int(pixel_edge_idx)),
+			calc_midpoint(neighbours.prev_idx),
+			calc_midpoint(neighbours.next_idx)
 		);
 	}
 }

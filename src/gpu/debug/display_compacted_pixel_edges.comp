@@ -15,7 +15,7 @@ void main() {
 
 	if (pixel_edge_idx < B_pixel_edge_desc.num_pixel_edges) {
 		const ivec4 local_axes = get_orientation_local_axes(orientation);
-		const ivec2 contour_pixel_coord = B_contour_pixel_pixel_coord.pixel_coord[contour_pixel_idx];
+		const ivec2 contour_pixel_coord = B_contour_pixel_attribs.data[contour_pixel_idx].pixel_coord;
 		const ivec2 left_pixel_coord = contour_pixel_coord + mult_axes(local_axes, ivec2(-1, 0));
 
 		const vec2 midpoint = B_compacted_pixel_edge_filtered_midpoint.midpoint[pixel_edge_idx];
