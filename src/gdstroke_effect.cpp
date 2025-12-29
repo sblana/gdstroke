@@ -259,6 +259,12 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		rd->compute_list_end();
 
 		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CR_CED_MEM_ACQUIRE]);
+		_bind_sets(rd, list);
+		rd->compute_list_dispatch(list, 1, 1, 1);
+		rd->compute_list_end();
+
+		list = rd->compute_list_begin();
 		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CR_CED_SCATTER]);
 		_bind_sets(rd, list);
 		rd->compute_list_dispatch(list, udiv_ceil(num_edges, 64), 1, 1);
@@ -291,9 +297,9 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_REUSABLE_WG_ALLOCATION]);
 		rd->compute_list_set_push_constant(list, PackedInt64Array({
 			// B_contour_edge_to_contour_fragment.data[idx].num_fragments,
-			int64_t(sizeof(uint64_t) * ContourBuffers::BUFFER_CONTOUR_EDGE_TO_CONTOUR_FRAGMENT_BUFFER + contour_buffers_ptr),
-			int64_t(0 * sizeof(int32_t)),
-			int64_t(2 * sizeof(int32_t)),
+			int64_t(sizeof(uint64_t) * ContourBuffers::BUFFER_CONTOUR_EDGE_MAPS_BUFFER + contour_buffers_ptr),
+			int64_t(3 * sizeof(int32_t)),
+			int64_t(4 * sizeof(int32_t)),
 			// B_contour_desc.num_contour_edges,
 			int64_t(sizeof(uint64_t) * ContourBuffers::BUFFER_CONTOUR_DESC_BUFFER + contour_buffers_ptr),
 			int64_t(0 * sizeof(int32_t)),
@@ -301,10 +307,16 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 			int64_t(sizeof(uint64_t) * ContourBuffers::BUFFER_CONTOUR_DESC_BUFFER + contour_buffers_ptr),
 			int64_t(2 * sizeof(int32_t)),
 			// B_contour_edge_to_contour_fragment.data[idx].first_fragment_idx,
-			int64_t(sizeof(uint64_t) * ContourBuffers::BUFFER_CONTOUR_EDGE_TO_CONTOUR_FRAGMENT_BUFFER + contour_buffers_ptr),
-			int64_t(1 * sizeof(int32_t)),
+			int64_t(sizeof(uint64_t) * ContourBuffers::BUFFER_CONTOUR_EDGE_MAPS_BUFFER + contour_buffers_ptr),
 			int64_t(2 * sizeof(int32_t)),
+			int64_t(4 * sizeof(int32_t)),
 		}).to_byte_array(), 80);
+		_bind_sets(rd, list);
+		rd->compute_list_dispatch(list, 1, 1, 1);
+		rd->compute_list_end();
+
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CR_FG_MEM_ACQUIRE]);
 		_bind_sets(rd, list);
 		rd->compute_list_dispatch(list, 1, 1, 1);
 		rd->compute_list_end();
@@ -397,6 +409,12 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		rd->compute_list_set_push_constant(list, push, 80);
 		_bind_sets(rd, list);
 		_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_REUSABLE_ALLOCATION_L0);
+		rd->compute_list_end();
+
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CR_CPG_MEM_ACQUIRE]);
+		_bind_sets(rd, list);
+		rd->compute_list_dispatch(list, 1, 1, 1);
 		rd->compute_list_end();
 
 		list = rd->compute_list_begin();
@@ -704,6 +722,12 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 
 	rd->draw_command_begin_label("debug", Color(0.2, 0.2, 0.2));
 	{
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_DEBUG_MEMORY_VISUALIZER]);
+		_bind_sets(rd, list);
+		_bind_sets_debug(rd, list);
+		rd->compute_list_dispatch(list, 128, 128, 1);
+		rd->compute_list_end();
 	}
 	rd->draw_command_end_label();
 }

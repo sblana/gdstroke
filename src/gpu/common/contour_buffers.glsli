@@ -1,13 +1,15 @@
 #ifndef CONTOUR_BUFFERS_GLSLI
 #define CONTOUR_BUFFERS_GLSLI
 
-#include "common/sanity.glsli"
-#extension GL_EXT_buffer_reference : enable
+#define MAX_NUM_CONTOUR_FRAGMENTS (1 << 18)
+#define MAX_NUM_CONTOUR_PIXELS    (1 << 18)
 
-#define MAX_NUM_CONTOUR_FRAGMENTS (1 << 20)
-#define MAX_NUM_CONTOUR_PIXELS    (1 << 20)
+#extension GL_ARB_shading_language_include : enable
+#include "common/mem.glsli"
+#include "common/math.glsli"
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourDescBuffer {
+
+layout(BUFREF_LAYOUT) buffer ContourDescBuffer {
 	int num_contour_edges;
 	int buf_len_contour_edges;
 
@@ -18,32 +20,25 @@ layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourDescB
 	int buf_len_contour_pixels;
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourEdgeToEdgeBuffer {
-	int idx[]
-	/* length of array is equal to B_mesh_desc.num_edges */;
+
+struct ContourEdgeMapsData {
+	int to_edge_idx;
+	int is_discarded;
+	Range contour_fragment_range;
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourEdgeIsDiscardedBuffer {
-	bool discarded[];
+layout(BUFREF_LAYOUT) buffer ContourEdgeMapsBuffer {
+	ContourEdgeMapsData data[];
 };
+#define PER_ELEMENT_BYTES_CONTOUR_EDGE_MAPS_BUFFER (4ul + 4ul + 8ul)
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourEdgeClipTBuffer {
+layout(BUFREF_LAYOUT) buffer ContourEdgeClipTBuffer {
 	float t[][2];
 };
+#define PER_ELEMENT_BYTES_CONTOUR_EDGE_CLIP_T_BUFFER (4ul + 4ul)
 
-struct ContourEdgeToContourFragmentData {
-	int num_fragments;
-	int first_fragment_idx;
-};
+#define BYTES_PER_CONTOUR_EDGE (PER_ELEMENT_BYTES_CONTOUR_EDGE_MAPS_BUFFER + PER_ELEMENT_BYTES_CONTOUR_EDGE_CLIP_T_BUFFER)
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourEdgeToContourFragmentBuffer {
-	ContourEdgeToContourFragmentData data[];
-};
-
-
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourFragmentToContourEdgeBuffer {
-	int idx[MAX_NUM_CONTOUR_FRAGMENTS];
-};
 
 struct ContourFragmentAttribsData {
 	ivec2 pixel_coord;
@@ -51,26 +46,37 @@ struct ContourFragmentAttribsData {
 	vec4 normal_depth;
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourFragmentAttribsBuffer {
-	ContourFragmentAttribsData data[MAX_NUM_CONTOUR_FRAGMENTS];
+layout(BUFREF_LAYOUT) buffer ContourFragmentAttribsBuffer {
+	ContourFragmentAttribsData data[];
 };
+#define PER_ELEMENT_BYTES_CONTOUR_FRAGMENT_ATTRIBS_BUFFER (8ul + 8ul + 16ul)
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourFragmentPseudoVisibleBuffer {
-	bool pseudo_visible[MAX_NUM_CONTOUR_FRAGMENTS];
+layout(BUFREF_LAYOUT) buffer ContourFragmentToContourEdgeBuffer {
+	int idx[];
 };
+#define PER_ELEMENT_BYTES_CONTOUR_FRAGMENT_TO_CONTOUR_EDGE_BUFFER (4ul)
+
+layout(BUFREF_LAYOUT) buffer ContourFragmentPseudoVisibleBuffer {
+	bool pseudo_visible[];
+};
+#define PER_ELEMENT_BYTES_CONTOUR_FRAGMENT_PSEUDO_VISIBLE_BUFFER (4ul)
 
 struct AllocationContourPixelData {
 	uint is_fragment_cluster_leader;
 	uint contour_pixel_idx;
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer AllocationContourPixelBuffer {
-	AllocationContourPixelData data[MAX_NUM_CONTOUR_FRAGMENTS];
+layout(BUFREF_LAYOUT) buffer AllocationContourPixelBuffer {
+	AllocationContourPixelData data[];
 };
+#define PER_ELEMENT_BYTES_ALLOCATION_CONTOUR_PIXEL_BUFFER (4ul + 4ul)
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer ForemostContourFragmentToContourPixelBuffer {
-	uint contour_pixel_idx[MAX_NUM_CONTOUR_FRAGMENTS];
+layout(BUFREF_LAYOUT) buffer ForemostContourFragmentToContourPixelBuffer {
+	uint contour_pixel_idx[];
 };
+#define PER_ELEMENT_BYTES_FOREMOST_CONTOUR_FRAGMENT_TO_CONTOUR_PIXEL_BUFFER (4ul)
+
+#define BYTES_PER_CONTOUR_FRAGMENT (PER_ELEMENT_BYTES_CONTOUR_FRAGMENT_ATTRIBS_BUFFER + PER_ELEMENT_BYTES_CONTOUR_FRAGMENT_TO_CONTOUR_EDGE_BUFFER + PER_ELEMENT_BYTES_CONTOUR_FRAGMENT_PSEUDO_VISIBLE_BUFFER+ PER_ELEMENT_BYTES_ALLOCATION_CONTOUR_PIXEL_BUFFER + PER_ELEMENT_BYTES_FOREMOST_CONTOUR_FRAGMENT_TO_CONTOUR_PIXEL_BUFFER)
 
 
 struct ContourPixelAttribsData {
@@ -79,19 +85,23 @@ struct ContourPixelAttribsData {
 	vec4 normal_depth;
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer ContourPixelAttribsBuffer {
-	ContourPixelAttribsData data[MAX_NUM_CONTOUR_PIXELS];
+layout(BUFREF_LAYOUT) buffer ContourPixelAttribsBuffer {
+	ContourPixelAttribsData data[];
 };
+#define PER_ELEMENT_BYTES_CONTOUR_PIXEL_ATTRIBS_BUFFER (8ul + 8ul + 16ul)
+
+#define BYTES_PER_CONTOUR_PIXEL (PER_ELEMENT_BYTES_CONTOUR_PIXEL_ATTRIBS_BUFFER)
 
 
-layout(set = 3, binding = 0, std430) readonly buffer ContourBuffers {
+#define CONTOUR_BALLOC_BUFFER_SIZE (16 * 1024 * 1024)
+
+layout(set = 3, binding = 0, scalar) buffer ContourBuffers {
 	ContourDescBuffer                           B_contour_desc;
-	ContourEdgeToEdgeBuffer                     B_contour_edge_to_edge;
-	ContourEdgeIsDiscardedBuffer                B_contour_edge_is_discarded;
+	BumpAllocatorBuffer                         B_contour_balloc_buffer;
+	ContourEdgeMapsBuffer                       B_contour_edge_maps;
 	ContourEdgeClipTBuffer                      B_contour_edge_clip_t;
-	ContourEdgeToContourFragmentBuffer          B_contour_edge_to_contour_fragment;
-	ContourFragmentToContourEdgeBuffer          B_contour_fragment_to_contour_edge;
 	ContourFragmentAttribsBuffer                B_contour_fragment_attribs;
+	ContourFragmentToContourEdgeBuffer          B_contour_fragment_to_contour_edge;
 	ContourFragmentPseudoVisibleBuffer          B_contour_fragment_pseudo_visible;
 	AllocationContourPixelBuffer                B_allocation_contour_pixel;
 	ForemostContourFragmentToContourPixelBuffer B_foremost_contour_fragment_to_contour_pixel;

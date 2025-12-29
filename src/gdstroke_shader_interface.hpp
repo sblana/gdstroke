@@ -118,12 +118,11 @@ public:
 	struct ContourInterfaceSet : InterfaceSet {
 		enum Buffer : uint32_t {
 			BUFFER_CONTOUR_DESC_BUFFER = 0,
-			BUFFER_CONTOUR_EDGE_TO_EDGE_BUFFER,
-			BUFFER_CONTOUR_EDGE_IS_DISCARDED_BUFFER,
+			BUFFER_MEMORY_BLOCK_BUFFER,
+			BUFFER_CONTOUR_EDGE_MAPS_BUFFER,
 			BUFFER_CONTOUR_EDGE_CLIP_T_BUFFER,
-			BUFFER_CONTOUR_EDGE_TO_CONTOUR_FRAGMENT_BUFFER,
-			BUFFER_CONTOUR_FRAGMENT_TO_CONTOUR_EDGE_BUFFER,
 			BUFFER_CONTOUR_FRAGMENT_ATTRIBS_BUFFER,
+			BUFFER_CONTOUR_FRAGMENT_TO_CONTOUR_EDGE_BUFFER,
 			BUFFER_CONTOUR_FRAGMENT_PSEUDO_VISIBLE_BUFFER,
 			BUFFER_ALLOCATION_CONTOUR_PIXEL_BUFFER,
 			BUFFER_FOREMOST_CONTOUR_FRAGMENT_TO_CONTOUR_PIXEL_BUFFER,
@@ -138,8 +137,9 @@ public:
 			BINDING_MAX,
 		};
 
-		static constexpr uint32_t max_num_contour_fragments = 1u << 20u;
-		static constexpr uint32_t max_num_contour_pixels = 1u << 20u;
+		static constexpr uint32_t max_num_contour_fragments = 1u << 18u;
+		static constexpr uint32_t max_num_contour_pixels = 1u << 18u;
+		static constexpr uint32_t balloc_buffer_size = 16 * 1024 * 1024;
 
 		RID nearest_sampler;
 
@@ -149,7 +149,7 @@ public:
 		virtual Error update_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
 		virtual void make_bindings() override;
 		inline virtual uint32_t get_slot() const override { return 3; }
-		virtual TypedArray<Ref<RDUniform>> get_draw_bindings() const;
+		virtual TypedArray<Ref<RDUniform>> get_draw_bindings() const override;
 	};
 
 	struct PixelEdgeInterfaceSet : InterfaceSet {

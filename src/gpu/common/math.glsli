@@ -1,7 +1,13 @@
-#include "common/contour_buffers.glsli"
+#ifndef MATH_GLSLI
+#define MATH_GLSLI
 
- int idiv_floor( int n,  int d) { return n / d -  int((n % d) != 0 && (n^d) < 0); }
- int idiv_ceil ( int n,  int d) { return n / d +  int((n % d) != 0 && (n^d) > 0); }
+struct Range {
+	int first;
+	int count;
+};
+
+//  int idiv_floor( int n,  int d) { return n / d -  int((n % d) != 0 && (n^d) < 0); }
+//  int idiv_ceil ( int n,  int d) { return n / d +  int((n % d) != 0 && (n^d) > 0); }
 uint udiv_floor(uint n, uint d) { return n / d; } // just for the sake of consistency
 uint udiv_ceil (uint n, uint d) { return n / d + uint((n % d) != 0); }
 
@@ -29,6 +35,9 @@ bool is_within_aabb(in ivec2 i_point, in ivec2 i_aabb_min, in uvec2 i_aabb_size)
 bool is_within_screen(in ivec2 i_point, in uvec2 i_screen_size) {
 	return is_within_aabb(i_point, ivec2(0, 0), i_screen_size);
 }
+
+#extension GL_ARB_shading_language_include : enable
+#include "common/pixel_edge_buffers.glsli"
 
 PixelEdgeOrientation orientation_op_add(in const PixelEdgeOrientation i_a, in const int i_b) {
 	return PixelEdgeOrientation((int(i_a.value + E_PixelEdgeOrientation_MAX) + i_b) % E_PixelEdgeOrientation_MAX);
@@ -72,3 +81,4 @@ uint get_invalid_morton_code() {
 	return 0u - 1u;
 }
 
+#endif // !MATH_GLSLI

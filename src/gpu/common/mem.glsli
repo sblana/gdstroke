@@ -1,0 +1,51 @@
+#ifndef MEM_GLSLI
+#define MEM_GLSLI
+
+#extension GL_EXT_buffer_reference : enable
+#extension GL_EXT_scalar_block_layout : enable
+#extension GL_ARB_shading_language_include : enable
+#include "common/ext/explicit_arithmetic_types.glsli"
+
+#define NULLPTR (0ul)
+#define DEFAULT_ALIGNMENT (8)
+#define BUFREF_FORWARD_LAYOUT buffer_reference
+#define BUFREF_LAYOUT buffer_reference, buffer_reference_align = DEFAULT_ALIGNMENT, scalar
+
+
+// Bump allocator
+// TODO: handle error cases
+
+layout(buffer_reference, buffer_reference_align = 8, scalar) buffer BumpAllocatorBuffer {
+	UInt64 used_bytes;
+	UInt64 capacity_bytes;
+	UInt32 mem[];
+};
+
+// ! NOT THREAD-SAFE !
+void init_balloc_buffer(in const BumpAllocatorBuffer i_rw_balloc_buf, in const UInt64 i_capacity_bytes);
+UInt64 balloc_acquire(in const BumpAllocatorBuffer i_rw_balloc_buf, in const UInt64 i_size_bytes, in const UInt64 i_alignment_bytes);
+UInt64 balloc_acquire(in const BumpAllocatorBuffer i_rw_balloc_buf, in const UInt64 i_size_bytes /* default alignment */);
+
+
+void init_balloc_buffer(in const BumpAllocatorBuffer i_rw_balloc_buf, in const UInt64 i_capacity_bytes) {
+	i_rw_balloc_buf.used_bytes = 0ul;
+	i_rw_balloc_buf.capacity_bytes = i_capacity_bytes;
+}
+
+UInt64 balloc_acquire(in const BumpAllocatorBuffer i_rw_balloc_buf, in const UInt64 i_size_bytes, in const UInt64 i_alignment_bytes) {
+	const UInt64 under = (UInt64(i_rw_balloc_buf) + 16ul + i_rw_balloc_buf.used_bytes) % i_alignment_bytes;
+	const UInt64 extra_align = i_alignment_bytes - under;
+	const UInt64 ret_ptr = UInt64(i_rw_balloc_buf) + 16ul + i_rw_balloc_buf.used_bytes + extra_align;
+	const UInt64 new_used_bytes = i_rw_balloc_buf.used_bytes + extra_align + i_size_bytes;
+	if (new_used_bytes > i_rw_balloc_buf.capacity_bytes) {
+		return NULLPTR;
+	}
+	i_rw_balloc_buf.used_bytes = new_used_bytes;
+	return ret_ptr;
+}
+
+UInt64 balloc_acquire(in const BumpAllocatorBuffer i_rw_balloc_buf, in const UInt64 i_size_bytes) {
+	return balloc_acquire(i_rw_balloc_buf, i_size_bytes, DEFAULT_ALIGNMENT);
+}
+
+#endif // !MEM_GLSLI

@@ -15,10 +15,10 @@ void main() {
 	}
 
 	const int contour_edge_idx = B_contour_fragment_to_contour_edge.idx[fragment_idx];
-	if (B_contour_edge_is_discarded.discarded[contour_edge_idx]) {
+	if (bool(B_contour_edge_maps.data[contour_edge_idx].is_discarded)) {
 		return;
 	}
-	const int edge_idx = B_contour_edge_to_edge.idx[contour_edge_idx];
+	const int edge_idx = B_contour_edge_maps.data[contour_edge_idx].to_edge_idx;
 	const vec4 verts_ndc[2] = pre_raster_edge(edge_idx);
 	const float clip_t[2] = B_contour_edge_clip_t.t[contour_edge_idx];
 	const vec4 verts_clipped_ndc[2] = {
@@ -53,9 +53,8 @@ void main() {
 	const float f_non_dominant_intercept = verts_clipped_screen[0][int(!f_is_y_dominant)] - verts_clipped_screen[0][int(f_is_y_dominant)] * f_slope;
 #endif
 
-	const uint first_fragment_global_idx = B_contour_edge_to_contour_fragment.data[contour_edge_idx].first_fragment_idx;
-	const uint num_fragments = B_contour_edge_to_contour_fragment.data[contour_edge_idx].num_fragments;
-	const int fragment_local_idx = int(fragment_idx) - int(first_fragment_global_idx);
+	const Range fragment_range = B_contour_edge_maps.data[contour_edge_idx].contour_fragment_range;
+	const int fragment_local_idx = int(fragment_idx) - fragment_range.first;
 	{
 		ivec2 pixel_coord = ivec2(0,0);
 
@@ -78,13 +77,13 @@ void main() {
 				pixel_coord.x = smallest_point.x - calc_local_x_along_bresline(abs_diff, fragment_local_idx);
 			}
 		}
-		const float interpolation_weight = (fragment_local_idx + 0.5) / float(num_fragments) * (int(is_first_point_smallest) * 2 - 1) + int(!is_first_point_smallest);
+		const float interpolation_weight = (fragment_local_idx + 0.5) / float(fragment_range.count) * (int(is_first_point_smallest) * 2 - 1) + int(!is_first_point_smallest);
 		#endif
 
 		#ifdef RASTER_METHOD_DDA
 		pixel_coord[int( f_is_y_dominant)] = int(verts_clipped_screen[0][int( f_is_y_dominant)] + fragment_local_idx * f_sign);
 		pixel_coord[int(!f_is_y_dominant)] = int((verts_clipped_screen[0][int(f_is_y_dominant)] + fragment_local_idx * f_sign) * f_slope + f_non_dominant_intercept);
-		const float interpolation_weight = (fragment_local_idx + 0.5) / float(num_fragments);
+		const float interpolation_weight = (fragment_local_idx + 0.5) / float(fragment_range.count);
 		#endif
 
 		const vec4 interpolated_ndc = perspective_interpolate_edge(verts_clipped_ndc, interpolation_weight);

@@ -19,7 +19,7 @@ void main() {
 			const int contour_pixel_idx = B_compacted_pixel_edge_to_contour_pixel.contour_pixel_idx[pixel_edge_idx];
 			const PixelEdgeLoopDescData loop_desc = B_pixel_edge_loop_desc.data[B_compacted_pixel_edge_to_pixel_edge_loop.idx[pixel_edge_idx]];
 
-			const int num_neighbours = min(INSIDE_OUTSIDE_TEST_MAX_NUM_NEIGHBOURS, idiv_floor(loop_desc.loop_len, 2));
+			const int num_neighbours = min(INSIDE_OUTSIDE_TEST_MAX_NUM_NEIGHBOURS, loop_desc.loop_len / 2);
 
 			// load contour pixel orientations
 			vec2 contour_pixel_orientations_stack[INSIDE_OUTSIDE_TEST_MAX_WINDOW_SIZE];

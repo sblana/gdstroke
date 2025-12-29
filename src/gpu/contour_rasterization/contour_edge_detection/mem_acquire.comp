@@ -1,0 +1,16 @@
+#version 450
+#extension GL_ARB_shading_language_include : enable
+
+layout(local_size_x = 1) in;
+
+#include "common/buffers.glsli"
+
+
+void main() {
+	if (gl_GlobalInvocationID.x == 0) {
+		init_balloc_buffer(B_contour_balloc_buffer, CONTOUR_BALLOC_BUFFER_SIZE);
+
+		B_contour_edge_maps   = ContourEdgeMapsBuffer (balloc_acquire(B_contour_balloc_buffer, B_contour_desc.num_contour_edges * PER_ELEMENT_BYTES_CONTOUR_EDGE_MAPS_BUFFER));
+		B_contour_edge_clip_t = ContourEdgeClipTBuffer(balloc_acquire(B_contour_balloc_buffer, B_contour_desc.num_contour_edges * PER_ELEMENT_BYTES_CONTOUR_EDGE_CLIP_T_BUFFER));
+	}
+}

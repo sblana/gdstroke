@@ -19,7 +19,7 @@ void main() {
 	if (is_compacted_pixel_edge_idx_valid(int(pixel_edge_idx))) {
 		const PixelEdgeLoopDescData loop_desc = B_pixel_edge_loop_desc.data[B_compacted_pixel_edge_to_pixel_edge_loop.idx[pixel_edge_idx]];
 
-		const int num_neighbours = min(ORIENTATION_FILTERING_MAX_NUM_NEIGHBOURS, idiv_floor(loop_desc.loop_len, 2));
+		const int num_neighbours = min(ORIENTATION_FILTERING_MAX_NUM_NEIGHBOURS, loop_desc.loop_len / 2);
 
 		// load midpoints
 		vec2 midpoint_stack[ORIENTATION_FILTERING_MAX_WINDOW_SIZE];
