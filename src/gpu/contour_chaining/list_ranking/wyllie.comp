@@ -13,19 +13,19 @@ layout(push_constant) RESTRICT uniform PushConstants {
 
 void main() {
 	const uint pixel_edge_idx = gl_GlobalInvocationID.x;
-	if (pixel_edge_idx < B_pixel_edge_desc.buf_len_sparse_pixel_edge) {
-		const SparsePixelEdgeWyllieData curr_data = B_sparse_pixel_edge_wyllie.data[pixel_edge_idx][U_push_constants.read_layer];
+	if (pixel_edge_idx < B_pixel_edge_desc.num_pixel_edges) {
+		const FragmentedPixelEdgeWyllieData curr_data = B_fragmented_pixel_edge_wyllie.data[pixel_edge_idx][U_push_constants.read_layer];
 		if (curr_data.next_idx != -1) {
 			int prev_idx = curr_data.prev_idx;
 			uint value = curr_data.value;
 
 			if (curr_data.prev_idx != -1) {
-				prev_idx = B_sparse_pixel_edge_wyllie.data[curr_data.prev_idx][U_push_constants.read_layer].prev_idx;
-				value += B_sparse_pixel_edge_wyllie.data[curr_data.prev_idx][U_push_constants.read_layer].value;
+				prev_idx = B_fragmented_pixel_edge_wyllie.data[curr_data.prev_idx][U_push_constants.read_layer].prev_idx;
+				value += B_fragmented_pixel_edge_wyllie.data[curr_data.prev_idx][U_push_constants.read_layer].value;
 			}
 
-			B_sparse_pixel_edge_wyllie.data[pixel_edge_idx][(U_push_constants.write_layer)].prev_idx = prev_idx;
-			B_sparse_pixel_edge_wyllie.data[pixel_edge_idx][(U_push_constants.write_layer)].value = value;
+			B_fragmented_pixel_edge_wyllie.data[pixel_edge_idx][(U_push_constants.write_layer)].prev_idx = prev_idx;
+			B_fragmented_pixel_edge_wyllie.data[pixel_edge_idx][(U_push_constants.write_layer)].value = value;
 		}
 	}
 }

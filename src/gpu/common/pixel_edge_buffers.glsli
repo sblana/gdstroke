@@ -2,17 +2,17 @@
 #define PEL_BUFFERS_GLSLI
 
 #extension GL_ARB_shading_language_include : enable
-#include "common/contour_buffers.glsli"
-#extension GL_EXT_buffer_reference : enable
+#include "common/mem.glsli"
 
 #define MAX_NUM_SPARSE_PIXEL_EDGES (MAX_NUM_CONTOUR_PIXELS * 4)
-#define MAX_NUM_COMPACTED_PIXEL_EDGES (MAX_NUM_SPARSE_PIXEL_EDGES / 2)
+#define MAX_NUM_FRAGMENTED_PIXEL_EDGES (MAX_NUM_SPARSE_PIXEL_EDGES / 2)
+#define MAX_NUM_COMPACTED_PIXEL_EDGES (MAX_NUM_FRAGMENTED_PIXEL_EDGES)
 #define MAX_NUM_PIXEL_EDGE_LOOPS (MAX_NUM_COMPACTED_PIXEL_EDGES / 4)
 #define MAX_NUM_SEGMENTS_PER_LOOP (1024)
 #define MAX_NUM_SEGMENTS (MAX_NUM_COMPACTED_PIXEL_EDGES / 8)
 #define MAX_NUM_SEGMENT_EDGES (MAX_NUM_SEGMENTS * 4)
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer PixelEdgeDescBuffer {
+layout(BUFREF_LAYOUT) buffer PixelEdgeDescBuffer {
 	int buf_len_sparse_pixel_edge;
 	int num_pixel_edges;
 	int num_pixel_edge_loops;
@@ -29,6 +29,9 @@ struct PixelEdgeOrientation {
 #define E_PixelEdgeOrientation_WEST  (3u)
 #define E_PixelEdgeOrientation_MAX   (4u)
 
+#include "common/math.glsli"
+#include "common/contour_buffers.glsli"
+
 uint get_sparse_pixel_edge_contour_pixel_idx(in const uint i_sparse_pixel_edge_idx) {
 	return i_sparse_pixel_edge_idx / 4u;
 }
@@ -42,46 +45,59 @@ struct SparsePixelEdgeNeighboursData {
 	int next_idx;
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer SparsePixelEdgeNeighboursBuffer {
+layout(BUFREF_LAYOUT) buffer SparsePixelEdgeNeighboursBuffer {
 	SparsePixelEdgeNeighboursData data[MAX_NUM_SPARSE_PIXEL_EDGES];
 };
 
-struct SparsePixelEdgeWyllieData {
+layout(BUFREF_LAYOUT) buffer SparsePixelEdgeIsValidBuffer {
+	bool is_valid[MAX_NUM_SPARSE_PIXEL_EDGES];
+};
+
+layout(BUFREF_LAYOUT) buffer SparsePixelEdgeToFragmentedPixelEdgeBuffer {
+	int idx[MAX_NUM_SPARSE_PIXEL_EDGES];
+};
+
+
+layout(BUFREF_LAYOUT) buffer FragmentedPixelEdgeToSparsePixelEdgeBuffer {
+	int idx[MAX_NUM_FRAGMENTED_PIXEL_EDGES];
+};
+
+struct FragmentedPixelEdgeWyllieData {
 	int next_idx;
 	int prev_idx;
 	int key;
 	uint value;
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer SparsePixelEdgeWyllieBuffer {
-	SparsePixelEdgeWyllieData data[MAX_NUM_SPARSE_PIXEL_EDGES][2];
+layout(BUFREF_LAYOUT) buffer FragmentedPixelEdgeWyllieBuffer {
+	FragmentedPixelEdgeWyllieData data[MAX_NUM_FRAGMENTED_PIXEL_EDGES][2];
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer SparsePixelEdgeAssociatedHeadBuffer {
-	int associated_head[MAX_NUM_SPARSE_PIXEL_EDGES];
+layout(BUFREF_LAYOUT) buffer FragmentedPixelEdgeAssociatedHeadBuffer {
+	int associated_head[MAX_NUM_FRAGMENTED_PIXEL_EDGES];
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer SparsePixelEdgeIsHeadBuffer {
-	bool is_head[MAX_NUM_SPARSE_PIXEL_EDGES];
+layout(BUFREF_LAYOUT) buffer FragmentedPixelEdgeIsHeadBuffer {
+	bool is_head[MAX_NUM_FRAGMENTED_PIXEL_EDGES];
 };
 
 // loop-local
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer SparsePixelEdgeLocalIdxBuffer {
-	int local_idx[MAX_NUM_SPARSE_PIXEL_EDGES];
+layout(BUFREF_LAYOUT) buffer FragmentedPixelEdgeLocalIdxBuffer {
+	int local_idx[MAX_NUM_FRAGMENTED_PIXEL_EDGES];
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer SparsePixelEdgeToPixelEdgeLoopBuffer {
-	int idx[MAX_NUM_SPARSE_PIXEL_EDGES];
+layout(BUFREF_LAYOUT) buffer FragmentedPixelEdgeToPixelEdgeLoopBuffer {
+	int idx[MAX_NUM_FRAGMENTED_PIXEL_EDGES];
 };
 
 struct PixelEdgeLoopDescData {
-	int sparse_head_idx;
+	int fragmented_head_idx;
 	int compacted_head_idx;
 	int loop_len;
 	int pad;
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer PixelEdgeLoopDescBuffer {
+layout(BUFREF_LAYOUT) buffer PixelEdgeLoopDescBuffer {
 	PixelEdgeLoopDescData data[MAX_NUM_PIXEL_EDGE_LOOPS];
 };
 
@@ -91,34 +107,34 @@ struct CompactedPixelEdgeNeighboursData {
 	int next_idx;
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer CompactedPixelEdgeNeighboursBuffer {
+layout(BUFREF_LAYOUT) buffer CompactedPixelEdgeNeighboursBuffer {
 	CompactedPixelEdgeNeighboursData data[MAX_NUM_COMPACTED_PIXEL_EDGES];
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer CompactedPixelEdgeToContourPixelBuffer {
+layout(BUFREF_LAYOUT) buffer CompactedPixelEdgeToContourPixelBuffer {
 	int contour_pixel_idx[MAX_NUM_COMPACTED_PIXEL_EDGES];
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer CompactedPixelEdgeOrientationBuffer {
+layout(BUFREF_LAYOUT) buffer CompactedPixelEdgeOrientationBuffer {
 	PixelEdgeOrientation orientation[MAX_NUM_COMPACTED_PIXEL_EDGES];
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer CompactedPixelEdgeAssociatedHeadBuffer {
+layout(BUFREF_LAYOUT) buffer CompactedPixelEdgeAssociatedHeadBuffer {
 	int associated_head[MAX_NUM_COMPACTED_PIXEL_EDGES];
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer CompactedPixelEdgeToPixelEdgeLoopBuffer {
+layout(BUFREF_LAYOUT) buffer CompactedPixelEdgeToPixelEdgeLoopBuffer {
 	int idx[MAX_NUM_COMPACTED_PIXEL_EDGES];
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer CompactedPixelEdgeFilteredMidpointBuffer {
+layout(BUFREF_LAYOUT) buffer CompactedPixelEdgeFilteredMidpointBuffer {
 	vec2 midpoint[MAX_NUM_COMPACTED_PIXEL_EDGES];
 };
 
 #define ORIENTATION_FILTERING_MAX_NUM_NEIGHBOURS (8)
 #define ORIENTATION_FILTERING_MAX_WINDOW_SIZE (ORIENTATION_FILTERING_MAX_NUM_NEIGHBOURS * 2 + 1)
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer CompactedPixelEdgeFilteredOrientationBuffer {
+layout(BUFREF_LAYOUT) buffer CompactedPixelEdgeFilteredOrientationBuffer {
 	vec2 orientation[MAX_NUM_COMPACTED_PIXEL_EDGES];
 };
 
@@ -130,19 +146,19 @@ struct CompactedPixelEdgeIsInsideData {
 	bool final;
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer CompactedPixelEdgeIsInsideBuffer {
+layout(BUFREF_LAYOUT) buffer CompactedPixelEdgeIsInsideBuffer {
 	CompactedPixelEdgeIsInsideData data[MAX_NUM_COMPACTED_PIXEL_EDGES];
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer CompactedPixelEdgeIsSegmentHeadBuffer {
+layout(BUFREF_LAYOUT) buffer CompactedPixelEdgeIsSegmentHeadBuffer {
 	bool segment_head[MAX_NUM_COMPACTED_PIXEL_EDGES];
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer CompactedPixelEdgeLoopLocalSegmentKeyBuffer {
+layout(BUFREF_LAYOUT) buffer CompactedPixelEdgeLoopLocalSegmentKeyBuffer {
 	int segment_key[MAX_NUM_COMPACTED_PIXEL_EDGES];
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer CompactedPixelEdgeIsDiscardedBuffer {
+layout(BUFREF_LAYOUT) buffer CompactedPixelEdgeIsDiscardedBuffer {
 	bool discarded[MAX_NUM_COMPACTED_PIXEL_EDGES];
 };
 
@@ -161,15 +177,15 @@ struct CompactedPixelEdgeSegmentDescData {
 	int allocation_idx;
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer CompactedPixelEdgeSegmentDescBuffer {
+layout(BUFREF_LAYOUT) buffer CompactedPixelEdgeSegmentDescBuffer {
 	CompactedPixelEdgeSegmentDescData data[MAX_NUM_COMPACTED_PIXEL_EDGES];
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer CompactedPixelEdgeSegmentKeyBuffer {
+layout(BUFREF_LAYOUT) buffer CompactedPixelEdgeSegmentKeyBuffer {
 	int segment_key[MAX_NUM_COMPACTED_PIXEL_EDGES];
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer CompactedPixelEdgeToSegmentEdgeBuffer {
+layout(BUFREF_LAYOUT) buffer CompactedPixelEdgeToSegmentEdgeBuffer {
 	int idx[MAX_NUM_COMPACTED_PIXEL_EDGES];
 };
 
@@ -180,7 +196,7 @@ struct PixelEdgeLoopSegmentsDescData {
 	int first_segment_edge_idx;
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer PixelEdgeLoopSegmentsDescBuffer {
+layout(BUFREF_LAYOUT) buffer PixelEdgeLoopSegmentsDescBuffer {
 	PixelEdgeLoopSegmentsDescData data[MAX_NUM_PIXEL_EDGE_LOOPS];
 };
 
@@ -189,16 +205,16 @@ struct AllocationSegmentData {
 	int loop_num_segment_edges_offset;
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer AllocationSegmentBuffer {
+layout(BUFREF_LAYOUT) buffer AllocationSegmentBuffer {
 	AllocationSegmentData data[MAX_NUM_PIXEL_EDGE_LOOPS];
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer SegmentDescBuffer {
+layout(BUFREF_LAYOUT) buffer SegmentDescBuffer {
 	int num_segments;
 	int num_segment_edges;
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer SegmentEdgeToCompactedPixelEdgeBuffer {
+layout(BUFREF_LAYOUT) buffer SegmentEdgeToCompactedPixelEdgeBuffer {
 	int idx[MAX_NUM_SEGMENT_EDGES];
 };
 
@@ -207,14 +223,14 @@ struct SegmentRangeData {
 	int num_segment_edges;
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer SegmentRangeBuffer {
+layout(BUFREF_LAYOUT) buffer SegmentRangeBuffer {
 	SegmentRangeData data[MAX_NUM_SEGMENTS];
 };
 
 
 #define MAX_NUM_STROKE_VERTICES (MAX_NUM_SEGMENT_EDGES * 4)
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer StrokeDescBuffer {
+layout(BUFREF_LAYOUT) buffer StrokeDescBuffer {
 	int total_num_vertices;
 };
 
@@ -223,11 +239,11 @@ struct SegmentStrokeVertexRangeData {
 	int num_vertices;
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer SegmentStrokeVertexRangeBuffer {
+layout(BUFREF_LAYOUT) buffer SegmentStrokeVertexRangeBuffer {
 	SegmentStrokeVertexRangeData data[MAX_NUM_SEGMENTS];
 };
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer StrokeVertexToSegmentEdgeBuffer {
+layout(BUFREF_LAYOUT) buffer StrokeVertexToSegmentEdgeBuffer {
 	int idx[MAX_NUM_STROKE_VERTICES];
 };
 
@@ -240,18 +256,23 @@ layout(buffer_reference, buffer_reference_align = 4, std430) buffer StrokeVertex
 #define E_StrokeVertexKind_RIGHT_MASK (1u << 0u)
 #define E_StrokeVertexKind_FRONT_MASK (1u << 1u)
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer StrokeVertexKindBuffer {
+layout(BUFREF_LAYOUT) buffer StrokeVertexKindBuffer {
 	StrokeVertexKind kind[MAX_NUM_STROKE_VERTICES];
 };
 
-layout(set = 4, binding = 0, std430) readonly buffer PixelEdgeBuffers {
+layout(set = 4, binding = 0, scalar) coherent buffer PixelEdgeBuffers {
 	PixelEdgeDescBuffer                         B_pixel_edge_desc;
 	SparsePixelEdgeNeighboursBuffer             B_sparse_pixel_edge_neighbours;
-	SparsePixelEdgeWyllieBuffer                 B_sparse_pixel_edge_wyllie;
-	SparsePixelEdgeAssociatedHeadBuffer         B_sparse_pixel_edge_associated_head;
-	SparsePixelEdgeIsHeadBuffer                 B_sparse_pixel_edge_is_head;
-	SparsePixelEdgeLocalIdxBuffer               B_sparse_pixel_edge_local_idx;
-	SparsePixelEdgeToPixelEdgeLoopBuffer        B_sparse_pixel_edge_to_pixel_edge_loop;
+	SparsePixelEdgeIsValidBuffer                B_sparse_pixel_edge_is_valid;
+	SparsePixelEdgeToFragmentedPixelEdgeBuffer  B_sparse_pixel_edge_to_fragmented_pixel_edge;
+
+	FragmentedPixelEdgeToSparsePixelEdgeBuffer  B_fragmented_pixel_edge_to_sparse_pixel_edge;
+	FragmentedPixelEdgeWyllieBuffer             B_fragmented_pixel_edge_wyllie;
+	FragmentedPixelEdgeAssociatedHeadBuffer     B_fragmented_pixel_edge_associated_head;
+	FragmentedPixelEdgeIsHeadBuffer             B_fragmented_pixel_edge_is_head;
+	FragmentedPixelEdgeLocalIdxBuffer           B_fragmented_pixel_edge_local_idx;
+	FragmentedPixelEdgeToPixelEdgeLoopBuffer    B_fragmented_pixel_edge_to_pixel_edge_loop;
+
 	PixelEdgeLoopDescBuffer                     B_pixel_edge_loop_desc;
 	CompactedPixelEdgeNeighboursBuffer          B_compacted_pixel_edge_neighbours;
 	CompactedPixelEdgeToContourPixelBuffer      B_compacted_pixel_edge_to_contour_pixel;
@@ -283,15 +304,21 @@ bool is_sparse_pixel_edge_idx_valid(in const int i_idx) {
 	return (
 		i_idx >= 0 &&
 		i_idx < B_pixel_edge_desc.buf_len_sparse_pixel_edge &&
-		B_sparse_pixel_edge_neighbours.data[i_idx] != SparsePixelEdgeNeighboursData(-1, -1)
+		B_sparse_pixel_edge_is_valid.is_valid[i_idx]
+	);
+}
+
+bool is_fragmented_pixel_edge_idx_valid(in const int i_idx) {
+	return (
+		i_idx >= 0 &&
+		i_idx < B_pixel_edge_desc.num_pixel_edges
 	);
 }
 
 bool is_compacted_pixel_edge_idx_valid(in const int i_idx) {
 	return (
 		i_idx >= 0 &&
-		i_idx < B_pixel_edge_desc.num_pixel_edges &&
-		B_compacted_pixel_edge_neighbours.data[i_idx] != CompactedPixelEdgeNeighboursData(-1, -1)
+		i_idx < B_pixel_edge_desc.num_pixel_edges
 	);
 }
 

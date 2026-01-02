@@ -9,18 +9,10 @@ layout(local_size_x = 64) in;
 void main() {
 	const uint pixel_edge_idx = gl_GlobalInvocationID.x;
 
-	if (pixel_edge_idx < B_pixel_edge_desc.buf_len_sparse_pixel_edge) {
-		// initialize
-		B_sparse_pixel_edge_associated_head.associated_head[pixel_edge_idx] = -1;
-		B_sparse_pixel_edge_is_head.is_head[pixel_edge_idx] = false;
+	if (is_fragmented_pixel_edge_idx_valid(int(pixel_edge_idx))) {
+		const FragmentedPixelEdgeWyllieData data = B_fragmented_pixel_edge_wyllie.data[pixel_edge_idx][0];
 
-		if (is_sparse_pixel_edge_idx_valid(int(pixel_edge_idx))) {
-			const SparsePixelEdgeWyllieData data = B_sparse_pixel_edge_wyllie.data[pixel_edge_idx][0];
-
-			B_sparse_pixel_edge_associated_head.associated_head[pixel_edge_idx] = data.key;
-			if (data.key == pixel_edge_idx) {
-				B_sparse_pixel_edge_is_head.is_head[pixel_edge_idx] = true;
-			}
-		}
+		B_fragmented_pixel_edge_associated_head.associated_head[pixel_edge_idx] = data.key;
+		B_fragmented_pixel_edge_is_head.is_head[pixel_edge_idx] = (data.key == pixel_edge_idx);
 	}
 }

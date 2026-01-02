@@ -461,6 +461,26 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		_bind_sets(rd, list);
 		_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_SPARSE_PIXEL_EDGES);
 		rd->compute_list_end();
+
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CC_PEG_FRAGMENTED_ALLOC]);
+		_bind_sets(rd, list);
+		_bind_sets_commander(rd, list);
+		rd->compute_list_dispatch(list, 1, 1, 1);
+		rd->compute_list_end();
+
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CC_PEG_SCATTER]);
+		_bind_sets(rd, list);
+		_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_SPARSE_PIXEL_EDGES);
+		rd->compute_list_end();
+
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CC_PEG_SECOND_COMMANDER]);
+		_bind_sets(rd, list);
+		_bind_sets_commander(rd, list);
+		rd->compute_list_dispatch(list, 1, 1, 1);
+		rd->compute_list_end();
 	}
 	rd->draw_command_end_label();
 
@@ -469,7 +489,7 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		list = rd->compute_list_begin();
 		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CC_LB_INIT]);
 		_bind_sets(rd, list);
-		_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_SPARSE_PIXEL_EDGES);
+		_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_FRAGMENTED_PIXEL_EDGES);
 		rd->compute_list_end();
 
 		int const num_steps = 20;
@@ -478,14 +498,14 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 			rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CC_LB_WYLLIE]);
 			rd->compute_list_set_push_constant(list, PackedInt32Array({ (step + 0) % 2, (step + 1) % 2, 0, 0 }).to_byte_array(), 16u);
 			_bind_sets(rd, list);
-			_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_SPARSE_PIXEL_EDGES);
+			_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_FRAGMENTED_PIXEL_EDGES);
 			rd->compute_list_end();
 		}
 
 		list = rd->compute_list_begin();
 		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CC_LB_SCATTER]);
 		_bind_sets(rd, list);
-		_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_SPARSE_PIXEL_EDGES);
+		_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_FRAGMENTED_PIXEL_EDGES);
 		rd->compute_list_end();
 	}
 	rd->draw_command_end_label();
@@ -495,7 +515,7 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		list = rd->compute_list_begin();
 		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CC_LR_INIT]);
 		_bind_sets(rd, list);
-		_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_SPARSE_PIXEL_EDGES);
+		_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_FRAGMENTED_PIXEL_EDGES);
 		rd->compute_list_end();
 
 		int const num_steps = 20;
@@ -504,14 +524,14 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 			rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CC_LR_WYLLIE]);
 			rd->compute_list_set_push_constant(list, PackedInt32Array({ (step + 0) % 2, (step + 1) % 2, 0, 0 }).to_byte_array(), 16u);
 			_bind_sets(rd, list);
-			_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_SPARSE_PIXEL_EDGES);
+			_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_FRAGMENTED_PIXEL_EDGES);
 			rd->compute_list_end();
 		}
 
 		list = rd->compute_list_begin();
 		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CC_LR_SCATTER]);
 		_bind_sets(rd, list);
-		_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_SPARSE_PIXEL_EDGES);
+		_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_FRAGMENTED_PIXEL_EDGES);
 		rd->compute_list_end();
 	}
 	rd->draw_command_end_label();
@@ -525,18 +545,18 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		rd->compute_list_end();
 
 		PackedByteArray push = PackedInt64Array({
-			// B_sparse_pixel_edge_is_head.is_head[idx],
-			int64_t(sizeof(uint64_t) * PixelEdgeBuffers::BUFFER_SPARSE_PIXEL_EDGE_IS_HEAD_BUFFER + pixel_edge_buffers_ptr),
+			// B_fragmented_pixel_edge_is_head.is_head[idx],
+			int64_t(sizeof(uint64_t) * PixelEdgeBuffers::BUFFER_FRAGMENTED_PIXEL_EDGE_IS_HEAD_BUFFER + pixel_edge_buffers_ptr),
 			int64_t(0 * sizeof(int32_t)),
 			int64_t(1 * sizeof(int32_t)),
-			// B_pixel_edge_desc.buf_len_sparse_pixel_edge,
+			// B_pixel_edge_desc.num_pixel_edges,
 			int64_t(sizeof(uint64_t) * PixelEdgeBuffers::BUFFER_PIXEL_EDGE_DESC_BUFFER + pixel_edge_buffers_ptr),
-			int64_t(0 * sizeof(int32_t)),
+			int64_t(1 * sizeof(int32_t)),
 			// B_pixel_edge_desc.num_pixel_edge_loops,
 			int64_t(sizeof(uint64_t) * PixelEdgeBuffers::BUFFER_PIXEL_EDGE_DESC_BUFFER + pixel_edge_buffers_ptr),
 			int64_t(2 * sizeof(int32_t)),
-			// B_sparse_pixel_edge_to_pixel_edge_loop.idx[idx],
-			int64_t(sizeof(uint64_t) * PixelEdgeBuffers::BUFFER_SPARSE_PIXEL_EDGE_TO_PIXEL_EDGE_LOOP_BUFFER + pixel_edge_buffers_ptr),
+			// B_fragmented_pixel_edge_to_pixel_edge_loop.idx[idx],
+			int64_t(sizeof(uint64_t) * PixelEdgeBuffers::BUFFER_FRAGMENTED_PIXEL_EDGE_TO_PIXEL_EDGE_LOOP_BUFFER + pixel_edge_buffers_ptr),
 			int64_t(0 * sizeof(int32_t)),
 			int64_t(1 * sizeof(int32_t)),
 		}).to_byte_array();
@@ -573,7 +593,7 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		list = rd->compute_list_begin();
 		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CC_D_HEAD_SCATTER]);
 		_bind_sets(rd, list);
-		_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_SPARSE_PIXEL_EDGES);
+		_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_FRAGMENTED_PIXEL_EDGES);
 		rd->compute_list_end();
 
 		list = rd->compute_list_begin();
@@ -585,7 +605,7 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		list = rd->compute_list_begin();
 		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CC_D_COMPACTED_SCATTER]);
 		_bind_sets(rd, list);
-		_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_SPARSE_PIXEL_EDGES);
+		_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_FRAGMENTED_PIXEL_EDGES);
 		rd->compute_list_end();
 
 		list = rd->compute_list_begin();
@@ -722,12 +742,6 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 
 	rd->draw_command_begin_label("debug", Color(0.2, 0.2, 0.2));
 	{
-		list = rd->compute_list_begin();
-		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_DEBUG_MEMORY_VISUALIZER]);
-		_bind_sets(rd, list);
-		_bind_sets_debug(rd, list);
-		rd->compute_list_dispatch(list, 128, 128, 1);
-		rd->compute_list_end();
 	}
 	rd->draw_command_end_label();
 }

@@ -298,12 +298,16 @@ Error GdstrokeShaderInterface::PixelEdgeInterfaceSet::create_resources(Rendering
 
 	resources[Buffer::BUFFER_PIXEL_EDGE_DESC_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 4, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
-	resources[Buffer::BUFFER_SPARSE_PIXEL_EDGE_NEIGHBOURS_BUFFER        ] = p_rd->storage_buffer_create(sizeof( int32_t) * 2 * max_num_sparse_pixel_edges, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
-	resources[Buffer::BUFFER_SPARSE_PIXEL_EDGE_WYLLIE_BUFFER            ] = p_rd->storage_buffer_create(sizeof(uint32_t) * 8 * max_num_sparse_pixel_edges, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
-	resources[Buffer::BUFFER_SPARSE_PIXEL_EDGE_ASSOCIATED_HEAD_BUFFER   ] = p_rd->storage_buffer_create(sizeof( int32_t) * 1 * max_num_sparse_pixel_edges, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
-	resources[Buffer::BUFFER_SPARSE_PIXEL_EDGE_IS_HEAD_BUFFER           ] = p_rd->storage_buffer_create(sizeof( int32_t) * 1 * max_num_sparse_pixel_edges, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
-	resources[Buffer::BUFFER_SPARSE_PIXEL_EDGE_LOCAL_IDX_BUFFER         ] = p_rd->storage_buffer_create(sizeof( int32_t) * 1 * max_num_sparse_pixel_edges, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
-	resources[Buffer::BUFFER_SPARSE_PIXEL_EDGE_TO_PIXEL_EDGE_LOOP_BUFFER] = p_rd->storage_buffer_create(sizeof( int32_t) * 1 * max_num_sparse_pixel_edges, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_SPARSE_PIXEL_EDGE_NEIGHBOURS_BUFFER              ] = p_rd->storage_buffer_create(sizeof(int32_t) * 2 * max_num_sparse_pixel_edges, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_SPARSE_PIXEL_EDGE_IS_VALID_BUFFER                ] = p_rd->storage_buffer_create(sizeof(int32_t) * 1 * max_num_sparse_pixel_edges, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_SPARSE_PIXEL_EDGE_TO_FRAGMENTED_PIXEL_EDGE_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 1 * max_num_sparse_pixel_edges, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+
+	resources[Buffer::BUFFER_FRAGMENTED_PIXEL_EDGE_TO_SPARSE_PIXEL_EDGE_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 1 * max_num_fragmented_pixel_edges, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_FRAGMENTED_PIXEL_EDGE_WYLLIE_BUFFER              ] = p_rd->storage_buffer_create(sizeof(int32_t) * 8 * max_num_fragmented_pixel_edges, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_FRAGMENTED_PIXEL_EDGE_ASSOCIATED_HEAD_BUFFER     ] = p_rd->storage_buffer_create(sizeof(int32_t) * 1 * max_num_fragmented_pixel_edges, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_FRAGMENTED_PIXEL_EDGE_IS_HEAD_BUFFER             ] = p_rd->storage_buffer_create(sizeof(int32_t) * 1 * max_num_fragmented_pixel_edges, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_FRAGMENTED_PIXEL_EDGE_LOCAL_IDX_BUFFER           ] = p_rd->storage_buffer_create(sizeof(int32_t) * 1 * max_num_fragmented_pixel_edges, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_FRAGMENTED_PIXEL_EDGE_TO_PIXEL_EDGE_LOOP_BUFFER  ] = p_rd->storage_buffer_create(sizeof(int32_t) * 1 * max_num_fragmented_pixel_edges, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
 	resources[Buffer::BUFFER_PIXEL_EDGE_LOOP_DESC_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 4 * max_num_pixel_edge_loops, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 

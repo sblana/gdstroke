@@ -8,18 +8,16 @@ layout(local_size_x = 64) in;
 
 
 void main() {
-	const uint pixel_edge_idx = gl_GlobalInvocationID.x;
+	const uint fragmented_pixel_edge_idx = gl_GlobalInvocationID.x;
 
-	if (pixel_edge_idx < B_pixel_edge_desc.buf_len_sparse_pixel_edge) {
-		B_sparse_pixel_edge_wyllie.data[pixel_edge_idx][0] = SparsePixelEdgeWyllieData(-1, -1, 0, get_invalid_morton_code());
-		B_sparse_pixel_edge_wyllie.data[pixel_edge_idx][1] = SparsePixelEdgeWyllieData(-1, -1, 0, get_invalid_morton_code());
-
-		if (is_sparse_pixel_edge_idx_valid(int(pixel_edge_idx))) {
-			const SparsePixelEdgeNeighboursData neighbours = B_sparse_pixel_edge_neighbours.data[pixel_edge_idx];
-			const uint contour_pixel_idx = get_sparse_pixel_edge_contour_pixel_idx(pixel_edge_idx);
-			const uint morton_code = calc_sparse_pixel_edge_morton_code(get_sparse_pixel_edge_orientation(pixel_edge_idx), B_contour_pixel_attribs.data[contour_pixel_idx].pixel_coord);
-			B_sparse_pixel_edge_wyllie.data[pixel_edge_idx][0] = SparsePixelEdgeWyllieData(neighbours.next_idx, neighbours.prev_idx, int(pixel_edge_idx), morton_code);
-			B_sparse_pixel_edge_wyllie.data[pixel_edge_idx][1] = SparsePixelEdgeWyllieData(neighbours.next_idx, neighbours.prev_idx, int(pixel_edge_idx), morton_code);
-		}
+	if (is_fragmented_pixel_edge_idx_valid(int(fragmented_pixel_edge_idx))) {
+		const uint sparse_pixel_edge_idx = B_fragmented_pixel_edge_to_sparse_pixel_edge.idx[fragmented_pixel_edge_idx];
+		const SparsePixelEdgeNeighboursData neighbours = B_sparse_pixel_edge_neighbours.data[sparse_pixel_edge_idx];
+		const int prev_idx = B_sparse_pixel_edge_to_fragmented_pixel_edge.idx[neighbours.prev_idx];
+		const int next_idx = B_sparse_pixel_edge_to_fragmented_pixel_edge.idx[neighbours.next_idx];
+		const uint contour_pixel_idx = get_sparse_pixel_edge_contour_pixel_idx(sparse_pixel_edge_idx);
+		const uint morton_code = calc_sparse_pixel_edge_morton_code(get_sparse_pixel_edge_orientation(sparse_pixel_edge_idx), B_contour_pixel_attribs.data[contour_pixel_idx].pixel_coord);
+		B_fragmented_pixel_edge_wyllie.data[fragmented_pixel_edge_idx][0] = FragmentedPixelEdgeWyllieData(next_idx, prev_idx, int(fragmented_pixel_edge_idx), morton_code);
+		B_fragmented_pixel_edge_wyllie.data[fragmented_pixel_edge_idx][1] = FragmentedPixelEdgeWyllieData(next_idx, prev_idx, int(fragmented_pixel_edge_idx), morton_code);
 	}
 }

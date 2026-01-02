@@ -48,6 +48,9 @@ enum Shader : int32_t {
 	SHADER_CR_CPG_DECODE,
 	SHADER_CC_PEG_FIRST_COMMANDER,
 	SHADER_CC_PEG_GENERATION,
+	SHADER_CC_PEG_FRAGMENTED_ALLOC,
+	SHADER_CC_PEG_SCATTER,
+	SHADER_CC_PEG_SECOND_COMMANDER,
 	SHADER_CC_LB_INIT,
 	SHADER_CC_LB_WYLLIE,
 	SHADER_CC_LB_SCATTER,
@@ -132,8 +135,11 @@ std::map<Shader, ShaderBuildInfo> shader_to_shader_info_map = {{
 	{ SHADER_CR_CPG_HARD_DEPTH_TEST,  ShaderBuildInfo{"cr_cpg_hard_depth_test",  "./contour_rasterization/contour_pixel_generation/hard_depth_test.glsl",  M_SHADER_STAGE_VERTEX_BIT | M_SHADER_STAGE_FRAGMENT_BIT} },
 	{ SHADER_CR_CPG_DECODE,           ShaderBuildInfo{"cr_cpg_decode",           "./contour_rasterization/contour_pixel_generation/decode.comp",           M_SHADER_STAGE_COMPUTE_BIT} },
 
-	{ SHADER_CC_PEG_FIRST_COMMANDER, ShaderBuildInfo{"cc_peg_first_commander", "./contour_chaining/pixel_edge_generation/first_commander.comp", M_SHADER_STAGE_COMPUTE_BIT} },
-	{ SHADER_CC_PEG_GENERATION,      ShaderBuildInfo{"cc_peg_generation",      "./contour_chaining/pixel_edge_generation/generation.comp",      M_SHADER_STAGE_COMPUTE_BIT} },
+	{ SHADER_CC_PEG_FIRST_COMMANDER,  ShaderBuildInfo{"cc_peg_first_commander",  "./contour_chaining/pixel_edge_generation/first_commander.comp",  M_SHADER_STAGE_COMPUTE_BIT} },
+	{ SHADER_CC_PEG_GENERATION,       ShaderBuildInfo{"cc_peg_generation",       "./contour_chaining/pixel_edge_generation/generation.comp",       M_SHADER_STAGE_COMPUTE_BIT} },
+	{ SHADER_CC_PEG_FRAGMENTED_ALLOC, ShaderBuildInfo{"cc_peg_fragmented_alloc", "./contour_chaining/pixel_edge_generation/fragmented_alloc.comp", M_SHADER_STAGE_COMPUTE_BIT} },
+	{ SHADER_CC_PEG_SCATTER,          ShaderBuildInfo{"cc_peg_scatter",          "./contour_chaining/pixel_edge_generation/scatter.comp",          M_SHADER_STAGE_COMPUTE_BIT} },
+	{ SHADER_CC_PEG_SECOND_COMMANDER, ShaderBuildInfo{"cc_peg_second_commander", "./contour_chaining/pixel_edge_generation/second_commander.comp", M_SHADER_STAGE_COMPUTE_BIT} },
 
 	{ SHADER_CC_LB_INIT,    ShaderBuildInfo{"cc_lb_init",    "./contour_chaining/loop_breaking/init.comp",    M_SHADER_STAGE_COMPUTE_BIT} },
 	{ SHADER_CC_LB_WYLLIE,  ShaderBuildInfo{"cc_lb_wyllie",  "./contour_chaining/loop_breaking/wyllie.comp",  M_SHADER_STAGE_COMPUTE_BIT} },

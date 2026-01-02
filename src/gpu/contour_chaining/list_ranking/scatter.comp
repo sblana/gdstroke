@@ -9,14 +9,9 @@ layout(local_size_x = 64) in;
 void main() {
 	const uint pixel_edge_idx = gl_GlobalInvocationID.x;
 
-	if (pixel_edge_idx < B_pixel_edge_desc.buf_len_sparse_pixel_edge) {
-		// initialize
-		B_sparse_pixel_edge_local_idx.local_idx[pixel_edge_idx] = -1;
+	if (is_fragmented_pixel_edge_idx_valid(int(pixel_edge_idx))) {
+		const FragmentedPixelEdgeWyllieData data = B_fragmented_pixel_edge_wyllie.data[pixel_edge_idx][0];
 
-		if (is_sparse_pixel_edge_idx_valid(int(pixel_edge_idx))) {
-			const SparsePixelEdgeWyllieData data = B_sparse_pixel_edge_wyllie.data[pixel_edge_idx][0];
-
-			B_sparse_pixel_edge_local_idx.local_idx[pixel_edge_idx] = int(data.value) - 1;
-		}
+		B_fragmented_pixel_edge_local_idx.local_idx[pixel_edge_idx] = int(data.value) - 1;
 	}
 }

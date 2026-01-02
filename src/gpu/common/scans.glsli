@@ -5,6 +5,7 @@
 #extension GL_EXT_scalar_block_layout : enable
 
 #include "common/math.glsli"
+#include "common/mem.glsli"
 #include "common/ext/explicit_arithmetic_types.glsli"
 #include "common/ext/subgroup.glsli"
 
@@ -52,11 +53,11 @@ struct AllocationPushData {
 	UInt64 src_to_dst_map_stride;
 };
 
-layout(buffer_reference, buffer_reference_align = 4, scalar) buffer Int32Reference {
+layout(BUFREF_LAYOUT) buffer Int32Reference {
 	Int32 value;
 };
 
-layout(buffer_reference, buffer_reference_align = 4, scalar) buffer UInt64Reference {
+layout(BUFREF_LAYOUT) buffer UInt64Reference {
 	UInt64 value;
 };
 
@@ -149,6 +150,7 @@ Int32Reference i32ref_index_into_buffer(in const UInt64 i_buffer_ptr, in const U
 		if (subgroupElect()) {																				\
 			MP_dst_size_ = sum;																				\
 		}																									\
+		subgroupBarrier();																					\
 		MP_block_offsets_[block_idx] = exclusive;															\
 	}																										\
 	barrier();																								\

@@ -1,0 +1,14 @@
+#version 450
+#extension GL_ARB_shading_language_include : enable
+
+layout(local_size_x = 64) in;
+
+#include "common/buffers.glsli"
+
+void main() {
+	const uint sparse_pixel_edge_idx = gl_GlobalInvocationID.x;
+	if (is_sparse_pixel_edge_idx_valid(int(sparse_pixel_edge_idx))) {
+		const int fragmented_pixel_edge_idx = B_sparse_pixel_edge_to_fragmented_pixel_edge.idx[sparse_pixel_edge_idx];
+		B_fragmented_pixel_edge_to_sparse_pixel_edge.idx[fragmented_pixel_edge_idx] = int(sparse_pixel_edge_idx);
+	}
+}

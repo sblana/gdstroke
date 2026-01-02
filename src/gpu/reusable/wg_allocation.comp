@@ -23,8 +23,8 @@ void main() {
 	UInt64 src_to_dst_map_buffer_ptr = UInt64Reference(U_push.src_to_dst_map_buffer_indirect_ptr).value;
 	UInt64 src_num_elements_ptr      = UInt64Reference(U_push.src_num_elements_indirect_ptr).value;
 	UInt64 dst_num_elements_ptr      = UInt64Reference(U_push.dst_num_elements_indirect_ptr).value;
-	readonly  Int32Reference src_num_elements = Int32Reference(src_num_elements_ptr + U_push.src_num_elements_offset);
-	writeonly Int32Reference dst_num_elements = Int32Reference(dst_num_elements_ptr + U_push.dst_num_elements_offset);
+	readonly Int32Reference src_num_elements = Int32Reference(src_num_elements_ptr + U_push.src_num_elements_offset);
+			 Int32Reference dst_num_elements = Int32Reference(dst_num_elements_ptr + U_push.dst_num_elements_offset);
 
 	M_SINGLE_WORKGROUP_ALLOCATION(
 		int,
