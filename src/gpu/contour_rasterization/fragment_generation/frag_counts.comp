@@ -14,8 +14,8 @@ void main() {
 		B_contour_edge_maps.data[contour_edge_idx].contour_fragment_range = Range(0, 0);
 
 		if (!bool(B_contour_edge_maps.data[contour_edge_idx].is_discarded)) {
-			const int edge_idx = B_contour_edge_maps.data[contour_edge_idx].to_edge_idx;
-			const vec4 verts_ndc[2] = pre_raster_edge(edge_idx);
+			const int global_edge_idx = B_contour_edge_maps.data[contour_edge_idx].to_global_edge_idx;
+			const vec4 verts_ndc[2] = pre_raster_edge(global_edge_idx);
 			const float clip_t[2] = B_contour_edge_clip_t.t[contour_edge_idx];
 			const vec4 verts_clipped_ndc[2] = {
 				verts_ndc[0] + (verts_ndc[1] - verts_ndc[0]) * clip_t[0],

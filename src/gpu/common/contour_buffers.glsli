@@ -22,7 +22,7 @@ layout(BUFREF_LAYOUT) buffer ContourDescBuffer {
 
 
 struct ContourEdgeMapsData {
-	int to_edge_idx;
+	int to_global_edge_idx;
 	int is_discarded;
 	Range contour_fragment_range;
 };

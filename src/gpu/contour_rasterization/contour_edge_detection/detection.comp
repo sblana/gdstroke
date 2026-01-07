@@ -7,18 +7,27 @@ layout(local_size_x = 64) in;
 
 
 void main() {
-	const uint edge_idx = gl_GlobalInvocationID.x;
-	
-	if (edge_idx < B_mesh_desc.num_edges) {
-		const bool face_0_backfacing = B_face_backfacing.backfacing[B_edge_to_face.face_idxs[edge_idx][0]];
-		const bool face_1_backfacing = B_face_backfacing.backfacing[B_edge_to_face.face_idxs[edge_idx][1]];
+	const uint global_edge_idx = gl_GlobalInvocationID.x;
+
+	if (global_edge_idx < B_global_edges.num_global_edges) {
+		const int mesh_instance_idx = B_global_edges.data[global_edge_idx].to_mesh_instance_idx;
+		const MeshInstanceMapsData mesh_instance_maps = B_mesh_instance_maps.data[mesh_instance_idx];
+
+		MeshDescData mesh_desc = B_mesh_desc.data[B_mesh_instance_desc.data[mesh_instance_idx].to_mesh_idx];
+
+		const int local_edge_idx = int(global_edge_idx) - mesh_instance_maps.first_global_edge_idx;
+		const LocalEdgeData local_edge_data = mesh_desc.local_edge_buffer.data[local_edge_idx];
+
+		const bool face_0_backfacing = B_global_faces.data[local_edge_data.to_local_face_idxs[0] + mesh_instance_maps.first_global_face_idx].is_backfacing;
+		const bool face_1_backfacing = B_global_faces.data[local_edge_data.to_local_face_idxs[1] + mesh_instance_maps.first_global_face_idx].is_backfacing;
+
 		const bool is_contour_edge = (
-			(!B_edge_is_concave.concave[edge_idx]) &&
+			(!local_edge_data.is_concave) &&
 			(
 				( face_0_backfacing && !face_1_backfacing) ||
 				(!face_0_backfacing &&  face_1_backfacing)
 			)
 		);
-		B_edge_is_contour.contour[edge_idx] = is_contour_edge;
+		B_global_edges.data[global_edge_idx].is_contour = is_contour_edge;
 	}
 }

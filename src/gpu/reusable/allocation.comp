@@ -27,12 +27,12 @@ shared int block_offsets[gl_WorkGroupSize.x];
 #define fn_set_src_to_dst_map(MP_idx_, MP_value_)     (i32ref_index_into_buffer(src_to_dst_map_buffer_ptr, U_push.src_to_dst_map_offset, U_push.src_to_dst_map_stride, (MP_idx_)).value  = MP_value_)
 #define fn_add_set_src_to_dst_map(MP_idx_, MP_value_) (i32ref_index_into_buffer(src_to_dst_map_buffer_ptr, U_push.src_to_dst_map_offset, U_push.src_to_dst_map_stride, (MP_idx_)).value += MP_value_)
 
-#define fn_get_intermediate_sums(MP_idx_)            int(B_allocation_column_edge.column_sum[MP_idx_])
-#define fn_set_intermediate_sums(MP_idx_, MP_value_) B_allocation_column_edge.column_sum[MP_idx_] = MP_value_
+#define fn_get_intermediate_sums(MP_idx_)            int(B_allocation_column.column_sum[MP_idx_])
+#define fn_set_intermediate_sums(MP_idx_, MP_value_) B_allocation_column.column_sum[MP_idx_] = MP_value_
 
-#define fn_get_intermediate_offsets(MP_idx_)                int(B_allocation_column_edge.column_offset[MP_idx_])
-#define fn_set_intermediate_offsets(MP_idx_, MP_value_)     B_allocation_column_edge.column_offset[MP_idx_]  = MP_value_
-#define fn_add_set_intermediate_offsets(MP_idx_, MP_value_) B_allocation_column_edge.column_offset[MP_idx_] += MP_value_
+#define fn_get_intermediate_offsets(MP_idx_)                int(B_allocation_column.column_offset[MP_idx_])
+#define fn_set_intermediate_offsets(MP_idx_, MP_value_)     B_allocation_column.column_offset[MP_idx_]  = MP_value_
+#define fn_add_set_intermediate_offsets(MP_idx_, MP_value_) B_allocation_column.column_offset[MP_idx_] += MP_value_
 
 void main() {
 	UInt64 src_buffer_ptr            = UInt64Reference(U_push.src_buffer_indirect_ptr).value;

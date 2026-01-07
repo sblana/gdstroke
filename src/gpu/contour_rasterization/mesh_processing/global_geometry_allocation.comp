@@ -1,0 +1,39 @@
+#version 450
+#extension GL_ARB_shading_language_include : enable
+
+layout(local_size_x = 1024) in;
+
+#include "common/buffers.glsli"
+#include "common/scans.glsli"
+
+
+shared int block_offsets[gl_WorkGroupSize.x];
+
+#define p0_fn_get_src_array(MP_idx_)                     B_mesh_desc.data[B_mesh_instance_desc.data[MP_idx_].to_mesh_idx].num_edges
+#define p0_fn_set_src_to_dst_map(MP_idx_, MP_value_)     B_mesh_instance_maps.data[MP_idx_].first_global_edge_idx  = MP_value_
+#define p0_fn_add_set_src_to_dst_map(MP_idx_, MP_value_) B_mesh_instance_maps.data[MP_idx_].first_global_edge_idx += MP_value_
+
+#define p1_fn_get_src_array(MP_idx_)                     B_mesh_desc.data[B_mesh_instance_desc.data[MP_idx_].to_mesh_idx].num_faces
+#define p1_fn_set_src_to_dst_map(MP_idx_, MP_value_)     B_mesh_instance_maps.data[MP_idx_].first_global_face_idx  = MP_value_
+#define p1_fn_add_set_src_to_dst_map(MP_idx_, MP_value_) B_mesh_instance_maps.data[MP_idx_].first_global_face_idx += MP_value_
+
+void main() {
+	M_SINGLE_WORKGROUP_ALLOCATION(
+		int,
+		block_offsets,
+		B_geometry_desc.num_mesh_instances,
+		p0_fn_get_src_array,
+		B_global_edges.num_global_edges,
+		p0_fn_set_src_to_dst_map,
+		p0_fn_add_set_src_to_dst_map
+	)
+	M_SINGLE_WORKGROUP_ALLOCATION(
+		int,
+		block_offsets,
+		B_geometry_desc.num_mesh_instances,
+		p1_fn_get_src_array,
+		B_global_faces.num_global_faces,
+		p1_fn_set_src_to_dst_map,
+		p1_fn_add_set_src_to_dst_map
+	)
+}

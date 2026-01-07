@@ -1,78 +1,125 @@
 #ifndef MESH_BUFFERS_GLSLI
 #define MESH_BUFFERS_GLSLI
 
-#include "common/sanity.glsli"
-#extension GL_EXT_buffer_reference : enable
+#extension GL_ARB_shading_language_include : enable
+#include "common/mem.glsli"
 
-layout(buffer_reference, buffer_reference_align = 4, std430) readonly buffer MeshDescBuffer {
+
+layout(BUFREF_LAYOUT) readonly buffer GeometryDescBuffer {
+	int num_meshes;
+	int num_mesh_instances;
+};
+
+
+struct LocalVertexData {
+	vec3 position;
+	int pad;
+};
+
+struct LocalEdgeData {
+	ivec2 to_local_vertex_idxs;
+	ivec2 to_local_face_idxs;
+	bool is_concave;
+	int pad;
+};
+
+struct LocalFaceData {
+	ivec3 to_local_vertex_idxs;
+	int pad0;
+	vec3 normal;
+	float pad1;
+};
+
+layout(BUFREF_LAYOUT) readonly buffer LocalVertexBuffer {
+	LocalVertexData data[];
+};
+
+layout(BUFREF_LAYOUT) readonly buffer LocalEdgeBuffer {
+	LocalEdgeData data[];
+};
+
+layout(BUFREF_LAYOUT) readonly buffer LocalFaceBuffer {
+	LocalFaceData data[];
+};
+
+
+struct MeshDescData {
 	int num_vertices;
 	int num_edges;
 	int num_faces;
 	int pad;
+	LocalVertexBuffer local_vertex_buffer;
+	LocalEdgeBuffer   local_edge_buffer;
+	LocalFaceBuffer   local_face_buffer;
+};
+
+layout(BUFREF_LAYOUT) readonly buffer MeshDescBuffer {
+	MeshDescData data[];
+};
+
+
+struct MeshInstanceDescData {
 	mat4 model_to_world;
+	int to_mesh_idx;
+	int pad;
+};
+
+struct MeshInstanceMapsData {
+	int first_global_edge_idx;
+	int first_global_face_idx;
+};
+
+layout(BUFREF_LAYOUT) readonly buffer MeshInstanceDescBuffer {
+	MeshInstanceDescData data[];
+};
+
+layout(BUFREF_LAYOUT) buffer MeshInstanceMapsBuffer {
+	MeshInstanceMapsData data[];
 };
 
 
-// w component for padding
-layout(buffer_reference, buffer_reference_align = 4, std430) readonly buffer VertexBuffer {
-	vec4 position[];
+struct GlobalEdgeData {
+	int to_mesh_instance_idx;
+	bool is_contour;
+	int to_contour_edge;
+	int pad;
+};
+
+struct GlobalFaceData {
+	int to_mesh_instance_idx;
+	bool is_backfacing;
+};
+
+layout(BUFREF_LAYOUT) buffer GlobalEdgesBuffer {
+	int num_global_edges;
+	int pad;
+	GlobalEdgeData data[];
+};
+
+layout(BUFREF_LAYOUT) buffer GlobalFacesBuffer {
+	int num_global_faces;
+	int pad;
+	GlobalFaceData data[];
 };
 
 
-layout(buffer_reference, buffer_reference_align = 4, std430) readonly buffer EdgeToVertexBuffer {
-	ivec2 vertex_idxs[];
-};
-
-layout(buffer_reference, buffer_reference_align = 4, std430) readonly buffer EdgeToFaceBuffer {
-	ivec2 face_idxs[];
-};
-
-layout(buffer_reference, buffer_reference_align = 4, std430) readonly buffer EdgeIsConcaveBuffer {
-	bool concave[];
-};
-
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer EdgeIsContourBuffer {
-	bool contour[];
-};
-
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer EdgeToContourEdgeBuffer {
-	int idx[];
-};
-
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer AllocationColumnEdgeBuffer {
+layout(BUFREF_LAYOUT) buffer AllocationColumnBuffer {
 	uint column_sum[8192];
 	uint column_offset[8192];
 };
 
 
-layout(buffer_reference, buffer_reference_align = 4, std430) readonly buffer FaceToVertexBuffer {
-	ivec4 idxs[];
-};
+layout(set = 2, binding = 0, scalar) coherent buffer MeshBuffers {
+	readonly GeometryDescBuffer       B_geometry_desc;
+	readonly MeshDescBuffer           B_mesh_desc;
+	readonly MeshInstanceDescBuffer   B_mesh_instance_desc;
 
-// w component for padding
-layout(buffer_reference, buffer_reference_align = 4, std430) readonly buffer FaceNormalBuffer {
-	vec4 normal[];
-};
+	MeshInstanceMapsBuffer   B_mesh_instance_maps;
 
-layout(buffer_reference, buffer_reference_align = 4, std430) buffer FaceBackfacingBuffer {
-	bool backfacing[];
-};
+	AllocationColumnBuffer   B_allocation_column;
 
-layout(set = 2, binding = 0, std430) readonly buffer MeshBuffers {
-	MeshDescBuffer             B_mesh_desc;
-
-	VertexBuffer               B_vertex;
-
-	EdgeToVertexBuffer         B_edge_to_vertex;
-	EdgeToFaceBuffer           B_edge_to_face;
-	EdgeIsConcaveBuffer        B_edge_is_concave;
-	EdgeIsContourBuffer        B_edge_is_contour;
-	EdgeToContourEdgeBuffer    B_edge_to_contour_edge;
-	AllocationColumnEdgeBuffer B_allocation_column_edge;
-
-	FaceToVertexBuffer         B_face_to_vertex;
-	FaceNormalBuffer           B_face_normal;
-	FaceBackfacingBuffer       B_face_backfacing;
+	GlobalEdgesBuffer         B_global_edges;
+	GlobalFacesBuffer         B_global_faces;
 };
 
 #endif // !MESH_BUFFERS_GLSLI

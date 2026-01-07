@@ -8,12 +8,26 @@ layout(local_size_x = 64) in;
 
 
 void main() {
-	const uint face_idx = gl_GlobalInvocationID.x;
-	if (face_idx < B_mesh_desc.num_faces) {
-		const vec3 view_space_normal = model_norm_to_view_norm(B_face_normal.normal[face_idx].xyz);
-		const vec3 vert_0_view_pos   = model_pos_to_view_pos(B_vertex.position[B_face_to_vertex.idxs[face_idx][0]].xyz);
+	const uint global_face_idx = gl_GlobalInvocationID.x;
+	if (global_face_idx < B_global_faces.num_global_faces) {
+		const int mesh_instance_idx = B_global_faces.data[global_face_idx].to_mesh_instance_idx;
+
+		MeshDescData mesh_desc = B_mesh_desc.data[B_mesh_instance_desc.data[mesh_instance_idx].to_mesh_idx];
+
+		const int local_face_idx = int(global_face_idx) - B_mesh_instance_maps.data[mesh_instance_idx].first_global_face_idx;
+		const LocalFaceData local_face_data = mesh_desc.local_face_buffer.data[local_face_idx];
+
+
+		const vec3 view_space_normal = model_norm_to_view_norm(
+			B_mesh_instance_desc.data[mesh_instance_idx].model_to_world,
+			local_face_data.normal
+		);
+		const vec3 vert_0_view_pos   = model_pos_to_view_pos(
+			B_mesh_instance_desc.data[mesh_instance_idx].model_to_world,
+			mesh_desc.local_vertex_buffer.data[ local_face_data.to_local_vertex_idxs[0] ].position
+		);
 		// see doi.org/10.1561/0600000075 Appendix C.2.1: Front-facing
 		const bool is_backfacing = dot(view_space_normal, -vert_0_view_pos) <= 0.0;
-		B_face_backfacing.backfacing[face_idx] = is_backfacing;
+		B_global_faces.data[global_face_idx].is_backfacing = is_backfacing;
 	}
 }
