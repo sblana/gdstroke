@@ -20,9 +20,14 @@ public:
 		int num_edges;
 		int num_faces;
 
-		PackedByteArray local_vertex_buffer;
-		PackedByteArray local_edge_buffer;
-		PackedByteArray local_face_buffer;
+		PackedByteArray local_vertex_buffer_data;
+		PackedByteArray local_edge_buffer_data;
+		PackedByteArray local_face_buffer_data;
+
+		// storage buffers
+		RID local_vertex_buffer;
+		RID local_edge_buffer;
+		RID local_face_buffer;
 	};
 
 private:
@@ -41,6 +46,9 @@ private:
 
 	// key is RID::get_id() referring to Mesh
 	static std::unordered_map<int64_t, ContourMesh> _contour_meshes;
+	// key is same as _contour_meshes, mapped is the index that key appears in iteration of _contour_meshes
+	static std::unordered_map<int64_t, uint64_t> _contour_meshes_mesh_idx;
+	static bool _dirty_contour_meshes;
 	// key is uint64_t(ObjectID) referring to MeshInstance3D
 	static std::unordered_set<uint64_t> _contour_instances;
 	static std::unordered_map<int64_t, Ref<GdstrokeEffect>> _id_to_gdstroke_effect_map;
@@ -54,6 +62,7 @@ public:
 	static void init_static();
 
 	static std::unordered_map<int64_t, ContourMesh> const &get_contour_meshes();
+	static std::unordered_map<int64_t, uint64_t> const &get_contour_meshes_mesh_idx();
 	static std::unordered_set<uint64_t> const &get_contour_instances();
 
 #pragma region // exposed

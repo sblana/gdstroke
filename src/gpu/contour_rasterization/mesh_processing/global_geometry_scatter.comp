@@ -12,7 +12,7 @@ layout(local_size_x = 64) in;
 void main() {
 	#ifdef PASS_GLOBAL_EDGES
 	const uint global_edge_idx = gl_GlobalInvocationID.x;
-	if (global_edge_idx < B_global_edges.num_global_edges) {
+	if (global_edge_idx < B_geometry_desc.num_global_edges) {
 		int my_mesh_instance_idx = 0;
 		for (int mesh_instance_idx = B_geometry_desc.num_mesh_instances - 1; mesh_instance_idx >= 0; --mesh_instance_idx) {
 			if (B_mesh_instance_maps.data[mesh_instance_idx].first_global_edge_idx <= global_edge_idx) {
@@ -25,7 +25,7 @@ void main() {
 	#endif
 	#ifdef PASS_GLOBAL_FACES
 	const uint global_face_idx = gl_GlobalInvocationID.x;
-	if (global_face_idx < B_global_faces.num_global_faces) {
+	if (global_face_idx < B_geometry_desc.num_global_faces) {
 		int my_mesh_instance_idx = 0;
 		for (int mesh_instance_idx = B_geometry_desc.num_mesh_instances - 1; mesh_instance_idx >= 0; --mesh_instance_idx) {
 			if (B_mesh_instance_maps.data[mesh_instance_idx].first_global_face_idx <= global_face_idx) {

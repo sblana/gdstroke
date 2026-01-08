@@ -9,7 +9,7 @@ layout(local_size_x = 64) in;
 
 void main() {
 	const uint global_face_idx = gl_GlobalInvocationID.x;
-	if (global_face_idx < B_global_faces.num_global_faces) {
+	if (global_face_idx < B_geometry_desc.num_global_faces) {
 		const int mesh_instance_idx = B_global_faces.data[global_face_idx].to_mesh_instance_idx;
 
 		MeshDescData mesh_desc = B_mesh_desc.data[B_mesh_instance_desc.data[mesh_instance_idx].to_mesh_idx];

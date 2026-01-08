@@ -1,5 +1,6 @@
 #include "gdstroke_server.hpp"
 
+#include <godot_cpp/classes/rendering_server.hpp>
 #include <map>
 #include <bit>
 #include <bitset>
@@ -10,6 +11,8 @@
 using namespace godot;
 
 std::unordered_map<int64_t, GdstrokeServer::ContourMesh> GdstrokeServer::_contour_meshes = {};
+std::unordered_map<int64_t, uint64_t> GdstrokeServer::_contour_meshes_mesh_idx = {};
+bool GdstrokeServer::_dirty_contour_meshes = true;
 std::unordered_set<uint64_t> GdstrokeServer::_contour_instances = {};
 std::unordered_map<int64_t, Ref<GdstrokeEffect>> GdstrokeServer::_id_to_gdstroke_effect_map = {};
 
@@ -163,13 +166,13 @@ GdstrokeServer::ContourMesh GdstrokeServer::_process_mesh(Ref<Mesh> p_mesh) {
 	contour_mesh.num_faces = temp_contour_mesh.num_faces;
 
 	for (int i = 0; i < contour_mesh.num_vertices; ++i) {
-		contour_mesh.local_vertex_buffer.append_array(PackedVector4Array({
+		contour_mesh.local_vertex_buffer_data.append_array(PackedVector4Array({
 			ctor_vec3_f(temp_contour_mesh.vertex_buffer.get(i)),
 		}).to_byte_array());
 	}
 
 	for (int i = 0; i < contour_mesh.num_edges; ++i) {
-		contour_mesh.local_edge_buffer.append_array(PackedInt32Array({
+		contour_mesh.local_edge_buffer_data.append_array(PackedInt32Array({
 			temp_contour_mesh.edge_to_vertex_buffer.get(i).x,
 			temp_contour_mesh.edge_to_vertex_buffer.get(i).y,
 			temp_contour_mesh.edge_to_face_buffer.get(i).x,
@@ -180,21 +183,29 @@ GdstrokeServer::ContourMesh GdstrokeServer::_process_mesh(Ref<Mesh> p_mesh) {
 	}
 
 	for (int i = 0; i < contour_mesh.num_faces; ++i) {
-		contour_mesh.local_face_buffer.append_array(PackedInt32Array({
+		contour_mesh.local_face_buffer_data.append_array(PackedInt32Array({
 			temp_contour_mesh.face_to_vertex_buffer.get(i).x,
 			temp_contour_mesh.face_to_vertex_buffer.get(i).y,
 			temp_contour_mesh.face_to_vertex_buffer.get(i).z,
 			0,
 		}).to_byte_array());
-		contour_mesh.local_face_buffer.append_array(PackedVector4Array({
+		contour_mesh.local_face_buffer_data.append_array(PackedVector4Array({
 			ctor_vec3_f(temp_contour_mesh.face_normal_buffer.get(i)),
 		}).to_byte_array());
 	}
+
+	RenderingDevice *rd = RenderingServer::get_singleton()->get_rendering_device();
+	contour_mesh.local_vertex_buffer = rd->storage_buffer_create(contour_mesh.local_vertex_buffer_data.size(), contour_mesh.local_vertex_buffer_data, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	contour_mesh.local_edge_buffer   = rd->storage_buffer_create(contour_mesh.local_edge_buffer_data.size(),   contour_mesh.local_edge_buffer_data,   0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	contour_mesh.local_face_buffer   = rd->storage_buffer_create(contour_mesh.local_face_buffer_data.size(),   contour_mesh.local_face_buffer_data,   0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
 	return contour_mesh;
 }
 
 void GdstrokeServer::_bind_methods() {
+	ClassDB::bind_static_method("GdstrokeServer", D_METHOD("has_contour_mesh", "p_mesh"), &GdstrokeServer::has_contour_mesh);
+	ClassDB::bind_static_method("GdstrokeServer", D_METHOD("has_contour_instance", "p_node"), &GdstrokeServer::has_contour_instance);
+	ClassDB::bind_static_method("GdstrokeServer", D_METHOD("register_contour_mesh", "p_mesh"), &GdstrokeServer::register_contour_mesh);
 	ClassDB::bind_static_method("GdstrokeServer", D_METHOD("register_contour_instance", "p_node"), &GdstrokeServer::register_contour_instance);
 	ClassDB::bind_static_method("GdstrokeServer", D_METHOD("get_gdstroke_effect", "p_id"), &GdstrokeServer::get_gdstroke_effect);
 }
@@ -203,6 +214,8 @@ void GdstrokeServer::init_static() {
 	_contour_meshes = {};
 	_contour_instances = {};
 	_id_to_gdstroke_effect_map = {};
+	_contour_meshes_mesh_idx = {};
+	_dirty_contour_meshes = true;
 }
 
 std::unordered_map<int64_t, GdstrokeServer::ContourMesh> const &GdstrokeServer::get_contour_meshes() {
@@ -219,6 +232,17 @@ int32_t GdstrokeServer::get_num_contour_meshes() {
 
 int32_t GdstrokeServer::get_num_contour_instances() {
 	return GdstrokeServer::_contour_instances.size();
+}
+
+std::unordered_map<int64_t, uint64_t> const &GdstrokeServer::get_contour_meshes_mesh_idx() {
+	if (_dirty_contour_meshes) {
+		uint64_t idx = 0;
+		for (auto const &kvp : GdstrokeServer::get_contour_meshes()) {
+			_contour_meshes_mesh_idx[kvp.first] = idx++;
+		}
+		_dirty_contour_meshes = false;
+	}
+	return _contour_meshes_mesh_idx;
 }
 
 bool GdstrokeServer::has_contour_mesh(Ref<Mesh> p_mesh) {
@@ -243,12 +267,13 @@ void GdstrokeServer::register_contour_mesh(Ref<Mesh> p_mesh) {
 	ERR_FAIL_COND(has_contour_mesh(p_mesh));
 
 	_contour_meshes.insert({ p_mesh->get_rid().get_id(), _process_mesh(p_mesh) });
+	_dirty_contour_meshes = true;
 }
 
 void GdstrokeServer::register_contour_instance(MeshInstance3D *p_node) {
 	ERR_FAIL_COND(has_contour_instance(p_node));
 	ERR_FAIL_NULL(p_node->get_mesh());
-	ERR_FAIL_COND(has_contour_mesh(p_node->get_mesh()));
+	ERR_FAIL_COND(!has_contour_mesh(p_node->get_mesh()));
 
 	_contour_instances.insert(p_node->get_instance_id());
 }

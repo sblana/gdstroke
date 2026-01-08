@@ -23,7 +23,7 @@ void main() {
 		block_offsets,
 		B_geometry_desc.num_mesh_instances,
 		p0_fn_get_src_array,
-		B_global_edges.num_global_edges,
+		B_geometry_desc.num_global_edges,
 		p0_fn_set_src_to_dst_map,
 		p0_fn_add_set_src_to_dst_map
 	)
@@ -32,7 +32,7 @@ void main() {
 		block_offsets,
 		B_geometry_desc.num_mesh_instances,
 		p1_fn_get_src_array,
-		B_global_faces.num_global_faces,
+		B_geometry_desc.num_global_faces,
 		p1_fn_set_src_to_dst_map,
 		p1_fn_add_set_src_to_dst_map
 	)

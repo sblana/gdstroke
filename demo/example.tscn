@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://dh0oj81pufivs"]
+[gd_scene load_steps=9 format=3 uid="uid://dh0oj81pufivs"]
 
 [ext_resource type="Script" uid="uid://beish714ac71p" path="res://mesh_instance_3d.gd" id="1_2jas5"]
 [ext_resource type="Script" uid="uid://ddww4yri6u53p" path="res://basic_stroke_effect.gd" id="1_8lvy3"]
@@ -28,6 +28,8 @@ metadata/_custom_type_script = "uid://ddww4yri6u53p"
 [sub_resource type="Compositor" id="Compositor_n51mc"]
 compositor_effects = Array[CompositorEffect]([SubResource("GdstrokeEffect_2jas5"), SubResource("CompositorEffect_8lvy3")])
 
+[sub_resource type="BoxMesh" id="BoxMesh_8lvy3"]
+
 [node name="Node" type="Node"]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
@@ -38,6 +40,21 @@ compositor = SubResource("Compositor_n51mc")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Node3D"]
 mesh = ExtResource("1_n51mc")
+script = ExtResource("1_2jas5")
+
+[node name="Node3D2" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 0)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Node3D2"]
+mesh = ExtResource("1_n51mc")
+script = ExtResource("1_2jas5")
+
+[node name="Node3D3" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 0)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Node3D3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+mesh = SubResource("BoxMesh_8lvy3")
 script = ExtResource("1_2jas5")
 
 [node name="Camera3D" type="Camera3D" parent="."]

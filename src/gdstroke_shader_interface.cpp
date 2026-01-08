@@ -122,75 +122,18 @@ Error GdstrokeShaderInterface::MeshInterfaceSet::create_resources(RenderingDevic
 	resources.clear();
 	resources.resize(int(Buffer::BUFFER_MAX) + int(Binding::BINDING_MAX));
 
-	GdstrokeServer::ContourMesh const &contour_mesh = GdstrokeServer::get_contour_mesh();
-	Transform3D contour_instance_transform = GdstrokeServer::get_contour_instance()->get_global_transform().affine_inverse();
-	PackedByteArray mesh_desc_buffer_data = PackedByteArray();
-	mesh_desc_buffer_data.resize(4 * sizeof(int32_t));
-	mesh_desc_buffer_data.encode_s32(0, contour_mesh.vertex_buffer.size());
-	mesh_desc_buffer_data.encode_s32(4, contour_mesh.edge_to_vertex_buffer.size());
-	mesh_desc_buffer_data.encode_s32(8, contour_mesh.face_to_vertex_buffer.size());
-	mesh_desc_buffer_data.encode_s32(12, 0);
-	mesh_desc_buffer_data.append_array(PackedVector4Array({
-		ctor_vec3_f(contour_instance_transform.get_basis()[0]),
-		ctor_vec3_f(contour_instance_transform.get_basis()[1]),
-		ctor_vec3_f(contour_instance_transform.get_basis()[2]),
-		ctor_vec3_f(-contour_instance_transform.get_origin(), 1.0),
-	}).to_byte_array());
+	resources[Buffer::BUFFER_GEOMETRY_DESC_BUFFER     ] = p_rd->storage_buffer_create(sizeof(int32_t) * 4,              {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	// arbitrary limit
+	resources[Buffer::BUFFER_MESH_DESC_BUFFER         ] = p_rd->storage_buffer_create(sizeof(int32_t) * 10 * (1 << 16), {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_MESH_INSTANCE_DESC_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 18 * (1 << 16), {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
-	// todo: maybe some functions to make serialization less ass
-	PackedByteArray vertex_buffer_data = PackedByteArray();
-	for (int i = 0; i < contour_mesh.vertex_buffer.size(); ++i) {
-		vertex_buffer_data.append_array(PackedVector4Array({
-			ctor_vec3_f(contour_mesh.vertex_buffer.get(i)),
-		}).to_byte_array());
-	}
-	PackedByteArray edge_to_vertex_buffer_data = PackedByteArray();
-	for (int i = 0; i < contour_mesh.edge_to_vertex_buffer.size(); ++i) {
-		edge_to_vertex_buffer_data.append_array(PackedInt32Array({
-			contour_mesh.edge_to_vertex_buffer.get(i)[0],
-			contour_mesh.edge_to_vertex_buffer.get(i)[1],
-		}).to_byte_array());
-	}
-	PackedByteArray edge_to_face_buffer_data = PackedByteArray();
-	for (int i = 0; i < contour_mesh.edge_to_face_buffer.size(); ++i) {
-		edge_to_face_buffer_data.append_array(PackedInt32Array({
-			contour_mesh.edge_to_face_buffer.get(i)[0],
-			contour_mesh.edge_to_face_buffer.get(i)[1],
-		}).to_byte_array());
-	}
-	PackedByteArray edge_is_concave_buffer_data = PackedByteArray();
-	for (int i = 0; i < contour_mesh.edge_is_concave_buffer.size(); ++i) {
-		edge_is_concave_buffer_data.append_array(PackedInt32Array({
-			contour_mesh.edge_is_concave_buffer.get(i),
-		}).to_byte_array());
-	}
-	PackedByteArray face_to_vertex_buffer_data = PackedByteArray();
-	for (int i = 0; i < contour_mesh.face_to_vertex_buffer.size(); ++i) {
-		face_to_vertex_buffer_data.append_array(PackedInt32Array({
-			contour_mesh.face_to_vertex_buffer.get(i)[0],
-			contour_mesh.face_to_vertex_buffer.get(i)[1],
-			contour_mesh.face_to_vertex_buffer.get(i)[2],
-			0,
-		}).to_byte_array());
-	}
-	PackedByteArray face_normal_buffer_data = PackedByteArray();
-	for (int i = 0; i < contour_mesh.face_normal_buffer.size(); ++i) {
-		face_normal_buffer_data.append_array(PackedVector4Array({
-			ctor_vec3_f(contour_mesh.face_normal_buffer.get(i)),
-		}).to_byte_array());
-	}
+	resources[Buffer::BUFFER_MESH_INSTANCE_MAPS_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 2 * (1 << 16), {},  0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
-	resources[Buffer::BUFFER_MESH_DESC_BUFFER             ] = p_rd->storage_buffer_create(mesh_desc_buffer_data.size(),            mesh_desc_buffer_data,       0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
-	resources[Buffer::BUFFER_VERTEX_BUFFER                ] = p_rd->storage_buffer_create(vertex_buffer_data.size(),               vertex_buffer_data,          0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
-	resources[Buffer::BUFFER_EDGE_TO_VERTEX_BUFFER        ] = p_rd->storage_buffer_create(edge_to_vertex_buffer_data.size(),       edge_to_vertex_buffer_data,  0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
-	resources[Buffer::BUFFER_EDGE_TO_FACE_BUFFER          ] = p_rd->storage_buffer_create(edge_to_face_buffer_data.size(),         edge_to_face_buffer_data,    0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
-	resources[Buffer::BUFFER_EDGE_IS_CONCAVE_BUFFER       ] = p_rd->storage_buffer_create(edge_is_concave_buffer_data.size(),      edge_is_concave_buffer_data, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
-	resources[Buffer::BUFFER_EDGE_IS_CONTOUR_BUFFER       ] = p_rd->storage_buffer_create(contour_mesh.edge_to_vertex_buffer.size() * sizeof(int32_t), {},      0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
-	resources[Buffer::BUFFER_EDGE_TO_CONTOUR_EDGE_BUFFER  ] = p_rd->storage_buffer_create(contour_mesh.edge_to_vertex_buffer.size() * sizeof(int32_t), {},      0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
-	resources[Buffer::BUFFER_ALLOCATION_COLUMN_EDGE_BUFFER] = p_rd->storage_buffer_create(8192 * sizeof(uint32_t) * 2, {},                                      0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
-	resources[Buffer::BUFFER_FACE_TO_VERTEX_BUFFER        ] = p_rd->storage_buffer_create(face_to_vertex_buffer_data.size(),       face_to_vertex_buffer_data,  0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
-	resources[Buffer::BUFFER_FACE_NORMAL_BUFFER           ] = p_rd->storage_buffer_create(face_normal_buffer_data.size(),          face_normal_buffer_data,     0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
-	resources[Buffer::BUFFER_FACE_BACKFACING_BUFFER       ] = p_rd->storage_buffer_create(contour_mesh.face_to_vertex_buffer.size() * sizeof(int32_t), {},      0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_ALLOCATION_COLUMN_BUFFER] = p_rd->storage_buffer_create(sizeof(uint32_t) * 2 * 8192, {},  0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+
+	// arbitrary limit
+	resources[Buffer::BUFFER_GLOBAL_EDGES_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 4 * (1 << 22), {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_GLOBAL_FACES_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 2 * (1 << 22), {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
 	PackedByteArray buffers_addresses_data;
 	buffers_addresses_data.resize(Buffer::BUFFER_MAX * 8);
@@ -204,16 +147,66 @@ Error GdstrokeShaderInterface::MeshInterfaceSet::create_resources(RenderingDevic
 }
 
 Error GdstrokeShaderInterface::MeshInterfaceSet::update_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
-	GdstrokeServer::ContourMesh const &contour_mesh = GdstrokeServer::get_contour_mesh();
-	Transform3D contour_instance_transform = GdstrokeServer::get_contour_instance()->get_global_transform().affine_inverse();
-	PackedByteArray mesh_desc_buffer_transform_data = PackedByteArray();
-	mesh_desc_buffer_transform_data.append_array(PackedVector4Array({
-		ctor_vec3_f(contour_instance_transform.get_basis()[0]),
-		ctor_vec3_f(contour_instance_transform.get_basis()[1]),
-		ctor_vec3_f(contour_instance_transform.get_basis()[2]),
-		ctor_vec3_f(-contour_instance_transform.get_origin(), 1.0),
-	}).to_byte_array());
-	return p_rd->buffer_update(resources[Buffer::BUFFER_MESH_DESC_BUFFER], 16, mesh_desc_buffer_transform_data.size(), mesh_desc_buffer_transform_data);
+	PackedByteArray geometry_desc_buffer_data = PackedByteArray();
+	geometry_desc_buffer_data.resize(sizeof(int32_t) * 2);
+	geometry_desc_buffer_data.encode_s32(0, GdstrokeServer::get_num_contour_meshes());
+	geometry_desc_buffer_data.encode_s32(4, GdstrokeServer::get_num_contour_instances());
+
+	p_rd->buffer_update(resources[Buffer::BUFFER_GEOMETRY_DESC_BUFFER], 0, geometry_desc_buffer_data.size(), geometry_desc_buffer_data);
+
+
+	PackedByteArray mesh_desc_buffer_data = PackedByteArray();
+	mesh_desc_buffer_data.resize(sizeof(int32_t) * 10 * GdstrokeServer::get_num_contour_meshes());
+	uint64_t bytes_written = 0;
+	for (auto const &kvp : GdstrokeServer::get_contour_meshes()) {
+		mesh_desc_buffer_data.encode_s32(bytes_written + 0, kvp.second.num_vertices);
+		mesh_desc_buffer_data.encode_s32(bytes_written + 4, kvp.second.num_edges);
+		mesh_desc_buffer_data.encode_s32(bytes_written + 8, kvp.second.num_faces);
+		mesh_desc_buffer_data.encode_s32(bytes_written + 12, 0);
+		mesh_desc_buffer_data.encode_u64(bytes_written + 16, p_rd->buffer_get_device_address(kvp.second.local_vertex_buffer));
+		mesh_desc_buffer_data.encode_u64(bytes_written + 24, p_rd->buffer_get_device_address(kvp.second.local_edge_buffer));
+		mesh_desc_buffer_data.encode_u64(bytes_written + 32, p_rd->buffer_get_device_address(kvp.second.local_face_buffer));
+		bytes_written += 40;
+	}
+
+	p_rd->buffer_update(resources[Buffer::BUFFER_MESH_DESC_BUFFER], 0, mesh_desc_buffer_data.size(), mesh_desc_buffer_data);
+
+
+	PackedByteArray mesh_instance_desc_buffer_data = PackedByteArray();
+	mesh_instance_desc_buffer_data.resize(sizeof(int32_t) * 18 * GdstrokeServer::get_num_contour_instances());
+	bytes_written = 0;
+	for (auto object_id : GdstrokeServer::get_contour_instances()) {
+		MeshInstance3D *contour_instance = cast_to<MeshInstance3D>(ObjectDB::get_instance(ObjectID(object_id)));
+		Transform3D contour_instance_transform = contour_instance->get_global_transform().affine_inverse();
+
+		mesh_instance_desc_buffer_data.encode_float(bytes_written +  0, contour_instance_transform.get_basis()[0][0]);
+		mesh_instance_desc_buffer_data.encode_float(bytes_written +  4, contour_instance_transform.get_basis()[0][1]);
+		mesh_instance_desc_buffer_data.encode_float(bytes_written +  8, contour_instance_transform.get_basis()[0][2]);
+		mesh_instance_desc_buffer_data.encode_float(bytes_written + 12, 0);
+
+		mesh_instance_desc_buffer_data.encode_float(bytes_written + 16, contour_instance_transform.get_basis()[1][0]);
+		mesh_instance_desc_buffer_data.encode_float(bytes_written + 20, contour_instance_transform.get_basis()[1][1]);
+		mesh_instance_desc_buffer_data.encode_float(bytes_written + 24, contour_instance_transform.get_basis()[1][2]);
+		mesh_instance_desc_buffer_data.encode_float(bytes_written + 28, 0);
+
+		mesh_instance_desc_buffer_data.encode_float(bytes_written + 32, contour_instance_transform.get_basis()[2][0]);
+		mesh_instance_desc_buffer_data.encode_float(bytes_written + 36, contour_instance_transform.get_basis()[2][1]);
+		mesh_instance_desc_buffer_data.encode_float(bytes_written + 40, contour_instance_transform.get_basis()[2][2]);
+		mesh_instance_desc_buffer_data.encode_float(bytes_written + 44, 0);
+
+		mesh_instance_desc_buffer_data.encode_float(bytes_written + 48, -contour_instance_transform.get_origin()[0]);
+		mesh_instance_desc_buffer_data.encode_float(bytes_written + 52, -contour_instance_transform.get_origin()[1]);
+		mesh_instance_desc_buffer_data.encode_float(bytes_written + 56, -contour_instance_transform.get_origin()[2]);
+		mesh_instance_desc_buffer_data.encode_float(bytes_written + 60, 1.0);
+
+		mesh_instance_desc_buffer_data.encode_s32(bytes_written + 64, GdstrokeServer::get_contour_meshes_mesh_idx().at(contour_instance->get_mesh()->get_rid().get_id()));
+		mesh_instance_desc_buffer_data.encode_s32(bytes_written + 68, 0);
+		bytes_written += 72;
+	}
+
+	p_rd->buffer_update(resources[Buffer::BUFFER_MESH_INSTANCE_DESC_BUFFER], 0, mesh_instance_desc_buffer_data.size(), mesh_instance_desc_buffer_data);
+
+	return Error::OK;
 }
 
 void GdstrokeShaderInterface::MeshInterfaceSet::make_bindings() {
@@ -230,7 +223,6 @@ void GdstrokeShaderInterface::ContourInterfaceSet::receive_hard_depth_test_attac
 Error GdstrokeShaderInterface::ContourInterfaceSet::create_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
 	ERR_FAIL_COND_V(p_render_data == nullptr, Error::FAILED);
 	Ref<RenderSceneBuffersRD> render_scene_buffers = (Ref<RenderSceneBuffersRD>)p_render_data->get_render_scene_buffers();
-	uint32_t num_edges = GdstrokeServer::get_contour_mesh().edge_to_vertex_buffer.size();
 
 	resources.clear();
 	resources.resize(int(Buffer::BUFFER_MAX) + int(Binding::BINDING_MAX));

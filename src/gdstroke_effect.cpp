@@ -107,7 +107,7 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 	RenderingDevice *rd = RenderingServer::get_singleton()->get_rendering_device();
 
 	if (!_ready) {
-		if (GdstrokeServer::get_contour_instance() == nullptr)
+		if (GdstrokeServer::get_num_contour_instances() == 0)
 			return;
 
 		_scene_interface_set.create_resources(rd, p_render_data);
@@ -165,10 +165,6 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 	ERR_FAIL_COND(!_debug_interface_set.get_uniform_set_rid(_compiled_shaders[Shader::SHADER_DUMMY_DEBUG]).is_valid());
 
 
-	uint32_t num_verts = GdstrokeServer::get_contour_mesh().vertex_buffer.size();
-	uint32_t num_edges = GdstrokeServer::get_contour_mesh().edge_to_vertex_buffer.size();
-	uint32_t num_faces = GdstrokeServer::get_contour_mesh().face_to_vertex_buffer.size();
-
 	// HACK: rethink abstractions to avoid this pls
 	using      MeshBuffers  = GdstrokeShaderInterface::     MeshInterfaceSet::Buffer;
 	using      MeshBindings = GdstrokeShaderInterface::     MeshInterfaceSet::Binding;
@@ -198,35 +194,64 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 	}
 	rd->draw_command_end_label();
 
+	rd->draw_command_begin_label("Mesh Processing", Color(1.0, 0.3, 1.0));
+	{
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CR_MP_GLOBAL_GEOMETRY_ALLOCATION]);
+		_bind_sets(rd, list);
+		rd->compute_list_dispatch(list, 1, 1, 1);
+		rd->compute_list_end();
+
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CR_MP_FIRST_COMMANDER]);
+		_bind_sets(rd, list);
+		_bind_sets_commander(rd, list);
+		rd->compute_list_dispatch(list, 1, 1, 1);
+		rd->compute_list_end();
+		
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CR_MP_GLOBAL_GEOMETRY_SCATTER_EDGES]);
+		_bind_sets(rd, list);
+		_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_GLOBAL_EDGES);
+		rd->compute_list_end();
+
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CR_MP_GLOBAL_GEOMETRY_SCATTER_FACES]);
+		_bind_sets(rd, list);
+		_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_GLOBAL_FACES);
+		rd->compute_list_end();
+	}
+	rd->draw_command_end_label();
+
 	rd->draw_command_begin_label("Contour Edge Detection", Color(1.0, 0.3, 1.0));
 	{
 		list = rd->compute_list_begin();
 		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CR_CED_FACE_ORIENTATION]);
 		_bind_sets(rd, list);
-		rd->compute_list_dispatch(list, udiv_ceil(num_faces, 64), 1, 1);
+		_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_GLOBAL_FACES);
 		rd->compute_list_end();
 
 		list = rd->compute_list_begin();
 		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CR_CED_DETECTION]);
 		_bind_sets(rd, list);
-		rd->compute_list_dispatch(list, udiv_ceil(num_edges, 64), 1, 1);
+		_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_GLOBAL_EDGES);
 		rd->compute_list_end();
 
 		PackedByteArray push = PackedInt64Array({
-			// B_edge_is_contour.contour[idx],
-			int64_t(sizeof(uint64_t) * MeshBuffers::BUFFER_EDGE_IS_CONTOUR_BUFFER + mesh_buffers_ptr),
-			int64_t(0 * sizeof(int32_t)),
+			// B_global_edges.data[idx].is_contour,
+			int64_t(sizeof(uint64_t) * MeshBuffers::BUFFER_GLOBAL_EDGES_BUFFER + mesh_buffers_ptr),
 			int64_t(1 * sizeof(int32_t)),
-			// B_mesh_desc.num_edges,
-			int64_t(sizeof(uint64_t) * MeshBuffers::BUFFER_MESH_DESC_BUFFER + mesh_buffers_ptr),
-			int64_t(1 * sizeof(int32_t)),
+			int64_t(4 * sizeof(int32_t)),
+			// B_geometry_desc.num_global_edges,
+			int64_t(sizeof(uint64_t) * MeshBuffers::BUFFER_GEOMETRY_DESC_BUFFER + mesh_buffers_ptr),
+			int64_t(2 * sizeof(int32_t)),
 			// B_contour_desc.num_contour_edges,
 			int64_t(sizeof(uint64_t) * ContourBuffers::BUFFER_CONTOUR_DESC_BUFFER + contour_buffers_ptr),
 			int64_t(0 * sizeof(int32_t)),
-			// B_edge_to_contour_edge.idx[idx],
-			int64_t(sizeof(uint64_t) * MeshBuffers::BUFFER_EDGE_TO_CONTOUR_EDGE_BUFFER + mesh_buffers_ptr),
-			int64_t(0 * sizeof(int32_t)),
-			int64_t(1 * sizeof(int32_t)),
+			// B_global_edges.data[idx].to_contour_edge,
+			int64_t(sizeof(uint64_t) * MeshBuffers::BUFFER_GLOBAL_EDGES_BUFFER + mesh_buffers_ptr),
+			int64_t(2 * sizeof(int32_t)),
+			int64_t(4 * sizeof(int32_t)),
 		}).to_byte_array();
 
 		list = rd->compute_list_begin();
@@ -267,7 +292,7 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		list = rd->compute_list_begin();
 		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CR_CED_SCATTER]);
 		_bind_sets(rd, list);
-		rd->compute_list_dispatch(list, udiv_ceil(num_edges, 64), 1, 1);
+		_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_GLOBAL_EDGES);
 		rd->compute_list_end();
 	}
 	rd->draw_command_end_label();

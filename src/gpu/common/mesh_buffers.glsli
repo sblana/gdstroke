@@ -8,6 +8,8 @@
 layout(BUFREF_LAYOUT) readonly buffer GeometryDescBuffer {
 	int num_meshes;
 	int num_mesh_instances;
+	int num_global_edges;
+	int num_global_faces;
 };
 
 
@@ -91,14 +93,10 @@ struct GlobalFaceData {
 };
 
 layout(BUFREF_LAYOUT) buffer GlobalEdgesBuffer {
-	int num_global_edges;
-	int pad;
 	GlobalEdgeData data[];
 };
 
 layout(BUFREF_LAYOUT) buffer GlobalFacesBuffer {
-	int num_global_faces;
-	int pad;
 	GlobalFaceData data[];
 };
 
@@ -110,7 +108,7 @@ layout(BUFREF_LAYOUT) buffer AllocationColumnBuffer {
 
 
 layout(set = 2, binding = 0, scalar) coherent buffer MeshBuffers {
-	readonly GeometryDescBuffer       B_geometry_desc;
+	GeometryDescBuffer       B_geometry_desc;
 	readonly MeshDescBuffer           B_mesh_desc;
 	readonly MeshInstanceDescBuffer   B_mesh_instance_desc;
 
