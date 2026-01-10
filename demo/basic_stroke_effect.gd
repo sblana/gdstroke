@@ -66,6 +66,9 @@ func _render_callback(_callback_type: int, render_data: RenderData) -> void:
 	var scene_buffers: RenderSceneBuffersRD = render_data.get_render_scene_buffers()
 	var gdstroke_effect: GdstrokeEffect = GdstrokeServer.get_gdstroke_effect(gdstroke_effect_id)
 
+	if GdstrokeServer.get_num_contour_instances() == 0:
+		return
+
 	if not pipeline.is_valid():
 		make_pipelines(scene_buffers.get_color_texture(), scene_buffers.get_depth_texture())
 	var framebuffer := FramebufferCacheRD.get_cache_multipass([scene_buffers.get_color_texture(), scene_buffers.get_depth_texture()], [], 1)
