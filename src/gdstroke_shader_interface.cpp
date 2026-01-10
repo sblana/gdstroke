@@ -177,26 +177,27 @@ Error GdstrokeShaderInterface::MeshInterfaceSet::update_resources(RenderingDevic
 	bytes_written = 0;
 	for (auto object_id : GdstrokeServer::get_contour_instances()) {
 		MeshInstance3D *contour_instance = cast_to<MeshInstance3D>(ObjectDB::get_instance(ObjectID(object_id)));
-		Transform3D contour_instance_transform = contour_instance->get_global_transform().affine_inverse();
+		Basis contour_instance_basis = contour_instance->get_global_transform().get_basis().transposed();
+		Vector3 contour_instance_origin = contour_instance->get_global_transform().get_origin();
 
-		mesh_instance_desc_buffer_data.encode_float(bytes_written +  0, contour_instance_transform.get_basis()[0][0]);
-		mesh_instance_desc_buffer_data.encode_float(bytes_written +  4, contour_instance_transform.get_basis()[0][1]);
-		mesh_instance_desc_buffer_data.encode_float(bytes_written +  8, contour_instance_transform.get_basis()[0][2]);
+		mesh_instance_desc_buffer_data.encode_float(bytes_written +  0, contour_instance_basis[0][0]);
+		mesh_instance_desc_buffer_data.encode_float(bytes_written +  4, contour_instance_basis[0][1]);
+		mesh_instance_desc_buffer_data.encode_float(bytes_written +  8, contour_instance_basis[0][2]);
 		mesh_instance_desc_buffer_data.encode_float(bytes_written + 12, 0);
 
-		mesh_instance_desc_buffer_data.encode_float(bytes_written + 16, contour_instance_transform.get_basis()[1][0]);
-		mesh_instance_desc_buffer_data.encode_float(bytes_written + 20, contour_instance_transform.get_basis()[1][1]);
-		mesh_instance_desc_buffer_data.encode_float(bytes_written + 24, contour_instance_transform.get_basis()[1][2]);
+		mesh_instance_desc_buffer_data.encode_float(bytes_written + 16, contour_instance_basis[1][0]);
+		mesh_instance_desc_buffer_data.encode_float(bytes_written + 20, contour_instance_basis[1][1]);
+		mesh_instance_desc_buffer_data.encode_float(bytes_written + 24, contour_instance_basis[1][2]);
 		mesh_instance_desc_buffer_data.encode_float(bytes_written + 28, 0);
 
-		mesh_instance_desc_buffer_data.encode_float(bytes_written + 32, contour_instance_transform.get_basis()[2][0]);
-		mesh_instance_desc_buffer_data.encode_float(bytes_written + 36, contour_instance_transform.get_basis()[2][1]);
-		mesh_instance_desc_buffer_data.encode_float(bytes_written + 40, contour_instance_transform.get_basis()[2][2]);
+		mesh_instance_desc_buffer_data.encode_float(bytes_written + 32, contour_instance_basis[2][0]);
+		mesh_instance_desc_buffer_data.encode_float(bytes_written + 36, contour_instance_basis[2][1]);
+		mesh_instance_desc_buffer_data.encode_float(bytes_written + 40, contour_instance_basis[2][2]);
 		mesh_instance_desc_buffer_data.encode_float(bytes_written + 44, 0);
 
-		mesh_instance_desc_buffer_data.encode_float(bytes_written + 48, -contour_instance_transform.get_origin()[0]);
-		mesh_instance_desc_buffer_data.encode_float(bytes_written + 52, -contour_instance_transform.get_origin()[1]);
-		mesh_instance_desc_buffer_data.encode_float(bytes_written + 56, -contour_instance_transform.get_origin()[2]);
+		mesh_instance_desc_buffer_data.encode_float(bytes_written + 48, contour_instance_origin[0]);
+		mesh_instance_desc_buffer_data.encode_float(bytes_written + 52, contour_instance_origin[1]);
+		mesh_instance_desc_buffer_data.encode_float(bytes_written + 56, contour_instance_origin[2]);
 		mesh_instance_desc_buffer_data.encode_float(bytes_written + 60, 1.0);
 
 		mesh_instance_desc_buffer_data.encode_s32(bytes_written + 64, GdstrokeServer::get_contour_meshes_mesh_idx().at(contour_instance->get_mesh()->get_rid().get_id()));

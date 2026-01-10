@@ -106,10 +106,10 @@ GdstrokeEffect::GdstrokeEffect() {
 void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData *p_render_data) {
 	RenderingDevice *rd = RenderingServer::get_singleton()->get_rendering_device();
 
-	if (!_ready) {
-		if (GdstrokeServer::get_num_contour_instances() == 0)
+	if (GdstrokeServer::get_num_contour_instances() == 0)
 			return;
 
+	if (!_ready) {
 		_scene_interface_set.create_resources(rd, p_render_data);
 		_command_interface_set.create_resources(rd, p_render_data);
 		_mesh_interface_set.create_resources(rd, p_render_data);
@@ -208,7 +208,7 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		_bind_sets_commander(rd, list);
 		rd->compute_list_dispatch(list, 1, 1, 1);
 		rd->compute_list_end();
-		
+
 		list = rd->compute_list_begin();
 		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CR_MP_GLOBAL_GEOMETRY_SCATTER_EDGES]);
 		_bind_sets(rd, list);

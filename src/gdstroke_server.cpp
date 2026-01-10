@@ -203,10 +203,14 @@ GdstrokeServer::ContourMesh GdstrokeServer::_process_mesh(Ref<Mesh> p_mesh) {
 }
 
 void GdstrokeServer::_bind_methods() {
+	ClassDB::bind_static_method("GdstrokeServer", D_METHOD("get_num_contour_meshes"), &GdstrokeServer::get_num_contour_meshes);
+	ClassDB::bind_static_method("GdstrokeServer", D_METHOD("get_num_contour_instances"), &GdstrokeServer::get_num_contour_instances);
 	ClassDB::bind_static_method("GdstrokeServer", D_METHOD("has_contour_mesh", "p_mesh"), &GdstrokeServer::has_contour_mesh);
 	ClassDB::bind_static_method("GdstrokeServer", D_METHOD("has_contour_instance", "p_node"), &GdstrokeServer::has_contour_instance);
 	ClassDB::bind_static_method("GdstrokeServer", D_METHOD("register_contour_mesh", "p_mesh"), &GdstrokeServer::register_contour_mesh);
+	ClassDB::bind_static_method("GdstrokeServer", D_METHOD("unregister_contour_mesh", "p_mesh"), &GdstrokeServer::unregister_contour_mesh);
 	ClassDB::bind_static_method("GdstrokeServer", D_METHOD("register_contour_instance", "p_node"), &GdstrokeServer::register_contour_instance);
+	ClassDB::bind_static_method("GdstrokeServer", D_METHOD("unregister_contour_instance", "p_node"), &GdstrokeServer::unregister_contour_instance);
 	ClassDB::bind_static_method("GdstrokeServer", D_METHOD("get_gdstroke_effect", "p_id"), &GdstrokeServer::get_gdstroke_effect);
 }
 
@@ -270,12 +274,30 @@ void GdstrokeServer::register_contour_mesh(Ref<Mesh> p_mesh) {
 	_dirty_contour_meshes = true;
 }
 
+void GdstrokeServer::unregister_contour_mesh(Ref<Mesh> p_mesh) {
+	ERR_FAIL_COND(!has_contour_mesh(p_mesh));
+
+	RenderingDevice *rd = RenderingServer::get_singleton()->get_rendering_device();
+	rd->free_rid(_contour_meshes.at(p_mesh->get_rid().get_id()).local_vertex_buffer);
+	rd->free_rid(_contour_meshes.at(p_mesh->get_rid().get_id()).local_edge_buffer);
+	rd->free_rid(_contour_meshes.at(p_mesh->get_rid().get_id()).local_face_buffer);
+	_contour_meshes.erase(p_mesh->get_rid().get_id());
+	_contour_meshes_mesh_idx.erase(p_mesh->get_rid().get_id());
+	_dirty_contour_meshes = true;
+}
+
 void GdstrokeServer::register_contour_instance(MeshInstance3D *p_node) {
 	ERR_FAIL_COND(has_contour_instance(p_node));
 	ERR_FAIL_NULL(p_node->get_mesh());
 	ERR_FAIL_COND(!has_contour_mesh(p_node->get_mesh()));
 
 	_contour_instances.insert(p_node->get_instance_id());
+}
+
+void GdstrokeServer::unregister_contour_instance(MeshInstance3D *p_node) {
+	ERR_FAIL_COND(!has_contour_instance(p_node));
+
+	_contour_instances.erase(p_node->get_instance_id());
 }
 
 void GdstrokeServer::register_gdstroke_effect(int64_t p_id, Ref<GdstrokeEffect> p_gdstroke_effect) {

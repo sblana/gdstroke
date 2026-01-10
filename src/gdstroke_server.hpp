@@ -74,8 +74,10 @@ public:
 	static bool has_contour_instance(MeshInstance3D const *p_node);
 
 	static void register_contour_mesh(Ref<Mesh> p_mesh);
+	static void unregister_contour_mesh(Ref<Mesh> p_mesh);
 
 	static void register_contour_instance(MeshInstance3D *p_node);
+	static void unregister_contour_instance(MeshInstance3D *p_node);
 
 	static void register_gdstroke_effect(int64_t p_id, Ref<GdstrokeEffect> p_gdstroke_effect);
 
