@@ -26,18 +26,19 @@ struct ContourEdgeMapsData {
 	int is_discarded;
 	Range contour_fragment_range;
 };
+#define _SIZEOF_ContourEdgeMapsData() (_M_SIZEOF(int)() * 2 + _M_SIZEOF(Range)())
 
 layout(BUFREF_LAYOUT) buffer ContourEdgeMapsBuffer {
 	ContourEdgeMapsData data[];
 };
-#define PER_ELEMENT_BYTES_CONTOUR_EDGE_MAPS_BUFFER (4ul + 4ul + 8ul)
+#define _BUF_SIZE_ContourEdgeMapsBuffer(MP_array_len) ((_M_SIZEOF(ContourEdgeMapsData)()) * (MP_array_len))
 
 layout(BUFREF_LAYOUT) buffer ContourEdgeClipTBuffer {
 	float t[][2];
 };
-#define PER_ELEMENT_BYTES_CONTOUR_EDGE_CLIP_T_BUFFER (4ul + 4ul)
+#define _BUF_SIZE_ContourEdgeClipTBuffer(MP_array_len) ((_M_SIZEOF(float)()) * 2 * (MP_array_len))
 
-#define BYTES_PER_CONTOUR_EDGE (PER_ELEMENT_BYTES_CONTOUR_EDGE_MAPS_BUFFER + PER_ELEMENT_BYTES_CONTOUR_EDGE_CLIP_T_BUFFER)
+#define BYTES_PER_CONTOUR_EDGE (M_BUF_SIZE(ContourEdgeMapsBuffer, 1) + M_BUF_SIZE(ContourEdgeClipTBuffer, 1))
 
 
 struct ContourFragmentAttribsData {
@@ -45,38 +46,40 @@ struct ContourFragmentAttribsData {
 	vec2 orientation;
 	vec4 normal_depth;
 };
+#define _SIZEOF_ContourFragmentAttribsData() (_M_SIZEOF(ivec2)() + _M_SIZEOF(vec2)() + _M_SIZEOF(vec4)())
 
 layout(BUFREF_LAYOUT) buffer ContourFragmentAttribsBuffer {
 	ContourFragmentAttribsData data[];
 };
-#define PER_ELEMENT_BYTES_CONTOUR_FRAGMENT_ATTRIBS_BUFFER (8ul + 8ul + 16ul)
+#define _BUF_SIZE_ContourFragmentAttribsBuffer(MP_array_len) ((_M_SIZEOF(ContourFragmentAttribsData)()) * (MP_array_len))
 
 layout(BUFREF_LAYOUT) buffer ContourFragmentToContourEdgeBuffer {
 	int idx[];
 };
-#define PER_ELEMENT_BYTES_CONTOUR_FRAGMENT_TO_CONTOUR_EDGE_BUFFER (4ul)
+#define _BUF_SIZE_ContourFragmentToContourEdgeBuffer(MP_array_len) ((_M_SIZEOF(int)()) * (MP_array_len))
 
 layout(BUFREF_LAYOUT) buffer ContourFragmentPseudoVisibleBuffer {
 	bool pseudo_visible[];
 };
-#define PER_ELEMENT_BYTES_CONTOUR_FRAGMENT_PSEUDO_VISIBLE_BUFFER (4ul)
+#define _BUF_SIZE_ContourFragmentPseudoVisibleBuffer(MP_array_len) ((_M_SIZEOF(bool)()) * (MP_array_len))
 
 struct AllocationContourPixelData {
 	uint is_fragment_cluster_leader;
 	uint contour_pixel_idx;
 };
+#define _SIZEOF_AllocationContourPixelData() (_M_SIZEOF(uint)() * 2)
 
 layout(BUFREF_LAYOUT) buffer AllocationContourPixelBuffer {
 	AllocationContourPixelData data[];
 };
-#define PER_ELEMENT_BYTES_ALLOCATION_CONTOUR_PIXEL_BUFFER (4ul + 4ul)
+#define _BUF_SIZE_AllocationContourPixelBuffer(MP_array_len) ((_M_SIZEOF(AllocationContourPixelData)()) * (MP_array_len))
 
 layout(BUFREF_LAYOUT) buffer ForemostContourFragmentToContourPixelBuffer {
 	uint contour_pixel_idx[];
 };
-#define PER_ELEMENT_BYTES_FOREMOST_CONTOUR_FRAGMENT_TO_CONTOUR_PIXEL_BUFFER (4ul)
+#define _BUF_SIZE_ForemostContourFragmentToContourPixelBuffer(MP_array_len) ((_M_SIZEOF(uint)()) * (MP_array_len))
 
-#define BYTES_PER_CONTOUR_FRAGMENT (PER_ELEMENT_BYTES_CONTOUR_FRAGMENT_ATTRIBS_BUFFER + PER_ELEMENT_BYTES_CONTOUR_FRAGMENT_TO_CONTOUR_EDGE_BUFFER + PER_ELEMENT_BYTES_CONTOUR_FRAGMENT_PSEUDO_VISIBLE_BUFFER+ PER_ELEMENT_BYTES_ALLOCATION_CONTOUR_PIXEL_BUFFER + PER_ELEMENT_BYTES_FOREMOST_CONTOUR_FRAGMENT_TO_CONTOUR_PIXEL_BUFFER)
+#define BYTES_PER_CONTOUR_FRAGMENT (M_BUF_SIZE(ContourFragmentAttribsBuffer, 1) + M_BUF_SIZE(ContourFragmentToContourEdgeBuffer, 1) + M_BUF_SIZE(ContourFragmentPseudoVisibleBuffer, 1)+ M_BUF_SIZE(AllocationContourPixelBuffer, 1) + M_BUF_SIZE(ForemostContourFragmentToContourPixelBuffer, 1))
 
 
 struct ContourPixelAttribsData {
@@ -84,13 +87,14 @@ struct ContourPixelAttribsData {
 	vec2 orientation;
 	vec4 normal_depth;
 };
+#define _SIZEOF_ContourPixelAttribsData() (_M_SIZEOF(ivec2)() + _M_SIZEOF(vec2)() + _M_SIZEOF(vec4)())
 
 layout(BUFREF_LAYOUT) buffer ContourPixelAttribsBuffer {
 	ContourPixelAttribsData data[];
 };
-#define PER_ELEMENT_BYTES_CONTOUR_PIXEL_ATTRIBS_BUFFER (8ul + 8ul + 16ul)
+#define _BUF_SIZE_ContourPixelAttribsBuffer(MP_array_len) ((_M_SIZEOF(ContourPixelAttribsData)()) * (MP_array_len))
 
-#define BYTES_PER_CONTOUR_PIXEL (PER_ELEMENT_BYTES_CONTOUR_PIXEL_ATTRIBS_BUFFER)
+#define BYTES_PER_CONTOUR_PIXEL (M_BUF_SIZE(ContourPixelAttribsBuffer, 1))
 
 
 #define CONTOUR_BALLOC_BUFFER_SIZE (16 * 1024 * 1024)

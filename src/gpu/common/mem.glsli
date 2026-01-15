@@ -11,15 +11,48 @@
 #define BUFREF_FORWARD_LAYOUT buffer_reference
 #define BUFREF_LAYOUT buffer_reference, buffer_reference_align = DEFAULT_ALIGNMENT, scalar
 
+#define M_BUF_SIZE(MP_type, MP_array_len) (_M_BUF_SIZE(MP_type)(MP_array_len))
+#define _M_BUF_SIZE(MP_type) _BUF_SIZE_##MP_type
+
+#define M_SIZEOF(MP_type) (_SIZEOF(MP_type)())
+#define _M_SIZEOF(MP_type) _SIZEOF(MP_type)
+#define _SIZEOF(MP_type) _SIZEOF_##MP_type
+
+#define _SIZEOF_float() 4ul
+#define _SIZEOF_double() 8ul
+#define _SIZEOF_int() 4ul
+#define _SIZEOF_uint() 4ul
+#define _SIZEOF_bool() 4ul
+
+#define _M_SIZEOF_VECTOR(MP_type, MP_n) ((_M_SIZEOF(MP_type)()) * MP_n)
+
+#define _SIZEOF_vec2() _M_SIZEOF_VECTOR(float, 2)
+#define _SIZEOF_vec3() _M_SIZEOF_VECTOR(float, 3)
+#define _SIZEOF_vec4() _M_SIZEOF_VECTOR(float, 4)
+#define _SIZEOF_dvec2() _M_SIZEOF_VECTOR(double, 2)
+#define _SIZEOF_dvec3() _M_SIZEOF_VECTOR(double, 3)
+#define _SIZEOF_dvec4() _M_SIZEOF_VECTOR(double, 4)
+#define _SIZEOF_ivec2() _M_SIZEOF_VECTOR(int, 2)
+#define _SIZEOF_ivec3() _M_SIZEOF_VECTOR(int, 3)
+#define _SIZEOF_ivec4() _M_SIZEOF_VECTOR(int, 4)
+#define _SIZEOF_uvec2() _M_SIZEOF_VECTOR(uint, 2)
+#define _SIZEOF_uvec3() _M_SIZEOF_VECTOR(uint, 3)
+#define _SIZEOF_uvec4() _M_SIZEOF_VECTOR(uint, 4)
+#define _SIZEOF_bvec2() _M_SIZEOF_VECTOR(bool, 2)
+#define _SIZEOF_bvec3() _M_SIZEOF_VECTOR(bool, 3)
+#define _SIZEOF_bvec4() _M_SIZEOF_VECTOR(bool, 4)
+
+
 
 // Bump allocator
 // TODO: handle error cases
 
-layout(buffer_reference, buffer_reference_align = 8, scalar) buffer BumpAllocatorBuffer {
+layout(BUFREF_LAYOUT) buffer BumpAllocatorBuffer {
 	UInt64 used_bytes;
 	UInt64 capacity_bytes;
 	UInt32 mem[];
 };
+#define _BUF_SIZE_BumpAllocatorBuffer(MP_array_len) ((_M_SIZEOF(UInt64)()) * 2 + (_M_SIZEOF(UInt32)()) * (MP_array_len))
 
 // ! NOT THREAD-SAFE !
 void init_balloc_buffer(in const BumpAllocatorBuffer i_rw_balloc_buf, in const UInt64 i_capacity_bytes);

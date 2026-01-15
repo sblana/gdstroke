@@ -8,10 +8,10 @@ layout(local_size_x = 1) in;
 
 void main() {
 	if (gl_GlobalInvocationID.x == 0) {
-		B_contour_fragment_attribs                   = ContourFragmentAttribsBuffer               (balloc_acquire(B_contour_balloc_buffer, B_contour_desc.num_contour_fragments * PER_ELEMENT_BYTES_CONTOUR_FRAGMENT_ATTRIBS_BUFFER));
-		B_contour_fragment_to_contour_edge           = ContourFragmentToContourEdgeBuffer         (balloc_acquire(B_contour_balloc_buffer, B_contour_desc.num_contour_fragments * PER_ELEMENT_BYTES_CONTOUR_FRAGMENT_TO_CONTOUR_EDGE_BUFFER));
-		B_contour_fragment_pseudo_visible            = ContourFragmentPseudoVisibleBuffer         (balloc_acquire(B_contour_balloc_buffer, B_contour_desc.num_contour_fragments * PER_ELEMENT_BYTES_CONTOUR_FRAGMENT_PSEUDO_VISIBLE_BUFFER));
-		B_allocation_contour_pixel                   = AllocationContourPixelBuffer               (balloc_acquire(B_contour_balloc_buffer, B_contour_desc.num_contour_fragments * PER_ELEMENT_BYTES_ALLOCATION_CONTOUR_PIXEL_BUFFER));
-		B_foremost_contour_fragment_to_contour_pixel = ForemostContourFragmentToContourPixelBuffer(balloc_acquire(B_contour_balloc_buffer, B_contour_desc.num_contour_fragments * PER_ELEMENT_BYTES_FOREMOST_CONTOUR_FRAGMENT_TO_CONTOUR_PIXEL_BUFFER));
+		B_contour_fragment_attribs                   = ContourFragmentAttribsBuffer               (balloc_acquire(B_contour_balloc_buffer, M_BUF_SIZE(ContourFragmentAttribsBuffer,                B_contour_desc.num_contour_fragments)));
+		B_contour_fragment_to_contour_edge           = ContourFragmentToContourEdgeBuffer         (balloc_acquire(B_contour_balloc_buffer, M_BUF_SIZE(ContourFragmentToContourEdgeBuffer,          B_contour_desc.num_contour_fragments)));
+		B_contour_fragment_pseudo_visible            = ContourFragmentPseudoVisibleBuffer         (balloc_acquire(B_contour_balloc_buffer, M_BUF_SIZE(ContourFragmentPseudoVisibleBuffer,          B_contour_desc.num_contour_fragments)));
+		B_allocation_contour_pixel                   = AllocationContourPixelBuffer               (balloc_acquire(B_contour_balloc_buffer, M_BUF_SIZE(AllocationContourPixelBuffer,                B_contour_desc.num_contour_fragments)));
+		B_foremost_contour_fragment_to_contour_pixel = ForemostContourFragmentToContourPixelBuffer(balloc_acquire(B_contour_balloc_buffer, M_BUF_SIZE(ForemostContourFragmentToContourPixelBuffer, B_contour_desc.num_contour_fragments)));
 	}
 }

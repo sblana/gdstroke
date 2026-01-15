@@ -28,4 +28,24 @@
 #define pack64(_value_) pack64(_value_)
 #define unpack32(_value_) unpack32(_value_)
 
+
+#define _SIZEOF_int32_t() 4ul
+#define _SIZEOF_uint32_t() 4ul
+#define _SIZEOF_int64_t() 8ul
+#define _SIZEOF_uint64_t() 8ul
+
+#define _SIZEOF_i32vec2() _M_SIZEOF_VECTOR(int32_t, 2)
+#define _SIZEOF_i32vec3() _M_SIZEOF_VECTOR(int32_t, 3)
+#define _SIZEOF_i32vec4() _M_SIZEOF_VECTOR(int32_t, 4)
+#define _SIZEOF_u32vec2() _M_SIZEOF_VECTOR(uint32_t, 2)
+#define _SIZEOF_u32vec3() _M_SIZEOF_VECTOR(uint32_t, 3)
+#define _SIZEOF_u32vec4() _M_SIZEOF_VECTOR(uint32_t, 4)
+#define _SIZEOF_i64vec2() _M_SIZEOF_VECTOR(int64_t, 2)
+#define _SIZEOF_i64vec3() _M_SIZEOF_VECTOR(int64_t, 3)
+#define _SIZEOF_i64vec4() _M_SIZEOF_VECTOR(int64_t, 4)
+#define _SIZEOF_u64vec2() _M_SIZEOF_VECTOR(uint64_t, 2)
+#define _SIZEOF_u64vec3() _M_SIZEOF_VECTOR(uint64_t, 3)
+#define _SIZEOF_u64vec4() _M_SIZEOF_VECTOR(uint64_t, 4)
+
+
 #endif // !EXT_EXPLICIT_ARITHMETIC_TYPES_GLSLI

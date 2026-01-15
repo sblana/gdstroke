@@ -5,6 +5,7 @@ struct Range {
 	int first;
 	int count;
 };
+#define _SIZEOF_Range() ((_M_SIZEOF(int)()) * 2ul)
 
 //  int idiv_floor( int n,  int d) { return n / d -  int((n % d) != 0 && (n^d) < 0); }
 //  int idiv_ceil ( int n,  int d) { return n / d +  int((n % d) != 0 && (n^d) > 0); }
