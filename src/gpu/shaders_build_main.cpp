@@ -40,7 +40,7 @@ void build_shader(ShaderBuildInfo shader_build_info, int godot_version_minor) {
 		std::string glc_stage_flags = shader_stage_bit_to_glc_stage_flags.at(1 << i);
 		std::string stage_affix = shader_stage_bit_to_stage_affix_lower.at(1 << i);
 
-		constexpr std::string_view glc_fmt = "glslang -DGODOT_VERSION_MINOR={} -g -Isrc/gpu/ --target-env vulkan1.2 --spirv-val {} {} src/gpu/{} -o temp/{}.{}.spv";
+		constexpr std::string_view glc_fmt = "glslang -DGODOT_VERSION_MINOR={} -g -Isrc/gpu/ --target-env vulkan1.3 --spirv-val {} {} src/gpu/{} -o temp/{}.{}.spv";
 		std::system(std::format(glc_fmt, godot_version_minor, glc_stage_flags, shader_build_info.glc_flags, shader_build_info.src_file_path, shader_build_info.name, stage_affix).c_str());
 
 		std::string stage_affix_upper = shader_stage_bit_to_stage_affix_upper.at(1 << i);

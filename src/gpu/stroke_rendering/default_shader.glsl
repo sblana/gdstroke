@@ -12,7 +12,7 @@ void main() {
 	const vec2 tangent = gdstroke_get_stroke_vertex_tangent(stroke_vertex_idx);
 	const vec2 normal = gdstroke_get_stroke_vertex_normal(stroke_vertex_idx);
 
-	const vec2 stroke_coord = gdstroke_get_stroke_coord(stroke_vertex_idx);
+	const vec2 stroke_coord = gdstroke_get_stroke_vertex_coord(stroke_vertex_idx);
 
 	const float width = 5.0 * mix(1.0, 0.1, stroke_coord.x);
 

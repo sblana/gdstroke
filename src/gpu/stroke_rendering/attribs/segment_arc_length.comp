@@ -1,0 +1,23 @@
+#version 450
+#extension GL_ARB_shading_language_include : enable
+
+layout(local_size_x = 64) in;
+
+#include "common/buffers.glsli"
+
+
+void main() {
+	const uint segment_edge = gl_GlobalInvocationID.x;
+	if (segment_edge < B_segment_desc.num_segment_edges) {
+		const int compacted_pixel_edge = B_segment_edge_to_compacted_pixel_edge.idx[segment_edge];
+		const int segment_key = B_compacted_pixel_edge_segment_key.segment_key[compacted_pixel_edge];
+		const SegmentRangeData segment_range = B_segment_range.data[segment_key];
+
+		const bool is_segment_tail = segment_range.first_idx + segment_range.num_segment_edges - 1 == segment_edge;
+
+
+		if (is_segment_tail) {
+			B_segment_arc_length.arc_length[segment_key] = B_segment_edge_arc_length.arc_length[segment_edge];
+		}
+	}
+}

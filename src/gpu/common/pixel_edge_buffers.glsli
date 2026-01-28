@@ -218,6 +218,18 @@ layout(BUFREF_LAYOUT) buffer SegmentEdgeToCompactedPixelEdgeBuffer {
 	int idx[MAX_NUM_SEGMENT_EDGES];
 };
 
+layout(BUFREF_LAYOUT) buffer SegmentEdgeIsHeadBuffer {
+	bool head[MAX_NUM_SEGMENT_EDGES];
+};
+
+layout(BUFREF_LAYOUT) buffer SegmentEdgeArcLengthBuffer {
+	float arc_length[MAX_NUM_SEGMENT_EDGES];
+};
+
+layout(BUFREF_LAYOUT) buffer SegmentArcLengthBuffer {
+	float arc_length[MAX_NUM_SEGMENTS];
+};
+
 struct SegmentRangeData {
 	int first_idx;
 	int num_segment_edges;
@@ -292,6 +304,9 @@ layout(set = 4, binding = 0, scalar) coherent buffer PixelEdgeBuffers {
 	AllocationSegmentBuffer                     B_allocation_segment;
 	SegmentDescBuffer                           B_segment_desc;
 	SegmentEdgeToCompactedPixelEdgeBuffer       B_segment_edge_to_compacted_pixel_edge;
+	SegmentEdgeIsHeadBuffer                     B_segment_edge_is_head;
+	SegmentEdgeArcLengthBuffer                  B_segment_edge_arc_length;
+	SegmentArcLengthBuffer                      B_segment_arc_length;
 	SegmentRangeBuffer                          B_segment_range;
 	StrokeDescBuffer                            B_stroke_desc;
 	SegmentStrokeVertexRangeBuffer              B_segment_stroke_vertex_range;

@@ -2,8 +2,6 @@
 #define SCANS_GLSLI
 
 #extension GL_ARB_shading_language_include : enable
-#extension GL_EXT_scalar_block_layout : enable
-
 #include "common/math.glsli"
 #include "common/mem.glsli"
 #include "common/ext/explicit_arithmetic_types.glsli"
@@ -21,6 +19,14 @@ BlockPartitionDesc create_block_partition_desc(in const uint i_max_num_blocks, i
 	bpd.num_elements = i_num_elements;
 	bpd.elements_per_block = udiv_ceil(i_num_elements, i_max_num_blocks);
 	bpd.num_blocks = udiv_ceil(i_num_elements, bpd.elements_per_block);
+	return bpd;
+}
+
+BlockPartitionDesc create_block_partition_desc2(in const uint i_elements_per_block, in const uint i_num_elements) {
+	BlockPartitionDesc bpd;
+	bpd.num_elements = i_num_elements;
+	bpd.elements_per_block = i_elements_per_block;
+	bpd.num_blocks = udiv_ceil(i_num_elements, i_elements_per_block);
 	return bpd;
 }
 
@@ -86,6 +92,7 @@ Int32Reference i32ref_index_into_buffer(in const UInt64 i_buffer_ptr, in const U
 ) \
 {																															\
 	const MP_type_ block_offset = MP_load_block_offset_;																	\
+	barrier();																												\
 	for (uint element_idx = MP_bd_name_.first_element_idx; element_idx <= MP_bd_name_.final_element_idx; ++element_idx) {	\
 		const uint idx = element_idx * gl_SubgroupSize + gl_SubgroupInvocationID;											\
 		if (idx < MP_src_size_) {																							\
@@ -120,6 +127,7 @@ Int32Reference i32ref_index_into_buffer(in const UInt64 i_buffer_ptr, in const U
 	const bool is_participating_stage_2 = bd.block_idx < bpd.num_blocks;									\
 																											\
 	MP_block_offsets_[gl_SubgroupID] = 0;																	\
+	barrier();																								\
 	if (is_participating_stage_0) {																			\
 		for (uint element_idx = bd.first_element_idx; element_idx <= bd.final_element_idx; ++element_idx) {	\
 			const uint idx = element_idx * gl_SubgroupSize + gl_SubgroupInvocationID;						\
@@ -130,6 +138,7 @@ Int32Reference i32ref_index_into_buffer(in const UInt64 i_buffer_ptr, in const U
 			}																								\
 			const MP_type_ exclusive = subgroupExclusiveAdd(value) + MP_block_offsets_[gl_SubgroupID];		\
 			const MP_type_ element_sum = subgroupAdd(value);												\
+			subgroupBarrier();																				\
 																											\
 			if (subgroupElect()) {																			\
 				MP_block_offsets_[gl_SubgroupID] += element_sum;											\

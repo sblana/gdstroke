@@ -325,8 +325,11 @@ Error GdstrokeShaderInterface::PixelEdgeInterfaceSet::create_resources(Rendering
 	resources[Buffer::BUFFER_SEGMENT_DESC_BUFFER] = p_rd->storage_buffer_create(sizeof( int32_t) * 2, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
 	resources[Buffer::BUFFER_SEGMENT_EDGE_TO_COMPACTED_PIXEL_EDGE_BUFFER] = p_rd->storage_buffer_create(sizeof( int32_t) * 1 * max_num_segment_edges, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_SEGMENT_EDGE_IS_HEAD_BUFFER                ] = p_rd->storage_buffer_create(sizeof( int32_t) * 1 * max_num_segment_edges, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_SEGMENT_EDGE_ARC_LENGTH_BUFFER             ] = p_rd->storage_buffer_create(sizeof( int32_t) * 1 * max_num_segment_edges, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
-	resources[Buffer::BUFFER_SEGMENT_RANGE_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 2 * max_num_segments, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_SEGMENT_ARC_LENGTH_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 1 * max_num_segments, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_SEGMENT_RANGE_BUFFER     ] = p_rd->storage_buffer_create(sizeof(int32_t) * 2 * max_num_segments, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
 	resources[Buffer::BUFFER_STROKE_DESC_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 1, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
@@ -361,7 +364,7 @@ void GdstrokeShaderInterface::PixelEdgeInterfaceSet::make_bindings() {
 Error GdstrokeShaderInterface::ShaderAPIInterfaceSet::create_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
 	resources.clear();
 	resources.resize(Binding::BINDING_MAX);
-	resources[Binding::BINDING_BUFFER_PTR_TABLE_BUFFER] = p_rd->storage_buffer_create(sizeof(uint64_t) * 16 + sizeof(float) * 4);
+	resources[Binding::BINDING_BUFFER_PTR_TABLE_BUFFER] = p_rd->storage_buffer_create(sizeof(uint64_t) * 128);
 	return Error::OK;
 }
 

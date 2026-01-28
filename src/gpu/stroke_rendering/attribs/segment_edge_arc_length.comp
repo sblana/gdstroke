@@ -1,0 +1,70 @@
+#version 450
+#extension GL_ARB_shading_language_include : enable
+
+layout(local_size_x = 1024) in;
+
+#include "common/buffers.glsli"
+#include "common/scans.glsli"
+
+
+shared float[gl_WorkGroupSize.x] subgroup_reduction_partial;
+shared bool[gl_WorkGroupSize.x] subgroup_reduction_flag;
+
+shared float running_reduction_value;
+
+// todo: make into function
+void main() {
+	running_reduction_value = 0;
+	const BlockPartitionDesc bpd = create_block_partition_desc2(gl_WorkGroupSize.x, B_segment_desc.num_segment_edges);
+	
+	for (uint bd_i = 0; bd_i < bpd.num_blocks; ++bd_i) {
+		BlockDesc bd = create_block_desc(bpd, bd_i);
+		float i_value = 0;
+		bool i_head = true;
+		if (bd.first_element_idx + gl_LocalInvocationID.x <= bd.final_element_idx) {
+			i_value = B_segment_edge_arc_length.arc_length[bd.first_element_idx + gl_LocalInvocationID.x];
+			i_head = B_segment_edge_is_head.head[bd.first_element_idx + gl_LocalInvocationID.x];
+		}
+		float o_invocation_scan_value;
+		bool o_invocation_or_head_flag;
+		barrier();
+		{
+			bool invocation_or_head_flag;
+			float invocation_scan_value = subgroupSegmentedInclusiveAdd(i_value, i_head, invocation_or_head_flag);
+
+			subgroupBarrier();
+			if (subgroupElectLast()) {
+				subgroup_reduction_partial[gl_SubgroupID] = invocation_scan_value;
+				subgroup_reduction_flag[gl_SubgroupID] = invocation_or_head_flag;
+			}
+			barrier();
+			if (gl_SubgroupID == 0 && gl_SubgroupInvocationID < gl_NumSubgroups) {
+				bool subgroup_or_head_flag;
+				const float subgroup_offset = subgroupSegmentedInclusiveAdd(subgroup_reduction_partial[gl_SubgroupInvocationID], subgroup_reduction_flag[gl_SubgroupInvocationID], subgroup_or_head_flag);
+				subgroupBarrier();
+				subgroup_reduction_partial[gl_SubgroupInvocationID] = subgroup_offset;
+				subgroup_reduction_flag[gl_SubgroupInvocationID] = subgroup_or_head_flag;
+			}
+			barrier();
+			if (gl_SubgroupID != 0) {
+				if (!invocation_or_head_flag) {
+					invocation_scan_value = subgroup_reduction_partial[gl_SubgroupID - 1] + invocation_scan_value;
+				}
+				invocation_or_head_flag = subgroup_reduction_flag[gl_SubgroupID - 1] || invocation_or_head_flag;
+			}
+			o_invocation_scan_value = invocation_scan_value;
+			o_invocation_or_head_flag = invocation_or_head_flag;
+			barrier();
+		}
+
+		o_invocation_scan_value += !o_invocation_or_head_flag ? running_reduction_value : 0;
+		if (bd.first_element_idx + gl_LocalInvocationID.x <= bd.final_element_idx) {
+			B_segment_edge_arc_length.arc_length[bd.first_element_idx + gl_LocalInvocationID.x] = o_invocation_scan_value;
+		}
+		barrier();
+		if (gl_SubgroupID == gl_NumSubgroups - 1 && subgroupElectLast()) {
+			running_reduction_value = !o_invocation_or_head_flag ? running_reduction_value : 0;
+			running_reduction_value += o_invocation_scan_value;
+		}
+	}
+}
