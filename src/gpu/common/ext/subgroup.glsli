@@ -3,13 +3,22 @@
 
 #extension GL_KHR_shader_subgroup_basic : enable
 #extension GL_KHR_shader_subgroup_vote : enable
+#extension GL_KHR_shader_subgroup_ballot : enable
+#extension GL_KHR_shader_subgroup_shuffle : enable
+#extension GL_KHR_shader_subgroup_shuffle_relative  : enable
 #extension GL_KHR_shader_subgroup_arithmetic : enable
 
 
 #define gl_NumSubgroups gl_NumSubgroups
 #define gl_SubgroupID gl_SubgroupID
+
 #define gl_SubgroupSize gl_SubgroupSize
 #define gl_SubgroupInvocationID gl_SubgroupInvocationID
+#define gl_SubgroupEqMask gl_SubgroupEqMask
+#define gl_SubgroupGeMask gl_SubgroupGeMask
+#define gl_SubgroupGtMask gl_SubgroupGtMask
+#define gl_SubgroupLeMask gl_SubgroupLeMask
+#define gl_SubgroupLtMask gl_SubgroupLtMask
 
 #define subgroupBarrier() subgroupBarrier()
 #define subgroupMemoryBarrier() subgroupMemoryBarrier()
@@ -17,11 +26,38 @@
 #define subgroupMemoryBarrierShared() subgroupMemoryBarrierShared()
 #define subgroupMemoryBarrierImage() subgroupMemoryBarrierImage()
 #define subgroupElect() subgroupElect()
+// Same as subgroupElect(), but the invocation chosen is the active invocation with the highest <gl_SubgroupInvocationID>.
+#define subgroupElectLast() subgroupElectLast()
 
 
 #define subgroupAll(_value_) subgroupAll(_value_)
 #define subgroupAny(_value_) subgroupAny(_value_)
 #define subgroupAllEqual(_value_) subgroupAllEqual(_value_)
+
+
+// SPIR-V 1.5: _id_ has to be dynamically-uniform.
+#define subgroupBroadcast(_value_, _id_) subgroupBroadcast(_value_, _id_)
+#define subgroupBroadcastFirst(_value_) subgroupBroadcastFirst(_value_)
+// Same as subgroupBroadcastFirst(), but the invocation chosen is the active invocation with the highest <gl_SubgroupInvocationID>.
+// Requires SPIR-V 1.5.
+#define subgroupBroadcastLast(_value_) subgroupBroadcastLast(_value_)
+
+#define SubgroupMask uvec4
+// This is the only subgroup ballot function that returns SubgroupMask.
+#define subgroupBallot(_value_) subgroupBallot(_value_)
+// _value_ has to be dynamically-uniform.
+#define subgroupInverseBallot(_value_) subgroupInverseBallot(_value_)
+#define subgroupBallotBitExtract(_value_, _index_) subgroupBallotBitExtract(_value_, _index_)
+#define subgroupBallotBitCount(_value_) subgroupBallotBitCount(_value_)
+#define subgroupBallotInclusiveBitCount(_value_) subgroupBallotInclusiveBitCount(_value_)
+#define subgroupBallotExclusiveBitCount(_value_) subgroupBallotExclusiveBitCount(_value_)
+#define subgroupBallotFindLSB(_value_) subgroupBallotFindLSB(_value_)
+#define subgroupBallotFindMSB(_value_) subgroupBallotFindMSB(_value_)
+
+#define subgroupShuffle(_value_, _id_) subgroupShuffle(_value_, _id_)
+#define subgroupShuffleXor(_value_, _mask_) subgroupShuffleXor(_value_, _mask_)
+#define subgroupShuffleUp(_value_, _delta_) subgroupShuffleUp(_value_, _delta_)
+#define subgroupShuffleDown(_value_, _delta_) subgroupShuffleDown(_value_, _delta_)
 
 
 #define subgroupAdd(_value_) subgroupAdd(_value_)
@@ -47,5 +83,11 @@
 #define subgroupExclusiveAnd(_value_) subgroupExclusiveAnd(_value_)
 #define subgroupExclusiveOr(_value_)  subgroupExclusiveOr(_value_)
 #define subgroupExclusiveXor(_value_) subgroupExclusiveXor(_value_)
+
+#define subgroupSegmentedInclusiveAdd(/* T */ _value_, /* bool */ _is_head_, /* out bool */ _o_invocation_or_head_flag_) subgroupSegmentedInclusiveAdd(_value_, _is_head_, _o_invocation_or_head_flag_)
+#define subgroupSegmentedExclusiveAdd(/* T */ _value_, /* bool */ _is_head_, /* out bool */ _o_invocation_or_head_flag_, /* out T */ _o_subgroup_reduction_) subgroupSegmentedExclusiveAdd(_value_, _is_head_, _o_invocation_or_head_flag_, _o_subgroup_reduction_)
+
+#extension GL_ARB_shading_language_include : enable
+#include "common/impl/subgroup.glsl"
 
 #endif // !EXT_SUBGROUP_GLSLI
