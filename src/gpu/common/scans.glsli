@@ -126,7 +126,7 @@ Int32Reference i32ref_index_into_buffer(in const UInt64 i_buffer_ptr, in const U
 	const bool is_participating_stage_1 = gl_SubgroupID == 0;												\
 	const bool is_participating_stage_2 = bd.block_idx < bpd.num_blocks;									\
 																											\
-	MP_block_offsets_[gl_SubgroupID] = 0;																	\
+	MP_block_offsets_[gl_LocalInvocationID.x] = 0;															\
 	barrier();																								\
 	if (is_participating_stage_0) {																			\
 		for (uint element_idx = bd.first_element_idx; element_idx <= bd.final_element_idx; ++element_idx) {	\
