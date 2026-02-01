@@ -9,28 +9,34 @@ void main() {
 	const uint fragmented_pixel_edge_idx = gl_GlobalInvocationID.x;
 
 	if (is_fragmented_pixel_edge_idx_valid(int(fragmented_pixel_edge_idx))) {
-		const int sparse_pixel_edge_idx = B_fragmented_pixel_edge_to_sparse_pixel_edge.idx[fragmented_pixel_edge_idx];
-		const SparsePixelEdgeNeighboursData neighbours = B_sparse_pixel_edge_neighbours.data[sparse_pixel_edge_idx];
-		const int prev_idx = B_sparse_pixel_edge_to_fragmented_pixel_edge.idx[neighbours.prev_idx];
-		const int next_idx = B_sparse_pixel_edge_to_fragmented_pixel_edge.idx[neighbours.next_idx];
+		const int sparse_pixel_edge_idx = B_fragmented_pixel_edge_attribs.data[fragmented_pixel_edge_idx].to_sparse_pixel_edge_idx;
+		const int prev_fragmented_idx = B_sparse_pixel_edge_attribs.data[B_sparse_pixel_edge_attribs.data[sparse_pixel_edge_idx].prev_idx].to_fragmented_pixel_edge_idx;
+		const int next_fragmented_idx = B_sparse_pixel_edge_attribs.data[B_sparse_pixel_edge_attribs.data[sparse_pixel_edge_idx].next_idx].to_fragmented_pixel_edge_idx;
 
-		const int associated_head_idx = B_fragmented_pixel_edge_associated_head.associated_head[fragmented_pixel_edge_idx];
-		const int pixel_edge_loop_idx = B_fragmented_pixel_edge_to_pixel_edge_loop.idx[associated_head_idx];
-		const int local_idx = B_fragmented_pixel_edge_local_idx.local_idx[fragmented_pixel_edge_idx];
-		const PixelEdgeLoopDescData loop_desc = B_pixel_edge_loop_desc.data[pixel_edge_loop_idx];
+		const int associated_head_idx = B_fragmented_pixel_edge_attribs.data[fragmented_pixel_edge_idx].associated_head;
+		const int pixel_edge_loop_idx = B_fragmented_pixel_edge_attribs.data[associated_head_idx].to_pixel_edge_loop_idx;
+		const int local_idx = B_fragmented_pixel_edge_attribs.data[fragmented_pixel_edge_idx].loop_local_idx;
+		const PixelEdgeLoopAttribs loop_attribs = B_pixel_edge_loop_attribs.data[pixel_edge_loop_idx];
 
-		const int compacted_pixel_edge_idx = loop_desc.compacted_head_idx + local_idx;
-		const int compacted_prev_idx = loop_desc.compacted_head_idx + B_fragmented_pixel_edge_local_idx.local_idx[prev_idx];
-		const int compacted_next_idx = loop_desc.compacted_head_idx + B_fragmented_pixel_edge_local_idx.local_idx[next_idx];
+		const int compacted_pixel_edge_idx = loop_attribs.compacted_head_idx + local_idx;
+		const int compacted_prev_idx = loop_attribs.compacted_head_idx + B_fragmented_pixel_edge_attribs.data[prev_fragmented_idx].loop_local_idx;
+		const int compacted_next_idx = loop_attribs.compacted_head_idx + B_fragmented_pixel_edge_attribs.data[next_fragmented_idx].loop_local_idx;
 		const int contour_pixel_idx = int(get_sparse_pixel_edge_contour_pixel_idx(sparse_pixel_edge_idx));
 		const PixelEdgeOrientation orientation = get_sparse_pixel_edge_orientation(sparse_pixel_edge_idx);
 
-		B_compacted_pixel_edge_neighbours.data[compacted_pixel_edge_idx] = CompactedPixelEdgeNeighboursData(compacted_prev_idx, compacted_next_idx);
-
-		B_compacted_pixel_edge_to_contour_pixel.contour_pixel_idx[compacted_pixel_edge_idx] = contour_pixel_idx;
-		B_compacted_pixel_edge_orientation.orientation[compacted_pixel_edge_idx] = orientation;
-
-		B_compacted_pixel_edge_associated_head.associated_head[compacted_pixel_edge_idx] = loop_desc.compacted_head_idx;
-		B_compacted_pixel_edge_to_pixel_edge_loop.idx[compacted_pixel_edge_idx] = pixel_edge_loop_idx;
+		B_compacted_pixel_edge_attribs.data[compacted_pixel_edge_idx] = CompactedPixelEdgeAttribs(
+			compacted_prev_idx,
+			compacted_next_idx,
+			contour_pixel_idx,
+			orientation,
+			loop_attribs.compacted_head_idx,
+			pixel_edge_loop_idx,
+			vec2(0),
+			vec2(0),
+			false,
+			false,
+			0,
+			0
+		);
 	}
 }

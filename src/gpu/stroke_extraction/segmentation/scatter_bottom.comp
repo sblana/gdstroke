@@ -10,16 +10,16 @@ void main() {
 	const uint pixel_edge_idx = gl_GlobalInvocationID.x;
 
 	if (is_compacted_pixel_edge_idx_valid(int(pixel_edge_idx))) {
-		const bool is_discarded = B_compacted_pixel_edge_is_discarded.discarded[pixel_edge_idx];
-		const int segment_key = B_compacted_pixel_edge_segment_key.segment_key[pixel_edge_idx];
-		const int segment_edge_idx = B_compacted_pixel_edge_to_segment_edge.idx[pixel_edge_idx];
-		const bool is_segment_head = B_compacted_pixel_edge_segment_desc.data[pixel_edge_idx].segment_head_idx == pixel_edge_idx;
+		const bool is_discarded = B_compacted_pixel_edge_attribs.data[pixel_edge_idx].is_discarded;
+		const int segment_key = B_compacted_pixel_edge_attribs.data[pixel_edge_idx].segment_key;
+		const int segment_edge_idx = B_compacted_pixel_edge_attribs.data[pixel_edge_idx].to_segment_edge_idx;
+		const bool is_segment_head = B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].segment_head_idx == pixel_edge_idx;
 
-		if (!is_discarded && segment_edge_idx < B_segment_desc.num_segment_edges) {
-			B_segment_edge_to_compacted_pixel_edge.idx[segment_edge_idx] = int(pixel_edge_idx);
+		if (!is_discarded && segment_edge_idx < B_pixel_edge_desc.num_segment_edges) {
+			B_segment_edge_attribs.data[segment_edge_idx].to_compacted_pixel_edge_idx = int(pixel_edge_idx);
 			if (is_segment_head) {
-				const int segment_length = B_compacted_pixel_edge_segment_desc.data[pixel_edge_idx].segment_length;
-				B_segment_range.data[segment_key] = SegmentRangeData(segment_edge_idx, segment_length);
+				const int segment_length = B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].segment_length;
+				B_segment_attribs.data[segment_key].segment_edges = Range(segment_edge_idx, segment_length);
 			}
 		}
 	}

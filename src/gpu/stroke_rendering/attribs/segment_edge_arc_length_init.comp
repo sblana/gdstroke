@@ -8,22 +8,20 @@ layout(local_size_x = 64) in;
 
 void main() {
 	const uint segment_edge = gl_GlobalInvocationID.x;
-	if (segment_edge < B_segment_desc.num_segment_edges) {
-		const int compacted_pixel_edge = B_segment_edge_to_compacted_pixel_edge.idx[segment_edge];
-		const int segment_key = B_compacted_pixel_edge_segment_key.segment_key[compacted_pixel_edge];
+	if (segment_edge < B_pixel_edge_desc.num_segment_edges) {
+		const int compacted_pixel_edge = B_segment_edge_attribs.data[segment_edge].to_compacted_pixel_edge_idx;
+		const int segment_key = B_compacted_pixel_edge_attribs.data[compacted_pixel_edge].segment_key;
 
-		const SegmentRangeData segment_range = B_segment_range.data[segment_key];
+		const bool is_segment_head = B_segment_attribs.data[segment_key].segment_edges.first == segment_edge;
 
-		const bool is_segment_head = segment_range.first_idx == segment_edge;
-
-		const vec2 midpoint = B_compacted_pixel_edge_filtered_midpoint.midpoint[compacted_pixel_edge];
+		const vec2 midpoint = B_compacted_pixel_edge_attribs.data[compacted_pixel_edge].filtered_midpoint;
 		vec2 midpoint_prev = midpoint;
 		if (!is_segment_head) {
-			midpoint_prev = B_compacted_pixel_edge_filtered_midpoint.midpoint[B_segment_edge_to_compacted_pixel_edge.idx[segment_edge - 1]];
+			midpoint_prev = B_compacted_pixel_edge_attribs.data[B_segment_edge_attribs.data[segment_edge - 1].to_compacted_pixel_edge_idx].filtered_midpoint;
 		}
 		const float local_arc_length = length(midpoint - midpoint_prev);
 
-		B_segment_edge_is_head.head[segment_edge] = is_segment_head;
-		B_segment_edge_arc_length.arc_length[segment_edge] = local_arc_length;
+		B_segment_edge_attribs.data[segment_edge].is_head = is_segment_head;
+		B_segment_edge_attribs.data[segment_edge].arc_length = local_arc_length;
 	}
 }

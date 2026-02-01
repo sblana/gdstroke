@@ -8,20 +8,18 @@ layout(local_size_x = 64) in;
 void main() {
 	const uint fragmented_pixel_edge_idx = gl_GlobalInvocationID.x;
 
-	if (is_fragmented_pixel_edge_idx_valid(int(fragmented_pixel_edge_idx)) && B_fragmented_pixel_edge_is_head.is_head[fragmented_pixel_edge_idx]) {
-		const uint sparse_pixel_edge_idx = B_fragmented_pixel_edge_to_sparse_pixel_edge.idx[fragmented_pixel_edge_idx];
-		const SparsePixelEdgeNeighboursData neighbours = B_sparse_pixel_edge_neighbours.data[sparse_pixel_edge_idx];
-		const int prev_idx = B_sparse_pixel_edge_to_fragmented_pixel_edge.idx[neighbours.prev_idx];
-		const int next_idx = B_sparse_pixel_edge_to_fragmented_pixel_edge.idx[neighbours.next_idx];
+	if (is_fragmented_pixel_edge_idx_valid(int(fragmented_pixel_edge_idx)) && fragmented_pixel_edge_idx == B_fragmented_pixel_edge_attribs.data[fragmented_pixel_edge_idx].associated_head) {
+		const int sparse_pixel_edge_idx = B_fragmented_pixel_edge_attribs.data[fragmented_pixel_edge_idx].to_sparse_pixel_edge_idx;
+		const int prev_fragmented_idx = B_sparse_pixel_edge_attribs.data[B_sparse_pixel_edge_attribs.data[sparse_pixel_edge_idx].prev_idx].to_fragmented_pixel_edge_idx;
 
-		const int pixel_edge_loop_idx = B_fragmented_pixel_edge_to_pixel_edge_loop.idx[fragmented_pixel_edge_idx];
-		const int loop_len = B_fragmented_pixel_edge_local_idx.local_idx[prev_idx] + 1;
+		const int pixel_edge_loop_idx = B_fragmented_pixel_edge_attribs.data[fragmented_pixel_edge_idx].to_pixel_edge_loop_idx;
+		const int loop_len = B_fragmented_pixel_edge_attribs.data[prev_fragmented_idx].loop_local_idx + 1;
 
-		PixelEdgeLoopDescData data;
+		PixelEdgeLoopAttribs data;
 		data.fragmented_head_idx = int(fragmented_pixel_edge_idx);
 		data.compacted_head_idx = -1;
 		data.loop_len = loop_len;
 
-		B_pixel_edge_loop_desc.data[pixel_edge_loop_idx] = data;
+		B_pixel_edge_loop_attribs.data[pixel_edge_loop_idx] = data;
 	}
 }

@@ -11,7 +11,7 @@ layout(local_size_x = 1) in;
 void main() {
 	if (gl_GlobalInvocationID.x == 0) {
 		DrawIndirectCommand command;
-		command.vertex_count = B_stroke_desc.total_num_vertices;
+		command.vertex_count = B_pixel_edge_desc.num_stroke_vertices;
 		command.instance_count = 1;
 		command.first_vertex = 0;
 		command.first_instance = 0;

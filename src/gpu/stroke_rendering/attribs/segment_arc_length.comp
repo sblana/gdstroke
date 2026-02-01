@@ -8,16 +8,16 @@ layout(local_size_x = 64) in;
 
 void main() {
 	const uint segment_edge = gl_GlobalInvocationID.x;
-	if (segment_edge < B_segment_desc.num_segment_edges) {
-		const int compacted_pixel_edge = B_segment_edge_to_compacted_pixel_edge.idx[segment_edge];
-		const int segment_key = B_compacted_pixel_edge_segment_key.segment_key[compacted_pixel_edge];
-		const SegmentRangeData segment_range = B_segment_range.data[segment_key];
+	if (segment_edge < B_pixel_edge_desc.num_segment_edges) {
+		const int compacted_pixel_edge = B_segment_edge_attribs.data[segment_edge].to_compacted_pixel_edge_idx;
+		const int segment_key = B_compacted_pixel_edge_attribs.data[compacted_pixel_edge].segment_key;
+		const Range segment_edges_range = B_segment_attribs.data[segment_key].segment_edges;
 
-		const bool is_segment_tail = segment_range.first_idx + segment_range.num_segment_edges - 1 == segment_edge;
+		const bool is_segment_tail = segment_edges_range.first + segment_edges_range.count - 1 == segment_edge;
 
 
 		if (is_segment_tail) {
-			B_segment_arc_length.arc_length[segment_key] = B_segment_edge_arc_length.arc_length[segment_edge];
+			B_segment_attribs.data[segment_key].arc_length = B_segment_edge_attribs.data[segment_edge].arc_length;
 		}
 	}
 }

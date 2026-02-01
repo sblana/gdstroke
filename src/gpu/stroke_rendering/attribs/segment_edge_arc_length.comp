@@ -15,15 +15,15 @@ shared float running_reduction_value;
 // todo: make into function
 void main() {
 	running_reduction_value = 0;
-	const BlockPartitionDesc bpd = create_block_partition_desc2(gl_WorkGroupSize.x, B_segment_desc.num_segment_edges);
+	const BlockPartitionDesc bpd = create_block_partition_desc2(gl_WorkGroupSize.x, B_pixel_edge_desc.num_segment_edges);
 	
 	for (uint bd_i = 0; bd_i < bpd.num_blocks; ++bd_i) {
 		BlockDesc bd = create_block_desc(bpd, bd_i);
 		float i_value = 0;
 		bool i_head = true;
 		if (bd.first_element_idx + gl_LocalInvocationID.x <= bd.final_element_idx) {
-			i_value = B_segment_edge_arc_length.arc_length[bd.first_element_idx + gl_LocalInvocationID.x];
-			i_head = B_segment_edge_is_head.head[bd.first_element_idx + gl_LocalInvocationID.x];
+			i_value = B_segment_edge_attribs.data[bd.first_element_idx + gl_LocalInvocationID.x].arc_length;
+			i_head = B_segment_edge_attribs.data[bd.first_element_idx + gl_LocalInvocationID.x].is_head;
 		}
 		float o_invocation_scan_value;
 		bool o_invocation_or_head_flag;
@@ -59,7 +59,7 @@ void main() {
 
 		o_invocation_scan_value += !o_invocation_or_head_flag ? running_reduction_value : 0;
 		if (bd.first_element_idx + gl_LocalInvocationID.x <= bd.final_element_idx) {
-			B_segment_edge_arc_length.arc_length[bd.first_element_idx + gl_LocalInvocationID.x] = o_invocation_scan_value;
+			B_segment_edge_attribs.data[bd.first_element_idx + gl_LocalInvocationID.x].arc_length = o_invocation_scan_value;
 		}
 		barrier();
 		if (gl_SubgroupID == gl_NumSubgroups - 1 && subgroupElectLast()) {

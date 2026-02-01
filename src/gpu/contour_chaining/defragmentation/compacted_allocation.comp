@@ -9,9 +9,9 @@ layout(local_size_x = 1024) in;
 
 shared int block_offsets[gl_WorkGroupSize.x];
 
-#define fn_get_src_array(MP_idx_)                     B_pixel_edge_loop_desc.data[MP_idx_].loop_len
-#define fn_set_src_to_dst_map(MP_idx_, MP_value_)     B_pixel_edge_loop_desc.data[MP_idx_].compacted_head_idx  = MP_value_
-#define fn_add_set_src_to_dst_map(MP_idx_, MP_value_) B_pixel_edge_loop_desc.data[MP_idx_].compacted_head_idx += MP_value_
+#define fn_get_src_array(MP_idx_)                     B_pixel_edge_loop_attribs.data[MP_idx_].loop_len
+#define fn_set_src_to_dst_map(MP_idx_, MP_value_)     B_pixel_edge_loop_attribs.data[MP_idx_].compacted_head_idx  = MP_value_
+#define fn_add_set_src_to_dst_map(MP_idx_, MP_value_) B_pixel_edge_loop_attribs.data[MP_idx_].compacted_head_idx += MP_value_
 
 void main() {
 	M_SINGLE_WORKGROUP_ALLOCATION(

@@ -17,22 +17,23 @@ void main() {
 	const uint pixel_edge_idx = gl_GlobalInvocationID.x;
 
 	if (is_compacted_pixel_edge_idx_valid(int(pixel_edge_idx))) {
-		const PixelEdgeLoopDescData loop_desc = B_pixel_edge_loop_desc.data[B_compacted_pixel_edge_to_pixel_edge_loop.idx[pixel_edge_idx]];
-
-		const int num_neighbours = min(ORIENTATION_FILTERING_MAX_NUM_NEIGHBOURS, loop_desc.loop_len / 2);
+		const PixelEdgeLoopAttribs loop_attribs = B_pixel_edge_loop_attribs.data[B_compacted_pixel_edge_attribs.data[pixel_edge_idx].to_pixel_edge_loop_idx];
+		const int num_neighbours = min(ORIENTATION_FILTERING_MAX_NUM_NEIGHBOURS, loop_attribs.loop_len / 2);
 
 		// load midpoints
 		vec2 midpoint_stack[ORIENTATION_FILTERING_MAX_WINDOW_SIZE];
-		midpoint_stack[num_neighbours] = B_compacted_pixel_edge_filtered_midpoint.midpoint[pixel_edge_idx];
+		midpoint_stack[num_neighbours] = B_compacted_pixel_edge_attribs.data[pixel_edge_idx].filtered_midpoint;
 
 		for (int forward = 0; forward < 2; ++forward) {
 			int direction = (forward * 2 - 1);
 			uint prev_idx = pixel_edge_idx;
 			for (int i = 1; i <= num_neighbours; ++i) {
-				CompactedPixelEdgeNeighboursData neighbours = B_compacted_pixel_edge_neighbours.data[prev_idx];
-				uint cur_idx = (forward > 0) ? neighbours.next_idx : neighbours.prev_idx;
+				uint cur_idx = ((forward > 0)
+					? (B_compacted_pixel_edge_attribs.data[prev_idx].next_idx)
+					: (B_compacted_pixel_edge_attribs.data[prev_idx].prev_idx)
+				);
 				int k = i * direction;
-				midpoint_stack[num_neighbours + k] = B_compacted_pixel_edge_filtered_midpoint.midpoint[cur_idx];
+				midpoint_stack[num_neighbours + k] = B_compacted_pixel_edge_attribs.data[cur_idx].filtered_midpoint;
 				prev_idx = cur_idx;
 			}
 		}
@@ -74,6 +75,6 @@ void main() {
 		float determinant = a1 * a3 - a2 * a2;
 		vec2 first_derivative = (a3 * b1 - a2 * b2) / determinant;
 		vec2 filtered_orientation = normalize(first_derivative);
-		B_compacted_pixel_edge_filtered_orientation.orientation[pixel_edge_idx] = filtered_orientation;
+		B_compacted_pixel_edge_attribs.data[pixel_edge_idx].filtered_orientation = filtered_orientation;
 	}
 }

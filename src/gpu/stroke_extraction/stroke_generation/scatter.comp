@@ -8,30 +8,30 @@ layout(local_size_x = 64) in;
 
 void main() {
 	const uint segment_edge_idx = gl_GlobalInvocationID.x;
-	if (segment_edge_idx < B_segment_desc.num_segment_edges) {
-		const int pixel_edge_idx = B_segment_edge_to_compacted_pixel_edge.idx[segment_edge_idx];
-		const int segment_key = B_compacted_pixel_edge_segment_key.segment_key[pixel_edge_idx];
-		const SegmentRangeData segment_range = B_segment_range.data[segment_key];
-		const int segment_local_edge_idx = int(segment_edge_idx - segment_range.first_idx);
-		const bool is_segment_tail = segment_local_edge_idx == max(segment_range.num_segment_edges - 1, 0);
+	if (segment_edge_idx < B_pixel_edge_desc.num_segment_edges) {
+		const int pixel_edge_idx = B_segment_edge_attribs.data[segment_edge_idx].to_compacted_pixel_edge_idx;
+		const int segment_key = B_compacted_pixel_edge_attribs.data[pixel_edge_idx].segment_key;
+		const Range segment_edges_range = B_segment_attribs.data[segment_key].segment_edges;
+		const int segment_local_edge_idx = int(segment_edge_idx - segment_edges_range.first);
+		const bool is_segment_tail = segment_local_edge_idx == max(segment_edges_range.count - 1, 0);
 
-		if (!is_segment_tail || segment_range.num_segment_edges == 1) {
+		if (!is_segment_tail || segment_edges_range.count == 1) {
 			const uint next_segment_edge_idx = (is_segment_tail) ? (segment_edge_idx) : (segment_edge_idx + 1);
-			const int first_vertex = B_segment_stroke_vertex_range.data[segment_key].first_idx + segment_local_edge_idx * 2 * 3;
+			const int first_vertex = B_segment_attribs.data[segment_key].stroke_vertices.first + segment_local_edge_idx * 2 * 3;
 
-			B_stroke_vertex_kind.kind[first_vertex + 0 + 0] = E_StrokeVertexKind_BACK_LEFT;
-			B_stroke_vertex_to_segment_edge.idx[first_vertex + 0 + 0] = int(segment_edge_idx);
-			B_stroke_vertex_kind.kind[first_vertex + 0 + 1] = E_StrokeVertexKind_BACK_RIGHT;
-			B_stroke_vertex_to_segment_edge.idx[first_vertex + 0 + 1] = int(segment_edge_idx);
-			B_stroke_vertex_kind.kind[first_vertex + 0 + 2] = E_StrokeVertexKind_FRONT_LEFT;
-			B_stroke_vertex_to_segment_edge.idx[first_vertex + 0 + 2] = int(next_segment_edge_idx);
+			B_stroke_vertex_attribs.data[first_vertex + 0 + 0].kind = E_StrokeVertexKind_BACK_LEFT;
+			B_stroke_vertex_attribs.data[first_vertex + 0 + 0].to_segment_edge_idx = int(segment_edge_idx);
+			B_stroke_vertex_attribs.data[first_vertex + 0 + 1].kind = E_StrokeVertexKind_BACK_RIGHT;
+			B_stroke_vertex_attribs.data[first_vertex + 0 + 1].to_segment_edge_idx = int(segment_edge_idx);
+			B_stroke_vertex_attribs.data[first_vertex + 0 + 2].kind = E_StrokeVertexKind_FRONT_LEFT;
+			B_stroke_vertex_attribs.data[first_vertex + 0 + 2].to_segment_edge_idx = int(next_segment_edge_idx);
 
-			B_stroke_vertex_kind.kind[first_vertex + 3 + 0] = E_StrokeVertexKind_FRONT_RIGHT;
-			B_stroke_vertex_to_segment_edge.idx[first_vertex + 3 + 0] = int(next_segment_edge_idx);
-			B_stroke_vertex_kind.kind[first_vertex + 3 + 1] = E_StrokeVertexKind_FRONT_LEFT;
-			B_stroke_vertex_to_segment_edge.idx[first_vertex + 3 + 1] = int(next_segment_edge_idx);
-			B_stroke_vertex_kind.kind[first_vertex + 3 + 2] = E_StrokeVertexKind_BACK_RIGHT;
-			B_stroke_vertex_to_segment_edge.idx[first_vertex + 3 + 2] = int(segment_edge_idx);
+			B_stroke_vertex_attribs.data[first_vertex + 3 + 0].kind = E_StrokeVertexKind_FRONT_RIGHT;
+			B_stroke_vertex_attribs.data[first_vertex + 3 + 0].to_segment_edge_idx = int(next_segment_edge_idx);
+			B_stroke_vertex_attribs.data[first_vertex + 3 + 1].kind = E_StrokeVertexKind_FRONT_LEFT;
+			B_stroke_vertex_attribs.data[first_vertex + 3 + 1].to_segment_edge_idx = int(next_segment_edge_idx);
+			B_stroke_vertex_attribs.data[first_vertex + 3 + 2].kind = E_StrokeVertexKind_BACK_RIGHT;
+			B_stroke_vertex_attribs.data[first_vertex + 3 + 2].to_segment_edge_idx = int(segment_edge_idx);
 		}
 	}
 }

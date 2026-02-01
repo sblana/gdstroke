@@ -21,8 +21,8 @@ shared int total_num_segment_edges;
 
 void main() {
 	const uint loop_idx = gl_WorkGroupID.x;
-	const PixelEdgeLoopDescData loop_desc = B_pixel_edge_loop_desc.data[gl_WorkGroupID.x];
-	const BlockPartitionDesc loop_bpd = create_block_partition_desc(gl_WorkGroupSize.x, loop_desc.loop_len);
+	const PixelEdgeLoopAttribs loop_attribs = B_pixel_edge_loop_attribs.data[gl_WorkGroupID.x];
+	const BlockPartitionDesc loop_bpd = create_block_partition_desc(gl_WorkGroupSize.x, loop_attribs.loop_len);
 	const BlockDesc loop_bd = create_block_desc(loop_bpd, gl_LocalInvocationID.x);
 
 	{
@@ -33,14 +33,14 @@ void main() {
 			block_num_inside_edges[loop_bd.block_idx] = 0;
 			block_segment_key_offsets[loop_bd.block_idx] = 0;
 			for (uint element_idx = loop_bd.first_element_idx; element_idx <= loop_bd.final_element_idx; ++element_idx) {
-				const uint pixel_edge_idx = loop_desc.compacted_head_idx + element_idx;
-				const bool is_inside = B_compacted_pixel_edge_is_inside.data[pixel_edge_idx].final;
+				const uint pixel_edge_idx = loop_attribs.compacted_head_idx + element_idx;
+				const bool is_inside = B_compacted_pixel_edge_attribs.data[pixel_edge_idx].is_inside;
 
-				B_compacted_pixel_edge_is_discarded.discarded[pixel_edge_idx] = !is_inside;
+				B_compacted_pixel_edge_attribs.data[pixel_edge_idx].is_discarded = !is_inside;
 				block_num_inside_edges[loop_bd.block_idx] += int(is_inside);
 
-				block_segment_key_offsets[loop_bd.block_idx] += int(B_compacted_pixel_edge_is_segment_head.segment_head[pixel_edge_idx]);
-				B_compacted_pixel_edge_loop_local_segment_key.segment_key[pixel_edge_idx] = block_segment_key_offsets[loop_bd.block_idx] - 1;
+				block_segment_key_offsets[loop_bd.block_idx] += int(B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].is_segment_head_initial);
+				B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].loop_local_segment_key = block_segment_key_offsets[loop_bd.block_idx] - 1;
 			}
 		}
 		barrier();
@@ -55,31 +55,27 @@ void main() {
 				total_num_segments += this_block_sum;
 			}
 
-			if (total_num_inside_edges == loop_desc.loop_len) {
+			if (total_num_inside_edges == loop_attribs.loop_len) {
 				total_num_segments = 1;
-				B_compacted_pixel_edge_is_segment_head.segment_head[loop_desc.compacted_head_idx] = true;
+				B_compacted_pixel_edge_segmentation.data[loop_attribs.compacted_head_idx].is_segment_head_initial = true;
 			}
 
-			const PixelEdgeLoopSegmentsDescData segments_desc = PixelEdgeLoopSegmentsDescData(
-				total_num_segments,
-				total_num_inside_edges,
-				0,
-				0
-			);
-			B_pixel_edge_loop_segments_desc.data[loop_idx] = segments_desc;
+			B_pixel_edge_loop_segmentation.data[loop_idx].num_segments = total_num_segments;
+			B_pixel_edge_loop_segmentation.data[loop_idx].num_inside_edges = total_num_inside_edges;
+			B_pixel_edge_loop_segmentation.data[loop_idx].num_segment_edges = 0;
 		}
 		barrier();
 		if (is_participating_stage_2) {
 			const int block_offset = block_segment_key_offsets[loop_bd.block_idx];
 			for (uint element_idx = loop_bd.first_element_idx; element_idx <= loop_bd.final_element_idx; ++element_idx) {
-				const uint pixel_edge_idx = loop_desc.compacted_head_idx + element_idx;
+				const uint pixel_edge_idx = loop_attribs.compacted_head_idx + element_idx;
 
-				int this_element_segment_key = block_offset + B_compacted_pixel_edge_loop_local_segment_key.segment_key[pixel_edge_idx];
-				B_compacted_pixel_edge_loop_local_segment_key.segment_key[pixel_edge_idx] += block_offset;
+				int this_element_segment_key = block_offset + B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].loop_local_segment_key;
+				B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].loop_local_segment_key += block_offset;
 				if (total_num_segments > 0 && this_element_segment_key == -1) {
 					this_element_segment_key = total_num_segments - 1;
 				}
-				B_compacted_pixel_edge_loop_local_segment_key.segment_key[pixel_edge_idx] = this_element_segment_key;
+				B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].loop_local_segment_key = this_element_segment_key;
 			}
 		}
 		barrier();
@@ -99,9 +95,9 @@ void main() {
 		// count segment lengths
 		if (loop_bd.block_idx < loop_bpd.num_blocks) {
 			for (uint element_idx = loop_bd.first_element_idx; element_idx <= loop_bd.final_element_idx; ++element_idx) {
-				const uint pixel_edge_idx = loop_desc.compacted_head_idx + element_idx;
-				const int segment_key = B_compacted_pixel_edge_loop_local_segment_key.segment_key[pixel_edge_idx];
-				if (B_compacted_pixel_edge_is_inside.data[pixel_edge_idx].final) {
+				const uint pixel_edge_idx = loop_attribs.compacted_head_idx + element_idx;
+				const int segment_key = B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].loop_local_segment_key;
+				if (B_compacted_pixel_edge_attribs.data[pixel_edge_idx].is_inside) {
 					atomicAdd(segment_length[segment_key], 1);
 				}
 			}
@@ -111,9 +107,9 @@ void main() {
 		// create mapping for segment head idxs
 		if (loop_bd.block_idx < loop_bpd.num_blocks) {
 			for (uint element_idx = loop_bd.first_element_idx; element_idx <= loop_bd.final_element_idx; ++element_idx) {
-				const uint pixel_edge_idx = loop_desc.compacted_head_idx + element_idx;
-				const int segment_key = B_compacted_pixel_edge_loop_local_segment_key.segment_key[pixel_edge_idx];
-				if (B_compacted_pixel_edge_is_segment_head.segment_head[pixel_edge_idx]) {
+				const uint pixel_edge_idx = loop_attribs.compacted_head_idx + element_idx;
+				const int segment_key = B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].loop_local_segment_key;
+				if (B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].is_segment_head_initial) {
 					segment_head_idx[segment_key] = int(pixel_edge_idx);
 				}
 			}
@@ -122,23 +118,19 @@ void main() {
 		// scatter head idx, tail idx, length
 		if (loop_bd.block_idx < loop_bpd.num_blocks) {
 			for (uint element_idx = loop_bd.first_element_idx; element_idx <= loop_bd.final_element_idx; ++element_idx) {
-				const uint pixel_edge_idx = loop_desc.compacted_head_idx + element_idx;
-				const int segment_key = B_compacted_pixel_edge_loop_local_segment_key.segment_key[pixel_edge_idx];
+				const uint pixel_edge_idx = loop_attribs.compacted_head_idx + element_idx;
+				const int segment_key = B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].loop_local_segment_key;
 
 				const int segment_tail_idx = (
-					(segment_head_idx[segment_key] - loop_desc.compacted_head_idx) + (segment_length[segment_key] - 1)
-				) % loop_desc.loop_len + loop_desc.compacted_head_idx;
+					(segment_head_idx[segment_key] - loop_attribs.compacted_head_idx) + (segment_length[segment_key] - 1)
+				) % loop_attribs.loop_len + loop_attribs.compacted_head_idx;
 
 				const int segment_local_idx = (
 					int(pixel_edge_idx) - segment_head_idx[segment_key]
-				) % loop_desc.loop_len;
+				) % loop_attribs.loop_len;
 
-				B_compacted_pixel_edge_segment_desc.data[pixel_edge_idx] = CompactedPixelEdgeSegmentDescData(
-					segment_head_idx[segment_key],
-					segment_tail_idx,
-					segment_length[segment_key],
-					0
-				);
+				B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].segment_head_idx = segment_head_idx[segment_key];
+				B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].segment_length = segment_length[segment_key];
 			}
 		}
 		barrier();
@@ -173,7 +165,7 @@ void main() {
 				block_num_inside_edges[block_idx] = total_num_segment_edges;
 				total_num_segment_edges += this_block_sum;
 			}
-			B_pixel_edge_loop_segments_desc.data[loop_idx].num_segment_edges = total_num_segment_edges;
+			B_pixel_edge_loop_segmentation.data[loop_idx].num_segment_edges = total_num_segment_edges;
 		}
 		barrier();
 		// get loop-local segment allocation idxs (stage 2)
@@ -186,12 +178,12 @@ void main() {
 		// scatter
 		if (loop_bd.block_idx < loop_bpd.num_blocks) {
 			for (uint element_idx = loop_bd.first_element_idx; element_idx <= loop_bd.final_element_idx; ++element_idx) {
-				const uint pixel_edge_idx = loop_desc.compacted_head_idx + element_idx;
-				const int edge_segment_key = B_compacted_pixel_edge_loop_local_segment_key.segment_key[pixel_edge_idx];
-				const CompactedPixelEdgeSegmentDescData edge_segment_desc = B_compacted_pixel_edge_segment_desc.data[pixel_edge_idx];
-				const int segment_local_idx = compacted_pixel_edge_segment_local_idx(int(pixel_edge_idx), edge_segment_desc.segment_head_idx, loop_desc.loop_len);
+				const uint pixel_edge_idx = loop_attribs.compacted_head_idx + element_idx;
+				const int edge_segment_key = B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].loop_local_segment_key;
+				// const CompactedPixelEdgeSegmentDescData edge_segment_desc = B_compacted_pixel_edge_segment_desc.data[pixel_edge_idx];
+				const int segment_local_idx = compacted_pixel_edge_segment_local_idx(int(pixel_edge_idx), B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].segment_head_idx, loop_attribs.loop_len);
 
-				B_compacted_pixel_edge_segment_desc.data[pixel_edge_idx].allocation_idx = segment_alloc_idx[edge_segment_key] + segment_local_idx;
+				B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].loop_local_allocation_idx = segment_alloc_idx[edge_segment_key] + segment_local_idx;
 			}
 		}
 		barrier();
@@ -213,7 +205,7 @@ void main() {
 				block_segment_key_offsets[block_idx] = total_num_passed_segments;
 				total_num_passed_segments += this_block_sum;
 			}
-			B_pixel_edge_loop_segments_desc.data[loop_idx].num_segments = total_num_passed_segments;
+			B_pixel_edge_loop_segmentation.data[loop_idx].num_segments = total_num_passed_segments;
 		}
 		barrier();
 		// get passed segment keys (stage 2)
@@ -226,12 +218,12 @@ void main() {
 		// update pixel edge to segment mapping with passed segment key
 		if (loop_bd.block_idx < loop_bpd.num_blocks) {
 			for (uint element_idx = loop_bd.first_element_idx; element_idx <= loop_bd.final_element_idx; ++element_idx) {
-				const uint pixel_edge_idx = loop_desc.compacted_head_idx + element_idx;
-				const int old_segment_key = B_compacted_pixel_edge_loop_local_segment_key.segment_key[pixel_edge_idx];
-				B_compacted_pixel_edge_loop_local_segment_key.segment_key[pixel_edge_idx] = segment_passed_key[old_segment_key];
+				const uint pixel_edge_idx = loop_attribs.compacted_head_idx + element_idx;
+				const int old_segment_key = B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].loop_local_segment_key;
+				B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].loop_local_segment_key = segment_passed_key[old_segment_key];
 
 				if (segment_is_discarded[old_segment_key]) {
-					B_compacted_pixel_edge_is_discarded.discarded[pixel_edge_idx] = true;
+					B_compacted_pixel_edge_attribs.data[pixel_edge_idx].is_discarded = true;
 				}
 			}
 		}

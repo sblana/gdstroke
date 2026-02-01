@@ -12,6 +12,6 @@ void main() {
 	if (is_fragmented_pixel_edge_idx_valid(int(pixel_edge_idx))) {
 		const FragmentedPixelEdgeWyllieData data = B_fragmented_pixel_edge_wyllie.data[pixel_edge_idx][0];
 
-		B_fragmented_pixel_edge_local_idx.local_idx[pixel_edge_idx] = int(data.value) - 1;
+		B_fragmented_pixel_edge_attribs.data[pixel_edge_idx].loop_local_idx = int(data.value) - 1;
 	}
 }

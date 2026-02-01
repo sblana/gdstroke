@@ -10,13 +10,14 @@ void main() {
 	const uint pixel_edge_idx = gl_GlobalInvocationID.x;
 
 	if (is_compacted_pixel_edge_idx_valid(int(pixel_edge_idx))) {
-		CompactedPixelEdgeNeighboursData neighbours = B_compacted_pixel_edge_neighbours.data[pixel_edge_idx];
+		const int prev_idx = B_compacted_pixel_edge_attribs.data[pixel_edge_idx].prev_idx;
+		const int next_idx = B_compacted_pixel_edge_attribs.data[pixel_edge_idx].next_idx;
 
 		const bool smoothed_is_inside = (
-			B_compacted_pixel_edge_is_inside.data[     pixel_edge_idx].initial ||
-			B_compacted_pixel_edge_is_inside.data[neighbours.prev_idx].initial &&
-			B_compacted_pixel_edge_is_inside.data[neighbours.next_idx].initial
+			B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].is_inside_initial ||
+			B_compacted_pixel_edge_segmentation.data[      prev_idx].is_inside_initial &&
+			B_compacted_pixel_edge_segmentation.data[      next_idx].is_inside_initial
 		);
-		B_compacted_pixel_edge_is_inside.data[pixel_edge_idx].final = smoothed_is_inside;
+		B_compacted_pixel_edge_attribs.data[pixel_edge_idx].is_inside = smoothed_is_inside;
 	}
 }

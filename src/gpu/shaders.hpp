@@ -61,7 +61,10 @@ enum Shader : int32_t {
 	SHADER_CC_LR_INIT,
 	SHADER_CC_LR_WYLLIE,
 	SHADER_CC_LR_SCATTER,
-	SHADER_CC_D_INIT,
+	SHADER_CC_D_HEAD_ALLOCATION_COMMANDER,
+	SHADER_CC_D_HEAD_ALLOCATION_L0_UP,
+	SHADER_CC_D_HEAD_ALLOCATION_L1_UP,
+	SHADER_CC_D_HEAD_ALLOCATION_L0_DOWN,
 	SHADER_CC_D_HEAD_SCATTER,
 	SHADER_CC_D_COMPACTED_ALLOCATION,
 	SHADER_CC_D_COMPACTED_SCATTER,
@@ -88,9 +91,6 @@ enum Shader : int32_t {
 	SHADER_SR_DEFAULT_SHADER,
 	SHADER_DEBUG_DISPLAY_CONTOUR_FRAGMENTS,
 	SHADER_DEBUG_DISPLAY_CONTOUR_PIXELS,
-	SHADER_DEBUG_DISPLAY_SPARSE_PIXEL_EDGES,
-	SHADER_DEBUG_DISPLAY_COMPACTED_PIXEL_EDGES,
-	SHADER_DEBUG_DISPLAY_SEGMENT_EDGES,
 	SHADER_MAX,
 };
 
@@ -161,11 +161,14 @@ std::map<Shader, ShaderBuildInfo> shader_to_shader_info_map = {{
 	{ SHADER_CC_LR_WYLLIE,  ShaderBuildInfo{"cc_lr_wyllie",  "./contour_chaining/list_ranking/wyllie.comp",  M_SHADER_STAGE_COMPUTE_BIT} },
 	{ SHADER_CC_LR_SCATTER, ShaderBuildInfo{"cc_lr_scatter", "./contour_chaining/list_ranking/scatter.comp", M_SHADER_STAGE_COMPUTE_BIT} },
 
-	{ SHADER_CC_D_INIT,                 ShaderBuildInfo{"cc_d_init",                 "./contour_chaining/defragmentation/init.comp",                 M_SHADER_STAGE_COMPUTE_BIT} },
-	{ SHADER_CC_D_HEAD_SCATTER,         ShaderBuildInfo{"cc_d_head_scatter",         "./contour_chaining/defragmentation/head_scatter.comp",         M_SHADER_STAGE_COMPUTE_BIT} },
-	{ SHADER_CC_D_COMPACTED_ALLOCATION, ShaderBuildInfo{"cc_d_compacted_allocation", "./contour_chaining/defragmentation/compacted_allocation.comp", M_SHADER_STAGE_COMPUTE_BIT} },
-	{ SHADER_CC_D_COMPACTED_SCATTER,    ShaderBuildInfo{"cc_d_compacted_scatter",    "./contour_chaining/defragmentation/compacted_scatter.comp",    M_SHADER_STAGE_COMPUTE_BIT} },
-	{ SHADER_CC_D_FIRST_COMMANDER,      ShaderBuildInfo{"cc_d_first_commander",      "./contour_chaining/defragmentation/first_commander.comp",      M_SHADER_STAGE_COMPUTE_BIT} },
+	{ SHADER_CC_D_HEAD_ALLOCATION_COMMANDER, ShaderBuildInfo{"cc_d_head_allocation_commander", "./contour_chaining/defragmentation/head_allocation.comp",      M_SHADER_STAGE_COMPUTE_BIT, "-DCOMMANDER"} },
+	{ SHADER_CC_D_HEAD_ALLOCATION_L0_UP,     ShaderBuildInfo{"cc_d_head_allocation_l0_up",     "./contour_chaining/defragmentation/head_allocation.comp",      M_SHADER_STAGE_COMPUTE_BIT, "-DLEVEL_0 -DUP_SWEEP"} },
+	{ SHADER_CC_D_HEAD_ALLOCATION_L1_UP,     ShaderBuildInfo{"cc_d_head_allocation_l1_up",     "./contour_chaining/defragmentation/head_allocation.comp",      M_SHADER_STAGE_COMPUTE_BIT, "-DLEVEL_1 -DUP_SWEEP"} },
+	{ SHADER_CC_D_HEAD_ALLOCATION_L0_DOWN,   ShaderBuildInfo{"cc_d_head_allocation_l0_down",   "./contour_chaining/defragmentation/head_allocation.comp",      M_SHADER_STAGE_COMPUTE_BIT, "-DLEVEL_0 -DDOWN_SWEEP"} },
+	{ SHADER_CC_D_HEAD_SCATTER,              ShaderBuildInfo{"cc_d_head_scatter",              "./contour_chaining/defragmentation/head_scatter.comp",         M_SHADER_STAGE_COMPUTE_BIT} },
+	{ SHADER_CC_D_COMPACTED_ALLOCATION,      ShaderBuildInfo{"cc_d_compacted_allocation",      "./contour_chaining/defragmentation/compacted_allocation.comp", M_SHADER_STAGE_COMPUTE_BIT} },
+	{ SHADER_CC_D_COMPACTED_SCATTER,         ShaderBuildInfo{"cc_d_compacted_scatter",         "./contour_chaining/defragmentation/compacted_scatter.comp",    M_SHADER_STAGE_COMPUTE_BIT} },
+	{ SHADER_CC_D_FIRST_COMMANDER,           ShaderBuildInfo{"cc_d_first_commander",           "./contour_chaining/defragmentation/first_commander.comp",      M_SHADER_STAGE_COMPUTE_BIT} },
 
 	{ SHADER_SE_MF_SMOOTHING, ShaderBuildInfo{"se_mf_smoothing", "./stroke_extraction/midpoints_filtering/smoothing.comp", M_SHADER_STAGE_COMPUTE_BIT} },
 
@@ -196,9 +199,6 @@ std::map<Shader, ShaderBuildInfo> shader_to_shader_info_map = {{
 
 	{ SHADER_DEBUG_DISPLAY_CONTOUR_FRAGMENTS,     ShaderBuildInfo{"debug__display_contour_fragments",     "./debug/display_contour_fragments.comp",     M_SHADER_STAGE_COMPUTE_BIT} },
 	{ SHADER_DEBUG_DISPLAY_CONTOUR_PIXELS,        ShaderBuildInfo{"debug__display_contour_pixels",        "./debug/display_contour_pixels.comp",        M_SHADER_STAGE_COMPUTE_BIT} },
-	{ SHADER_DEBUG_DISPLAY_SPARSE_PIXEL_EDGES,    ShaderBuildInfo{"debug__display_sparse_pixel_edges",    "./debug/display_sparse_pixel_edges.comp",    M_SHADER_STAGE_COMPUTE_BIT} },
-	{ SHADER_DEBUG_DISPLAY_COMPACTED_PIXEL_EDGES, ShaderBuildInfo{"debug__display_compacted_pixel_edges", "./debug/display_compacted_pixel_edges.comp", M_SHADER_STAGE_COMPUTE_BIT} },
-	{ SHADER_DEBUG_DISPLAY_SEGMENT_EDGES,         ShaderBuildInfo{"debug__display_segment_edges",         "./debug/display_segment_edges.comp",         M_SHADER_STAGE_COMPUTE_BIT} },
 }};
 
 #endif // !SHADERS_BUILD_DECLARATIONS_ONLY

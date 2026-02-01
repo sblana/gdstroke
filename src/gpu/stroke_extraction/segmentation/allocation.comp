@@ -12,15 +12,14 @@ shared int block_num_segment_edges[gl_WorkGroupSize.x];
 shared int total_num_segments;
 shared int total_num_segment_edges;
 
-#define p0_fn_get_src_array(MP_idx_)                     B_pixel_edge_loop_segments_desc.data[MP_idx_].num_segments
-#define p0_fn_set_src_to_dst_map(MP_idx_, MP_value_)     B_allocation_segment.data[MP_idx_].loop_segment_key_offset  = MP_value_
-#define p0_fn_add_set_src_to_dst_map(MP_idx_, MP_value_) B_allocation_segment.data[MP_idx_].loop_segment_key_offset += MP_value_
+#define p0_fn_get_src_array(MP_idx_)                     B_pixel_edge_loop_segmentation.data[MP_idx_].num_segments
+#define p0_fn_set_src_to_dst_map(MP_idx_, MP_value_)     B_pixel_edge_loop_segmentation.data[MP_idx_].loop_segment_key_offset  = MP_value_
+#define p0_fn_add_set_src_to_dst_map(MP_idx_, MP_value_) B_pixel_edge_loop_segmentation.data[MP_idx_].loop_segment_key_offset += MP_value_
 
-#define p1_fn_get_src_array(MP_idx_)                     B_pixel_edge_loop_segments_desc.data[MP_idx_].num_segment_edges
-#define p1_fn_set_src_to_dst_map(MP_idx_, MP_value_)     B_allocation_segment.data[MP_idx_].loop_num_segment_edges_offset  = MP_value_
+#define p1_fn_get_src_array(MP_idx_)                     B_pixel_edge_loop_segmentation.data[MP_idx_].num_segment_edges
+#define p1_fn_set_src_to_dst_map(MP_idx_, MP_value_)     B_pixel_edge_loop_segmentation.data[MP_idx_].loop_num_segment_edges_offset  = MP_value_
 #define p1_fn_add_set_src_to_dst_map(MP_idx_, MP_value_) { \
-	B_allocation_segment.data[MP_idx_].loop_num_segment_edges_offset += MP_value_; \
-	B_pixel_edge_loop_segments_desc.data[MP_idx_].first_segment_edge_idx = B_allocation_segment.data[MP_idx_].loop_num_segment_edges_offset; \
+	B_pixel_edge_loop_segmentation.data[MP_idx_].loop_num_segment_edges_offset += MP_value_; \
 }
 
 void main() {
@@ -29,7 +28,7 @@ void main() {
 		block_num_segments,
 		B_pixel_edge_desc.num_pixel_edge_loops,
 		p0_fn_get_src_array,
-		B_segment_desc.num_segments,
+		B_pixel_edge_desc.num_segments,
 		p0_fn_set_src_to_dst_map,
 		p0_fn_add_set_src_to_dst_map
 	)
@@ -38,7 +37,7 @@ void main() {
 		block_num_segment_edges,
 		B_pixel_edge_desc.num_pixel_edge_loops,
 		p1_fn_get_src_array,
-		B_segment_desc.num_segment_edges,
+		B_pixel_edge_desc.num_segment_edges,
 		p1_fn_set_src_to_dst_map,
 		p1_fn_add_set_src_to_dst_map
 	)

@@ -564,53 +564,26 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 	rd->draw_command_begin_label("Defragmentation", Color(1.0, 0.3, 1.0));
 	{
 		list = rd->compute_list_begin();
-		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CC_D_INIT]);
-		_bind_sets(rd, list);
-		rd->compute_list_dispatch(list, 1, 1, 1);
-		rd->compute_list_end();
-
-		PackedByteArray push = PackedInt64Array({
-			// B_fragmented_pixel_edge_is_head.is_head[idx],
-			int64_t(sizeof(uint64_t) * PixelEdgeBuffers::BUFFER_FRAGMENTED_PIXEL_EDGE_IS_HEAD_BUFFER + pixel_edge_buffers_ptr),
-			int64_t(0 * sizeof(int32_t)),
-			int64_t(1 * sizeof(int32_t)),
-			// B_pixel_edge_desc.num_pixel_edges,
-			int64_t(sizeof(uint64_t) * PixelEdgeBuffers::BUFFER_PIXEL_EDGE_DESC_BUFFER + pixel_edge_buffers_ptr),
-			int64_t(1 * sizeof(int32_t)),
-			// B_pixel_edge_desc.num_pixel_edge_loops,
-			int64_t(sizeof(uint64_t) * PixelEdgeBuffers::BUFFER_PIXEL_EDGE_DESC_BUFFER + pixel_edge_buffers_ptr),
-			int64_t(2 * sizeof(int32_t)),
-			// B_fragmented_pixel_edge_to_pixel_edge_loop.idx[idx],
-			int64_t(sizeof(uint64_t) * PixelEdgeBuffers::BUFFER_FRAGMENTED_PIXEL_EDGE_TO_PIXEL_EDGE_LOOP_BUFFER + pixel_edge_buffers_ptr),
-			int64_t(0 * sizeof(int32_t)),
-			int64_t(1 * sizeof(int32_t)),
-		}).to_byte_array();
-
-		list = rd->compute_list_begin();
-		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_REUSABLE_ALLOCATION_COMMANDER]);
-		rd->compute_list_set_push_constant(list, push, 80);
+		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CC_D_HEAD_ALLOCATION_COMMANDER]);
 		_bind_sets(rd, list);
 		_bind_sets_commander(rd, list);
 		rd->compute_list_dispatch(list, 1, 1, 1);
 		rd->compute_list_end();
 
 		list = rd->compute_list_begin();
-		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_REUSABLE_ALLOCATION_L0_UP]);
-		rd->compute_list_set_push_constant(list, push, 80);
+		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CC_D_HEAD_ALLOCATION_L0_UP]);
 		_bind_sets(rd, list);
 		_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_REUSABLE_ALLOCATION_L0);
 		rd->compute_list_end();
 
 		list = rd->compute_list_begin();
-		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_REUSABLE_ALLOCATION_L1_UP]);
-		rd->compute_list_set_push_constant(list, push, 80);
+		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CC_D_HEAD_ALLOCATION_L1_UP]);
 		_bind_sets(rd, list);
 		rd->compute_list_dispatch(list, 1, 1, 1);
 		rd->compute_list_end();
 
 		list = rd->compute_list_begin();
-		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_REUSABLE_ALLOCATION_L0_DOWN]);
-		rd->compute_list_set_push_constant(list, push, 80);
+		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CC_D_HEAD_ALLOCATION_L0_DOWN]);
 		_bind_sets(rd, list);
 		_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_REUSABLE_ALLOCATION_L0);
 		rd->compute_list_end();

@@ -11,13 +11,12 @@ void main() {
 	const uint fragmented_pixel_edge_idx = gl_GlobalInvocationID.x;
 
 	if (is_fragmented_pixel_edge_idx_valid(int(fragmented_pixel_edge_idx))) {
-		const uint sparse_pixel_edge_idx = B_fragmented_pixel_edge_to_sparse_pixel_edge.idx[fragmented_pixel_edge_idx];
-		const SparsePixelEdgeNeighboursData neighbours = B_sparse_pixel_edge_neighbours.data[sparse_pixel_edge_idx];
-		const int prev_idx = B_sparse_pixel_edge_to_fragmented_pixel_edge.idx[neighbours.prev_idx];
-		const int next_idx = B_sparse_pixel_edge_to_fragmented_pixel_edge.idx[neighbours.next_idx];
+		const int sparse_pixel_edge_idx = B_fragmented_pixel_edge_attribs.data[fragmented_pixel_edge_idx].to_sparse_pixel_edge_idx;
+		const int prev_fragmented_idx = B_sparse_pixel_edge_attribs.data[B_sparse_pixel_edge_attribs.data[sparse_pixel_edge_idx].prev_idx].to_fragmented_pixel_edge_idx;
+		const int next_fragmented_idx = B_sparse_pixel_edge_attribs.data[B_sparse_pixel_edge_attribs.data[sparse_pixel_edge_idx].next_idx].to_fragmented_pixel_edge_idx;
 		const uint contour_pixel_idx = get_sparse_pixel_edge_contour_pixel_idx(sparse_pixel_edge_idx);
 		const uint morton_code = calc_sparse_pixel_edge_morton_code(get_sparse_pixel_edge_orientation(sparse_pixel_edge_idx), B_contour_pixel_attribs.data[contour_pixel_idx].pixel_coord);
-		B_fragmented_pixel_edge_wyllie.data[fragmented_pixel_edge_idx][0] = FragmentedPixelEdgeWyllieData(next_idx, prev_idx, int(fragmented_pixel_edge_idx), morton_code);
-		B_fragmented_pixel_edge_wyllie.data[fragmented_pixel_edge_idx][1] = FragmentedPixelEdgeWyllieData(next_idx, prev_idx, int(fragmented_pixel_edge_idx), morton_code);
+		B_fragmented_pixel_edge_wyllie.data[fragmented_pixel_edge_idx][0] = FragmentedPixelEdgeWyllieData(next_fragmented_idx, prev_fragmented_idx, int(fragmented_pixel_edge_idx), morton_code);
+		B_fragmented_pixel_edge_wyllie.data[fragmented_pixel_edge_idx][1] = FragmentedPixelEdgeWyllieData(next_fragmented_idx, prev_fragmented_idx, int(fragmented_pixel_edge_idx), morton_code);
 	}
 }

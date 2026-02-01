@@ -11,8 +11,8 @@ void main() {
 	const uint pixel_edge_idx = gl_GlobalInvocationID.x;
 
 	if (is_compacted_pixel_edge_idx_valid(int(pixel_edge_idx))) {
-		const bool is_inside = B_compacted_pixel_edge_is_inside.data[pixel_edge_idx].final;
-		const bool prev_is_inside = B_compacted_pixel_edge_is_inside.data[B_compacted_pixel_edge_neighbours.data[pixel_edge_idx].prev_idx].final;
-		B_compacted_pixel_edge_is_segment_head.segment_head[pixel_edge_idx] = is_inside && !prev_is_inside;
+		const bool is_inside = B_compacted_pixel_edge_attribs.data[pixel_edge_idx].is_inside;
+		const bool prev_is_inside = B_compacted_pixel_edge_attribs.data[B_compacted_pixel_edge_attribs.data[pixel_edge_idx].prev_idx].is_inside;
+		B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].is_segment_head_initial = is_inside && !prev_is_inside;
 	}
 }

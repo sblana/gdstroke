@@ -9,17 +9,17 @@ layout(local_size_x = 1024) in;
 
 shared int block_offsets[gl_WorkGroupSize.x];
 
-#define fn_get_src_array(MP_idx_)                     B_segment_stroke_vertex_range.data[MP_idx_].num_vertices
-#define fn_set_src_to_dst_map(MP_idx_, MP_value_)     B_segment_stroke_vertex_range.data[MP_idx_].first_idx  = MP_value_
-#define fn_add_set_src_to_dst_map(MP_idx_, MP_value_) B_segment_stroke_vertex_range.data[MP_idx_].first_idx += MP_value_
+#define fn_get_src_array(MP_idx_)                     B_segment_attribs.data[MP_idx_].stroke_vertices.count
+#define fn_set_src_to_dst_map(MP_idx_, MP_value_)     B_segment_attribs.data[MP_idx_].stroke_vertices.first  = MP_value_
+#define fn_add_set_src_to_dst_map(MP_idx_, MP_value_) B_segment_attribs.data[MP_idx_].stroke_vertices.first += MP_value_
 
 void main() {
 	M_SINGLE_WORKGROUP_ALLOCATION(
 		int,
 		block_offsets,
-		B_segment_desc.num_segments,
+		B_pixel_edge_desc.num_segments,
 		fn_get_src_array,
-		B_stroke_desc.total_num_vertices,
+		B_pixel_edge_desc.num_stroke_vertices,
 		fn_set_src_to_dst_map,
 		fn_add_set_src_to_dst_map
 	)

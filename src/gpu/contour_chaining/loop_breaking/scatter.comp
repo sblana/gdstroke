@@ -12,7 +12,6 @@ void main() {
 	if (is_fragmented_pixel_edge_idx_valid(int(pixel_edge_idx))) {
 		const FragmentedPixelEdgeWyllieData data = B_fragmented_pixel_edge_wyllie.data[pixel_edge_idx][0];
 
-		B_fragmented_pixel_edge_associated_head.associated_head[pixel_edge_idx] = data.key;
-		B_fragmented_pixel_edge_is_head.is_head[pixel_edge_idx] = (data.key == pixel_edge_idx);
+		B_fragmented_pixel_edge_attribs.data[pixel_edge_idx].associated_head = data.key;
 	}
 }

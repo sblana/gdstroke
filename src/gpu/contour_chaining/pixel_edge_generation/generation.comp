@@ -14,8 +14,9 @@ void main() {
 
 	if (pixel_edge_idx < B_pixel_edge_desc.buf_len_sparse_pixel_edge) {
 		// initialize buffer
-		B_sparse_pixel_edge_neighbours.data[pixel_edge_idx] = SparsePixelEdgeNeighboursData(-1, -1);
-		B_sparse_pixel_edge_is_valid.is_valid[pixel_edge_idx] = false;
+		B_sparse_pixel_edge_attribs.data[pixel_edge_idx].prev_idx = -1;
+		B_sparse_pixel_edge_attribs.data[pixel_edge_idx].next_idx = -1;
+		B_sparse_pixel_edge_attribs.data[pixel_edge_idx].is_valid = false;
 
 		const ivec4 local_axes = get_orientation_local_axes(orientation);
 		const ivec2 pixel_coord = B_contour_pixel_attribs.data[contour_pixel_idx].pixel_coord;
@@ -58,17 +59,15 @@ void main() {
 				prev_orientation = get_prev_orientation(orientation);
 			}
 
-			SparsePixelEdgeNeighboursData pixel_edge = SparsePixelEdgeNeighboursData(
-				int(prev_contour_pixel_idx * 4 + prev_orientation.value),
-				int(next_contour_pixel_idx * 4 + next_orientation.value)
-			);
-			B_sparse_pixel_edge_neighbours.data[pixel_edge_idx] = pixel_edge;
-			B_sparse_pixel_edge_is_valid.is_valid[pixel_edge_idx] = true;
+			B_sparse_pixel_edge_attribs.data[pixel_edge_idx].prev_idx = int(prev_contour_pixel_idx * 4 + prev_orientation.value);
+			B_sparse_pixel_edge_attribs.data[pixel_edge_idx].next_idx = int(next_contour_pixel_idx * 4 + next_orientation.value);
+			B_sparse_pixel_edge_attribs.data[pixel_edge_idx].is_valid = true;
 		}
 		const int here_contour_fragment_idx = int(imageLoad(U_foremost_fragment_bitmap, pixel_coord).x) - 1;
 		if (here_contour_fragment_idx == -1 || contour_pixel_idx != B_foremost_contour_fragment_to_contour_pixel.contour_pixel_idx[here_contour_fragment_idx]) {
-			B_sparse_pixel_edge_neighbours.data[pixel_edge_idx] = SparsePixelEdgeNeighboursData(-1, -1);
-			B_sparse_pixel_edge_is_valid.is_valid[pixel_edge_idx] = false;
+			B_sparse_pixel_edge_attribs.data[pixel_edge_idx].prev_idx = -1;
+			B_sparse_pixel_edge_attribs.data[pixel_edge_idx].next_idx = -1;
+			B_sparse_pixel_edge_attribs.data[pixel_edge_idx].is_valid = false;
 		}
 	}
 }

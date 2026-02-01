@@ -13,13 +13,13 @@ void main() {
 	if (pixel_edge_idx < B_pixel_edge_desc.num_pixel_edges) {
 
 		// init
-		B_compacted_pixel_edge_is_inside.data[pixel_edge_idx] = CompactedPixelEdgeIsInsideData(false, false);
+		B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].is_inside_initial = false;
 
 		if (is_compacted_pixel_edge_idx_valid(int(pixel_edge_idx))) {
-			const int contour_pixel_idx = B_compacted_pixel_edge_to_contour_pixel.contour_pixel_idx[pixel_edge_idx];
-			const PixelEdgeLoopDescData loop_desc = B_pixel_edge_loop_desc.data[B_compacted_pixel_edge_to_pixel_edge_loop.idx[pixel_edge_idx]];
+			const int contour_pixel_idx = B_compacted_pixel_edge_attribs.data[pixel_edge_idx].to_contour_pixel_idx;
+			const PixelEdgeLoopAttribs loop_attribs = B_pixel_edge_loop_attribs.data[B_compacted_pixel_edge_attribs.data[pixel_edge_idx].to_pixel_edge_loop_idx];
 
-			const int num_neighbours = min(INSIDE_OUTSIDE_TEST_MAX_NUM_NEIGHBOURS, loop_desc.loop_len / 2);
+			const int num_neighbours = min(INSIDE_OUTSIDE_TEST_MAX_NUM_NEIGHBOURS, loop_attribs.loop_len / 2);
 
 			// load contour pixel orientations
 			vec2 contour_pixel_orientations_stack[INSIDE_OUTSIDE_TEST_MAX_WINDOW_SIZE];
@@ -29,16 +29,18 @@ void main() {
 				const int direction = (forward * 2 - 1);
 				uint prev_idx = pixel_edge_idx;
 				for (int i = 1; i <= num_neighbours; ++i) {
-					CompactedPixelEdgeNeighboursData neighbours = B_compacted_pixel_edge_neighbours.data[prev_idx];
-					const uint cur_idx = (forward > 0) ? neighbours.next_idx : neighbours.prev_idx;
+					uint cur_idx = ((forward > 0)
+						? (B_compacted_pixel_edge_attribs.data[prev_idx].next_idx)
+						: (B_compacted_pixel_edge_attribs.data[prev_idx].prev_idx)
+					);
 					const int k = i * direction;
-					const int cur_contour_pixel_idx = B_compacted_pixel_edge_to_contour_pixel.contour_pixel_idx[cur_idx];
+					const int cur_contour_pixel_idx = B_compacted_pixel_edge_attribs.data[cur_idx].to_contour_pixel_idx;
 					contour_pixel_orientations_stack[num_neighbours + k] = B_contour_pixel_attribs.data[cur_contour_pixel_idx].orientation;
 					prev_idx = cur_idx;
 				}
 			}
 
-			const vec2 pixel_edge_orientation = B_compacted_pixel_edge_filtered_orientation.orientation[pixel_edge_idx];
+			const vec2 pixel_edge_orientation = B_compacted_pixel_edge_attribs.data[pixel_edge_idx].filtered_orientation;
 			const float orientation_threshold = 0.6;
 			int times_passed = 0;
 			for (int k = -num_neighbours; k <= num_neighbours; ++k) {
@@ -49,7 +51,7 @@ void main() {
 			}
 
 			const bool is_inside = times_passed > (num_neighbours * 2 + 1) / 2;
-			B_compacted_pixel_edge_is_inside.data[pixel_edge_idx] = CompactedPixelEdgeIsInsideData(is_inside, false);
+			B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].is_inside_initial = is_inside;
 		}
 	}
 }
