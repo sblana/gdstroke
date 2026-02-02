@@ -18,11 +18,17 @@ public:
 		RASTER_METHOD_MAX
 	};
 
+	enum DebugView : int64_t {
+		DEBUG_VIEW_DISABLED = 0,
+		DEBUG_VIEW_CONTOUR_PIXELS,
+		DEBUG_VIEW_MAX
+	};
+
 private:
 	int64_t _id = 0;
 	RasterMethod _raster_method = RasterMethod::RASTER_METHOD_BRESENHAM;
 	bool _ready = false;
-	bool _debug_enabled = true;
+	DebugView _debug_view = DebugView::DEBUG_VIEW_DISABLED;
 	RID _compiled_shaders[Shader::SHADER_MAX];
 	RID _pipelines[Shader::SHADER_MAX];
 	GdstrokeShaderInterface::SceneInterfaceSet _scene_interface_set = {};
@@ -67,6 +73,8 @@ public:
 	void set_config_use_soft_depth_test_modification(bool p_value);
 	uint32_t get_config_min_segment_length() const;
 	void set_config_min_segment_length(uint32_t p_value);
+	DebugView get_debug_view() const;
+	void      set_debug_view(DebugView p_value);
 
 	RID     get_stroke_shader_uniform_set_rid();
 	int64_t get_stroke_shader_uniform_set_slot() const;
@@ -75,3 +83,4 @@ public:
 };
 
 VARIANT_ENUM_CAST(GdstrokeEffect::RasterMethod)
+VARIANT_ENUM_CAST(GdstrokeEffect::DebugView)

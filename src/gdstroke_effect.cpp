@@ -52,6 +52,8 @@ void GdstrokeEffect::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_config_use_soft_depth_test_modification"),            &GdstrokeEffect::get_config_use_soft_depth_test_modification);
 	ClassDB::bind_method(D_METHOD("set_config_min_segment_length", "p_value"), &GdstrokeEffect::set_config_min_segment_length);
 	ClassDB::bind_method(D_METHOD("get_config_min_segment_length"),            &GdstrokeEffect::get_config_min_segment_length);
+	ClassDB::bind_method(D_METHOD("set_debug_view", "p_value"), &GdstrokeEffect::set_debug_view);
+	ClassDB::bind_method(D_METHOD("get_debug_view"),            &GdstrokeEffect::get_debug_view);
 	ClassDB::bind_method(D_METHOD("get_stroke_shader_uniform_set_rid"),  &GdstrokeEffect::get_stroke_shader_uniform_set_rid);
 	ClassDB::bind_method(D_METHOD("get_stroke_shader_uniform_set_slot"), &GdstrokeEffect::get_stroke_shader_uniform_set_slot);
 	ClassDB::bind_method(D_METHOD("draw_indirect_stroke_shader", "p_rd", "p_draw_list"), &GdstrokeEffect::draw_indirect_stroke_shader);
@@ -96,6 +98,14 @@ void GdstrokeEffect::_bind_methods() {
 		),
 		"set_config_min_segment_length",
 		"get_config_min_segment_length"
+	);
+	ADD_PROPERTY(
+		PropertyInfo(
+			Variant::INT, "debug_view",
+			PropertyHint::PROPERTY_HINT_ENUM, "Disabled,Contour Pixels"
+		),
+		"set_debug_view",
+		"get_debug_view"
 	);
 }
 
@@ -758,6 +768,17 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 
 	rd->draw_command_begin_label("debug", Color(0.2, 0.2, 0.2));
 	{
+		switch (_debug_view) {
+			case DebugView::DEBUG_VIEW_CONTOUR_PIXELS: {
+				list = rd->compute_list_begin();
+				rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_DEBUG_DISPLAY_CONTOUR_PIXELS]);
+				_bind_sets(rd, list);
+				_bind_sets_debug(rd, list);
+				_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_PIXELS);
+				rd->compute_list_end();
+				break;
+			}
+		}
 	}
 	rd->draw_command_end_label();
 }
@@ -801,6 +822,14 @@ uint32_t GdstrokeEffect::get_config_min_segment_length() const {
 
 void GdstrokeEffect::set_config_min_segment_length(uint32_t p_value) {
 	_scene_interface_set.config_data.min_segment_length = uint32_t(p_value);
+}
+
+GdstrokeEffect::DebugView GdstrokeEffect::get_debug_view() const {
+	return _debug_view;
+}
+
+void                      GdstrokeEffect::set_debug_view(DebugView p_value) {
+	_debug_view = p_value;
 }
 
 RID GdstrokeEffect::get_stroke_shader_uniform_set_rid() {
