@@ -10,6 +10,11 @@ layout(local_size_x = 1) in;
 
 void main() {
 	if (gl_GlobalInvocationID.x == 0) {
+		init_balloc_buffer(B_pixel_edge_balloc_buffer, PIXEL_EDGE_BALLOC_BUFFER_SIZE);
+
+		B_pixel_edge_desc           = PixelEdgeDescBuffer         (balloc_acquire(B_pixel_edge_balloc_buffer, M_BUF_SIZE(PixelEdgeDescBuffer, NULLPTR)));
+		B_sparse_pixel_edge_attribs = SparsePixelEdgeAttribsBuffer(balloc_acquire(B_pixel_edge_balloc_buffer, M_BUF_SIZE(SparsePixelEdgeAttribsBuffer, B_contour_desc.num_contour_pixels * 4)));
+
 		B_pixel_edge_desc.buf_len_sparse_pixel_edge = B_contour_desc.num_contour_pixels * 4;
 
 		DispatchIndirectCommand command;

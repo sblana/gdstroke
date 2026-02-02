@@ -229,7 +229,7 @@ Error GdstrokeShaderInterface::ContourInterfaceSet::create_resources(RenderingDe
 	resources.resize(int(Buffer::BUFFER_MAX) + int(Binding::BINDING_MAX));
 	resources[Buffer::BUFFER_CONTOUR_DESC_BUFFER       ] = p_rd->storage_buffer_create(sizeof(int32_t) * 6, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
-	resources[Buffer::BUFFER_MEMORY_BLOCK_BUFFER       ] = p_rd->storage_buffer_create(balloc_buffer_size, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_CONTOUR_BALLOC_BUFFER     ] = p_rd->storage_buffer_create(balloc_buffer_size, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
 	resources[Buffer::BUFFER_CONTOUR_EDGE_MAPS_BUFFER  ] = p_rd->storage_buffer_create(4, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 	resources[Buffer::BUFFER_CONTOUR_EDGE_CLIP_T_BUFFER] = p_rd->storage_buffer_create(4, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
@@ -289,21 +289,23 @@ Error GdstrokeShaderInterface::PixelEdgeInterfaceSet::create_resources(Rendering
 	resources.clear();
 	resources.resize(int(Buffer::BUFFER_MAX) + int(Binding::BINDING_MAX));
 
-	resources[Buffer::BUFFER_PIXEL_EDGE_DESC_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 6, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_PIXEL_EDGE_BALLOC_BUFFER] = p_rd->storage_buffer_create(balloc_buffer_size, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
-	resources[Buffer::BUFFER_SPARSE_PIXEL_EDGE_ATTRIBS_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 4 * max_num_sparse_pixel_edges, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
-	resources[Buffer::BUFFER_FRAGMENTED_PIXEL_EDGE_ATTRIBS_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 4 * max_num_fragmented_pixel_edges, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
-	resources[Buffer::BUFFER_FRAGMENTED_PIXEL_EDGE_WYLLIE_BUFFER ] = p_rd->storage_buffer_create(sizeof(int32_t) * 8 * max_num_fragmented_pixel_edges, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_PIXEL_EDGE_DESC_BUFFER          ] = p_rd->storage_buffer_create(4, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_SPARSE_PIXEL_EDGE_ATTRIBS_BUFFER] = p_rd->storage_buffer_create(4, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
-	resources[Buffer::BUFFER_PIXEL_EDGE_LOOP_ATTRIBS_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 4 * max_num_pixel_edge_loops, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
-	resources[Buffer::BUFFER_COMPACTED_PIXEL_EDGE_ATTRIBS_BUFFER     ] = p_rd->storage_buffer_create(sizeof( int32_t) * 14 * max_num_compacted_pixel_edges, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
-	
-	resources[Buffer::BUFFER_PIXEL_EDGE_LOOP_SEGMENTATION_BUFFER] = p_rd->storage_buffer_create(sizeof( int32_t) * 6 * max_num_pixel_edge_loops, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
-	resources[Buffer::BUFFER_COMPACTED_PIXEL_EDGE_SEGMENTATION_BUFFER] = p_rd->storage_buffer_create(sizeof( int32_t) * 6 * max_num_compacted_pixel_edges, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_FRAGMENTED_PIXEL_EDGE_ATTRIBS_BUFFER    ] = p_rd->storage_buffer_create(4, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_FRAGMENTED_PIXEL_EDGE_WYLLIE_BUFFER     ] = p_rd->storage_buffer_create(4, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_COMPACTED_PIXEL_EDGE_ATTRIBS_BUFFER     ] = p_rd->storage_buffer_create(4, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_COMPACTED_PIXEL_EDGE_SEGMENTATION_BUFFER] = p_rd->storage_buffer_create(4, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
-	resources[Buffer::BUFFER_SEGMENT_ATTRIBS_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 6 * max_num_segments, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
-	resources[Buffer::BUFFER_SEGMENT_EDGE_ATTRIBS_BUFFER] = p_rd->storage_buffer_create(sizeof( int32_t) * 2 * max_num_segment_edges, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
-	resources[Buffer::BUFFER_STROKE_VERTEX_ATTRIBS_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 2 * max_num_stroke_vertices, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_PIXEL_EDGE_LOOP_ATTRIBS_BUFFER     ] = p_rd->storage_buffer_create(4, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_PIXEL_EDGE_LOOP_SEGMENTATION_BUFFER] = p_rd->storage_buffer_create(4, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+
+	resources[Buffer::BUFFER_SEGMENT_ATTRIBS_BUFFER     ] = p_rd->storage_buffer_create(4, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_SEGMENT_EDGE_ATTRIBS_BUFFER] = p_rd->storage_buffer_create(4, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+
+	resources[Buffer::BUFFER_STROKE_VERTEX_ATTRIBS_BUFFER] = p_rd->storage_buffer_create(4, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
 
 	PackedByteArray buffers_addresses_data;

@@ -10,6 +10,9 @@ layout(local_size_x = 1) in;
 
 void main() {
 	if (gl_GlobalInvocationID.x == 0) {
+		B_segment_attribs      = SegmentAttribsBuffer    (balloc_acquire(B_pixel_edge_balloc_buffer, M_BUF_SIZE(SegmentAttribsBuffer,     B_pixel_edge_desc.num_segments)));
+		B_segment_edge_attribs = SegmentEdgeAttribsBuffer(balloc_acquire(B_pixel_edge_balloc_buffer, M_BUF_SIZE(SegmentEdgeAttribsBuffer, B_pixel_edge_desc.num_segment_edges)));
+
 		DispatchIndirectCommand command;
 		command.workgroups_x = udiv_ceil(B_pixel_edge_desc.num_segments, 64);
 		command.workgroups_y = 1;

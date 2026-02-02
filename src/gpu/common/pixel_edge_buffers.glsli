@@ -11,6 +11,7 @@
 #define MAX_NUM_SEGMENTS_PER_LOOP (1024)
 #define MAX_NUM_SEGMENTS (MAX_NUM_COMPACTED_PIXEL_EDGES / 8)
 #define MAX_NUM_SEGMENT_EDGES (MAX_NUM_SEGMENTS * 4)
+#define MAX_NUM_STROKE_VERTICES (MAX_NUM_SEGMENT_EDGES * 4)
 
 
 layout(BUFREF_LAYOUT) buffer PixelEdgeDescBuffer {
@@ -21,11 +22,13 @@ layout(BUFREF_LAYOUT) buffer PixelEdgeDescBuffer {
 	int num_segment_edges;
 	int num_stroke_vertices;
 };
+#define _BUF_SIZE_PixelEdgeDescBuffer(MP_array_len) ((_M_SIZEOF(int)()) * 6)
 
 
 struct PixelEdgeOrientation {
 	uint value;
 };
+#define _SIZEOF_PixelEdgeOrientation() (_M_SIZEOF(int)() * 1)
 
 #define E_PixelEdgeOrientation_NORTH (0u)
 #define E_PixelEdgeOrientation_EAST  (1u)
@@ -44,28 +47,32 @@ PixelEdgeOrientation get_sparse_pixel_edge_orientation(in const uint i_sparse_pi
 	return PixelEdgeOrientation(i_sparse_pixel_edge_idx % 4u);
 }
 
-struct SparsePixelEdgeAttribsData {
+struct SparsePixelEdgeAttribs {
 	int prev_idx;
 	int next_idx;
 	bool is_valid;
 	int to_fragmented_pixel_edge_idx;
 };
+#define _SIZEOF_SparsePixelEdgeAttribs() (_M_SIZEOF(int)() * 4)
 
 layout(BUFREF_LAYOUT) buffer SparsePixelEdgeAttribsBuffer {
-	SparsePixelEdgeAttribsData data[MAX_NUM_SPARSE_PIXEL_EDGES];
+	SparsePixelEdgeAttribs data[];
 };
+#define _BUF_SIZE_SparsePixelEdgeAttribsBuffer(MP_array_len) ((_M_SIZEOF(SparsePixelEdgeAttribs)()) * (MP_array_len))
 
 
-struct FragmentedPixelEdgeAttribsData {
+struct FragmentedPixelEdgeAttribs {
 	int to_sparse_pixel_edge_idx;
 	int associated_head;
 	int loop_local_idx;
 	int to_pixel_edge_loop_idx;
 };
+#define _SIZEOF_FragmentedPixelEdgeAttribs() (_M_SIZEOF(int)() * 4)
 
 layout(BUFREF_LAYOUT) buffer FragmentedPixelEdgeAttribsBuffer {
-	FragmentedPixelEdgeAttribsData data[MAX_NUM_FRAGMENTED_PIXEL_EDGES];
+	FragmentedPixelEdgeAttribs data[];
 };
+#define _BUF_SIZE_FragmentedPixelEdgeAttribsBuffer(MP_array_len) ((_M_SIZEOF(FragmentedPixelEdgeAttribs)()) * (MP_array_len))
 
 struct FragmentedPixelEdgeWyllieData {
 	int next_idx;
@@ -73,10 +80,12 @@ struct FragmentedPixelEdgeWyllieData {
 	int key;
 	uint value;
 };
+#define _SIZEOF_FragmentedPixelEdgeWyllieData() (_M_SIZEOF(int)() * 4)
 
 layout(BUFREF_LAYOUT) buffer FragmentedPixelEdgeWyllieBuffer {
-	FragmentedPixelEdgeWyllieData data[MAX_NUM_FRAGMENTED_PIXEL_EDGES][2];
+	FragmentedPixelEdgeWyllieData data[][2];
 };
+#define _BUF_SIZE_FragmentedPixelEdgeWyllieBuffer(MP_array_len) ((_M_SIZEOF(FragmentedPixelEdgeWyllieData)()) * (MP_array_len) * 2)
 
 
 struct PixelEdgeLoopAttribs {
@@ -85,10 +94,12 @@ struct PixelEdgeLoopAttribs {
 	int loop_len;
 	int pad;
 };
+#define _SIZEOF_PixelEdgeLoopAttribs() (_M_SIZEOF(int)() * 4)
 
 layout(BUFREF_LAYOUT) buffer PixelEdgeLoopAttribsBuffer {
-	PixelEdgeLoopAttribs data[MAX_NUM_PIXEL_EDGE_LOOPS];
+	PixelEdgeLoopAttribs data[];
 };
+#define _BUF_SIZE_PixelEdgeLoopAttribsBuffer(MP_array_len) ((_M_SIZEOF(PixelEdgeLoopAttribs)()) * (MP_array_len))
 
 
 struct CompactedPixelEdgeAttribs {
@@ -105,10 +116,13 @@ struct CompactedPixelEdgeAttribs {
 	int segment_key;
 	int to_segment_edge_idx;
 };
+#define _SIZEOF_CompactedPixelEdgeAttribs() (_M_SIZEOF(int)() * 9 + _M_SIZEOF(vec2)() * 2 + _M_SIZEOF(PixelEdgeOrientation)())
 
 layout(BUFREF_LAYOUT) buffer CompactedPixelEdgeAttribsBuffer {
-	CompactedPixelEdgeAttribs data[MAX_NUM_COMPACTED_PIXEL_EDGES];
+	CompactedPixelEdgeAttribs data[];
 };
+#define _BUF_SIZE_CompactedPixelEdgeAttribsBuffer(MP_array_len) ((_M_SIZEOF(CompactedPixelEdgeAttribs)()) * (MP_array_len))
+
 
 #define ORIENTATION_FILTERING_MAX_NUM_NEIGHBOURS (8)
 #define ORIENTATION_FILTERING_MAX_WINDOW_SIZE (ORIENTATION_FILTERING_MAX_NUM_NEIGHBOURS * 2 + 1)
@@ -125,10 +139,12 @@ struct PixelEdgeLoopSegmentationData {
 	int loop_num_segment_edges_offset;
 	int pad;
 };
+#define _SIZEOF_PixelEdgeLoopSegmentationData() (_M_SIZEOF(int)() * 6)
 
 layout(BUFREF_LAYOUT) buffer PixelEdgeLoopSegmentationBuffer {
-	PixelEdgeLoopSegmentationData data[MAX_NUM_PIXEL_EDGE_LOOPS];
+	PixelEdgeLoopSegmentationData data[];
 };
+#define _BUF_SIZE_PixelEdgeLoopSegmentationBuffer(MP_array_len) ((_M_SIZEOF(PixelEdgeLoopSegmentationData)()) * (MP_array_len))
 
 
 struct CompactedPixelEdgeSegmentationData {
@@ -139,10 +155,12 @@ struct CompactedPixelEdgeSegmentationData {
 	int segment_length;
 	int loop_local_allocation_idx;
 };
+#define _SIZEOF_CompactedPixelEdgeSegmentationData() (_M_SIZEOF(int)() * 6)
 
 layout(BUFREF_LAYOUT) buffer CompactedPixelEdgeSegmentationBuffer {
-	CompactedPixelEdgeSegmentationData data[MAX_NUM_COMPACTED_PIXEL_EDGES];
+	CompactedPixelEdgeSegmentationData data[];
 };
+#define _BUF_SIZE_CompactedPixelEdgeSegmentationBuffer(MP_array_len) ((_M_SIZEOF(CompactedPixelEdgeSegmentationData)()) * (MP_array_len))
 
 int compacted_pixel_edge_segment_local_idx(in const int i_pixel_edge_idx, in const int i_segment_head_idx, in const int i_loop_len) {
 	int local_idx = i_pixel_edge_idx - i_segment_head_idx;
@@ -159,10 +177,12 @@ struct SegmentAttribs {
 	float arc_length;
 	int pad;
 };
+#define _SIZEOF_SegmentAttribs() (_M_SIZEOF(Range)() * 2 + _M_SIZEOF(int)() * 2)
 
 layout(BUFREF_LAYOUT) buffer SegmentAttribsBuffer {
-	SegmentAttribs data[MAX_NUM_SEGMENTS];
+	SegmentAttribs data[];
 };
+#define _BUF_SIZE_SegmentAttribsBuffer(MP_array_len) ((_M_SIZEOF(SegmentAttribs)()) * (MP_array_len))
 
 
 struct SegmentEdgeAttribs {
@@ -171,13 +191,13 @@ struct SegmentEdgeAttribs {
 	float arc_length;
 	int pad;
 };
+#define _SIZEOF_SegmentEdgeAttribs() (_M_SIZEOF(int)() * 4)
 
 layout(BUFREF_LAYOUT) buffer SegmentEdgeAttribsBuffer {
-	SegmentEdgeAttribs data[MAX_NUM_SEGMENT_EDGES];
+	SegmentEdgeAttribs data[];
 };
+#define _BUF_SIZE_SegmentEdgeAttribsBuffer(MP_array_len) ((_M_SIZEOF(SegmentEdgeAttribs)()) * (MP_array_len))
 
-
-#define MAX_NUM_STROKE_VERTICES (MAX_NUM_SEGMENT_EDGES * 4)
 
 #define StrokeVertexKind uint
 #define E_StrokeVertexKind_BACK_LEFT   (0u)
@@ -192,27 +212,33 @@ struct StrokeVertexAttribs {
 	int to_segment_edge_idx;
 	StrokeVertexKind kind;
 };
+#define _SIZEOF_StrokeVertexAttribs() (_M_SIZEOF(int)() + _M_SIZEOF(StrokeVertexKind)())
 
 layout(BUFREF_LAYOUT) buffer StrokeVertexAttribsBuffer {
-	StrokeVertexAttribs data[MAX_NUM_SEGMENTS];
+	StrokeVertexAttribs data[];
 };
+#define _BUF_SIZE_StrokeVertexAttribsBuffer(MP_array_len) ((_M_SIZEOF(StrokeVertexAttribs)()) * (MP_array_len))
 
 
-layout(set = 4, binding = 0, scalar) coherent buffer PixelEdgeBuffers {
+#define PIXEL_EDGE_BALLOC_BUFFER_SIZE (128 * 1024 * 1024)
+
+layout(set = 4, binding = 0, scalar) buffer PixelEdgeBuffers {
+	BumpAllocatorBuffer                         B_pixel_edge_balloc_buffer;
+
 	PixelEdgeDescBuffer                         B_pixel_edge_desc;
-
 	SparsePixelEdgeAttribsBuffer                B_sparse_pixel_edge_attribs;
+
 	FragmentedPixelEdgeAttribsBuffer            B_fragmented_pixel_edge_attribs;
 	FragmentedPixelEdgeWyllieBuffer             B_fragmented_pixel_edge_wyllie;
+	CompactedPixelEdgeAttribsBuffer             B_compacted_pixel_edge_attribs;
+	CompactedPixelEdgeSegmentationBuffer        B_compacted_pixel_edge_segmentation;
 
 	PixelEdgeLoopAttribsBuffer                  B_pixel_edge_loop_attribs;
-	CompactedPixelEdgeAttribsBuffer             B_compacted_pixel_edge_attribs;
-
-	CompactedPixelEdgeSegmentationBuffer        B_compacted_pixel_edge_segmentation;
 	PixelEdgeLoopSegmentationBuffer             B_pixel_edge_loop_segmentation;
 
 	SegmentAttribsBuffer                        B_segment_attribs;
 	SegmentEdgeAttribsBuffer                    B_segment_edge_attribs;
+
 	StrokeVertexAttribsBuffer                   B_stroke_vertex_attribs;
 };
 

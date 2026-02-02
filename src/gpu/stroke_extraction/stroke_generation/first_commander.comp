@@ -10,6 +10,8 @@ layout(local_size_x = 1) in;
 
 void main() {
 	if (gl_GlobalInvocationID.x == 0) {
+		B_stroke_vertex_attribs = StrokeVertexAttribsBuffer(balloc_acquire(B_pixel_edge_balloc_buffer, M_BUF_SIZE(StrokeVertexAttribsBuffer, B_pixel_edge_desc.num_stroke_vertices)));
+
 		DrawIndirectCommand command;
 		command.vertex_count = B_pixel_edge_desc.num_stroke_vertices;
 		command.instance_count = 1;

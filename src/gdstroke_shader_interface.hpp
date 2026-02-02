@@ -117,7 +117,7 @@ public:
 	struct ContourInterfaceSet : InterfaceSet {
 		enum Buffer : uint32_t {
 			BUFFER_CONTOUR_DESC_BUFFER = 0,
-			BUFFER_MEMORY_BLOCK_BUFFER,
+			BUFFER_CONTOUR_BALLOC_BUFFER,
 			BUFFER_CONTOUR_EDGE_MAPS_BUFFER,
 			BUFFER_CONTOUR_EDGE_CLIP_T_BUFFER,
 			BUFFER_CONTOUR_FRAGMENT_ATTRIBS_BUFFER,
@@ -153,18 +153,18 @@ public:
 
 	struct PixelEdgeInterfaceSet : InterfaceSet {
 		enum Buffer : uint32_t {
-			BUFFER_PIXEL_EDGE_DESC_BUFFER = 0,
+			BUFFER_PIXEL_EDGE_BALLOC_BUFFER = 0,
+			BUFFER_PIXEL_EDGE_DESC_BUFFER,
 			BUFFER_SPARSE_PIXEL_EDGE_ATTRIBS_BUFFER,
 			BUFFER_FRAGMENTED_PIXEL_EDGE_ATTRIBS_BUFFER,
 			BUFFER_FRAGMENTED_PIXEL_EDGE_WYLLIE_BUFFER,
-			BUFFER_PIXEL_EDGE_LOOP_ATTRIBS_BUFFER,
 			BUFFER_COMPACTED_PIXEL_EDGE_ATTRIBS_BUFFER,
-			BUFFER_PIXEL_EDGE_LOOP_SEGMENTATION_BUFFER,
 			BUFFER_COMPACTED_PIXEL_EDGE_SEGMENTATION_BUFFER,
+			BUFFER_PIXEL_EDGE_LOOP_ATTRIBS_BUFFER,
+			BUFFER_PIXEL_EDGE_LOOP_SEGMENTATION_BUFFER,
 			BUFFER_SEGMENT_ATTRIBS_BUFFER,
 			BUFFER_SEGMENT_EDGE_ATTRIBS_BUFFER,
 			BUFFER_STROKE_VERTEX_ATTRIBS_BUFFER,
-
 			BUFFER_MAX,
 		};
 
@@ -180,6 +180,7 @@ public:
 		static constexpr uint32_t max_num_segments = max_num_compacted_pixel_edges / 8;
 		static constexpr uint32_t max_num_segment_edges = max_num_segments * 4;
 		static constexpr uint32_t max_num_stroke_vertices = max_num_segment_edges * 4;
+		static constexpr uint32_t balloc_buffer_size = 128 * 1024 * 1024;
 
 		virtual Error create_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
 		virtual Error update_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;

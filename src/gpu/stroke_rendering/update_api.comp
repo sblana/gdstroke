@@ -10,25 +10,25 @@ layout(local_size_x = 1) in;
 
 void main() {
 	_GdstrokeAPI_buffer_ptr_table.stroke_vertex_to_stroke_vertex_kind_map_buffer_ptr          = UInt64(B_stroke_vertex_attribs) + 1*4;
-	_GdstrokeAPI_buffer_ptr_table.stroke_vertex_to_stroke_vertex_kind_map_buffer_stride       = UInt64(2*4);
+	_GdstrokeAPI_buffer_ptr_table.stroke_vertex_to_stroke_vertex_kind_map_buffer_stride       = UInt64(M_SIZEOF(StrokeVertexAttribs));
 	_GdstrokeAPI_buffer_ptr_table.stroke_vertex_to_segment_edge_map_buffer_ptr                = UInt64(B_stroke_vertex_attribs) + 0*4;
-	_GdstrokeAPI_buffer_ptr_table.stroke_vertex_to_segment_edge_map_buffer_stride             = UInt64(2*4);
+	_GdstrokeAPI_buffer_ptr_table.stroke_vertex_to_segment_edge_map_buffer_stride             = UInt64(M_SIZEOF(StrokeVertexAttribs));
 	_GdstrokeAPI_buffer_ptr_table.segment_edge_to_compacted_pixel_edge_map_buffer_ptr         = UInt64(B_segment_edge_attribs) + 0*4;
-	_GdstrokeAPI_buffer_ptr_table.segment_edge_to_compacted_pixel_edge_map_buffer_stride      = UInt64(4*4);
+	_GdstrokeAPI_buffer_ptr_table.segment_edge_to_compacted_pixel_edge_map_buffer_stride      = UInt64(M_SIZEOF(SegmentEdgeAttribs));
 	_GdstrokeAPI_buffer_ptr_table.segment_edge_to_arc_length_map_buffer_ptr                   = UInt64(B_segment_edge_attribs) + 2*4;
-	_GdstrokeAPI_buffer_ptr_table.segment_edge_to_arc_length_map_buffer_stride                = UInt64(4*4);
+	_GdstrokeAPI_buffer_ptr_table.segment_edge_to_arc_length_map_buffer_stride                = UInt64(M_SIZEOF(SegmentEdgeAttribs));
 	_GdstrokeAPI_buffer_ptr_table.compacted_pixel_edge_to_orientation_map_buffer_ptr          = UInt64(B_compacted_pixel_edge_attribs) + 8*4;
-	_GdstrokeAPI_buffer_ptr_table.compacted_pixel_edge_to_orientation_map_buffer_stride       = UInt64(14*4);
+	_GdstrokeAPI_buffer_ptr_table.compacted_pixel_edge_to_orientation_map_buffer_stride       = UInt64(M_SIZEOF(CompactedPixelEdgeAttribs));
 	_GdstrokeAPI_buffer_ptr_table.compacted_pixel_edge_to_filtered_midpoint_map_buffer_ptr    = UInt64(B_compacted_pixel_edge_attribs) + 6*4;
-	_GdstrokeAPI_buffer_ptr_table.compacted_pixel_edge_to_filtered_midpoint_map_buffer_stride = UInt64(14*4);
+	_GdstrokeAPI_buffer_ptr_table.compacted_pixel_edge_to_filtered_midpoint_map_buffer_stride = UInt64(M_SIZEOF(CompactedPixelEdgeAttribs));
 	_GdstrokeAPI_buffer_ptr_table.compacted_pixel_edge_to_segment_id_map_buffer_ptr           = UInt64(B_compacted_pixel_edge_attribs) + 12*4;
-	_GdstrokeAPI_buffer_ptr_table.compacted_pixel_edge_to_segment_id_map_buffer_stride        = UInt64(14*4);
+	_GdstrokeAPI_buffer_ptr_table.compacted_pixel_edge_to_segment_id_map_buffer_stride        = UInt64(M_SIZEOF(CompactedPixelEdgeAttribs));
 	_GdstrokeAPI_buffer_ptr_table.segment_id_to_segment_head_edge_map_buffer_ptr              = UInt64(B_segment_attribs) + 0*4;
-	_GdstrokeAPI_buffer_ptr_table.segment_id_to_segment_head_edge_map_buffer_stride           = UInt64(6*4);
+	_GdstrokeAPI_buffer_ptr_table.segment_id_to_segment_head_edge_map_buffer_stride           = UInt64(M_SIZEOF(SegmentAttribs));
 	_GdstrokeAPI_buffer_ptr_table.segment_id_to_segment_length_map_buffer_ptr                 = UInt64(B_segment_attribs) + 1*4;
-	_GdstrokeAPI_buffer_ptr_table.segment_id_to_segment_length_map_buffer_stride              = UInt64(6*4);
+	_GdstrokeAPI_buffer_ptr_table.segment_id_to_segment_length_map_buffer_stride              = UInt64(M_SIZEOF(SegmentAttribs));
 	_GdstrokeAPI_buffer_ptr_table.segment_id_to_arc_length_map_buffer_ptr                     = UInt64(B_segment_attribs) + 4*4;
-	_GdstrokeAPI_buffer_ptr_table.segment_id_to_arc_length_map_buffer_stride                  = UInt64(6*4);
+	_GdstrokeAPI_buffer_ptr_table.segment_id_to_arc_length_map_buffer_stride                  = UInt64(M_SIZEOF(SegmentAttribs));
 	_GdstrokeAPI_buffer_ptr_table.viewport_size = vec2(U_scene_data.cur.viewport_size);
 	_GdstrokeAPI_buffer_ptr_table.time = float(U_scene_data.cur.time);
 }

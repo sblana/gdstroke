@@ -495,16 +495,16 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		rd->compute_list_end();
 
 		list = rd->compute_list_begin();
-		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CC_PEG_SCATTER]);
-		_bind_sets(rd, list);
-		_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_SPARSE_PIXEL_EDGES);
-		rd->compute_list_end();
-
-		list = rd->compute_list_begin();
 		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CC_PEG_SECOND_COMMANDER]);
 		_bind_sets(rd, list);
 		_bind_sets_commander(rd, list);
 		rd->compute_list_dispatch(list, 1, 1, 1);
+		rd->compute_list_end();
+
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CC_PEG_SCATTER]);
+		_bind_sets(rd, list);
+		_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_SPARSE_PIXEL_EDGES);
 		rd->compute_list_end();
 	}
 	rd->draw_command_end_label();
@@ -589,6 +589,13 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		rd->compute_list_end();
 
 		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CC_D_FIRST_COMMANDER]);
+		_bind_sets(rd, list);
+		_bind_sets_commander(rd, list);
+		rd->compute_list_dispatch(list, 1, 1, 1);
+		rd->compute_list_end();
+
+		list = rd->compute_list_begin();
 		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CC_D_HEAD_SCATTER]);
 		_bind_sets(rd, list);
 		_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_FRAGMENTED_PIXEL_EDGES);
@@ -604,13 +611,6 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CC_D_COMPACTED_SCATTER]);
 		_bind_sets(rd, list);
 		_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_FRAGMENTED_PIXEL_EDGES);
-		rd->compute_list_end();
-
-		list = rd->compute_list_begin();
-		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CC_D_FIRST_COMMANDER]);
-		_bind_sets(rd, list);
-		_bind_sets_commander(rd, list);
-		rd->compute_list_dispatch(list, 1, 1, 1);
 		rd->compute_list_end();
 	}
 	rd->draw_command_end_label();

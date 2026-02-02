@@ -41,17 +41,17 @@ layout(BUFREF_LAYOUT) buffer ContourEdgeClipTBuffer {
 #define BYTES_PER_CONTOUR_EDGE (M_BUF_SIZE(ContourEdgeMapsBuffer, 1) + M_BUF_SIZE(ContourEdgeClipTBuffer, 1))
 
 
-struct ContourFragmentAttribsData {
+struct ContourFragmentAttribs {
 	ivec2 pixel_coord;
 	vec2 orientation;
 	vec4 normal_depth;
 };
-#define _SIZEOF_ContourFragmentAttribsData() (_M_SIZEOF(ivec2)() + _M_SIZEOF(vec2)() + _M_SIZEOF(vec4)())
+#define _SIZEOF_ContourFragmentAttribs() (_M_SIZEOF(ivec2)() + _M_SIZEOF(vec2)() + _M_SIZEOF(vec4)())
 
 layout(BUFREF_LAYOUT) buffer ContourFragmentAttribsBuffer {
-	ContourFragmentAttribsData data[];
+	ContourFragmentAttribs data[];
 };
-#define _BUF_SIZE_ContourFragmentAttribsBuffer(MP_array_len) ((_M_SIZEOF(ContourFragmentAttribsData)()) * (MP_array_len))
+#define _BUF_SIZE_ContourFragmentAttribsBuffer(MP_array_len) ((_M_SIZEOF(ContourFragmentAttribs)()) * (MP_array_len))
 
 layout(BUFREF_LAYOUT) buffer ContourFragmentToContourEdgeBuffer {
 	int idx[];
@@ -82,17 +82,17 @@ layout(BUFREF_LAYOUT) buffer ForemostContourFragmentToContourPixelBuffer {
 #define BYTES_PER_CONTOUR_FRAGMENT (M_BUF_SIZE(ContourFragmentAttribsBuffer, 1) + M_BUF_SIZE(ContourFragmentToContourEdgeBuffer, 1) + M_BUF_SIZE(ContourFragmentPseudoVisibleBuffer, 1)+ M_BUF_SIZE(AllocationContourPixelBuffer, 1) + M_BUF_SIZE(ForemostContourFragmentToContourPixelBuffer, 1))
 
 
-struct ContourPixelAttribsData {
+struct ContourPixelAttribs {
 	ivec2 pixel_coord;
 	vec2 orientation;
 	vec4 normal_depth;
 };
-#define _SIZEOF_ContourPixelAttribsData() (_M_SIZEOF(ivec2)() + _M_SIZEOF(vec2)() + _M_SIZEOF(vec4)())
+#define _SIZEOF_ContourPixelAttribs() (_M_SIZEOF(ivec2)() + _M_SIZEOF(vec2)() + _M_SIZEOF(vec4)())
 
 layout(BUFREF_LAYOUT) buffer ContourPixelAttribsBuffer {
-	ContourPixelAttribsData data[];
+	ContourPixelAttribs data[];
 };
-#define _BUF_SIZE_ContourPixelAttribsBuffer(MP_array_len) ((_M_SIZEOF(ContourPixelAttribsData)()) * (MP_array_len))
+#define _BUF_SIZE_ContourPixelAttribsBuffer(MP_array_len) ((_M_SIZEOF(ContourPixelAttribs)()) * (MP_array_len))
 
 #define BYTES_PER_CONTOUR_PIXEL (M_BUF_SIZE(ContourPixelAttribsBuffer, 1))
 

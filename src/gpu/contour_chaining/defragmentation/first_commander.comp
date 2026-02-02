@@ -10,6 +10,9 @@ layout(local_size_x = 1) in;
 
 void main() {
 	if (gl_GlobalInvocationID.x == 0) {
+		B_pixel_edge_loop_attribs      = PixelEdgeLoopAttribsBuffer     (balloc_acquire(B_pixel_edge_balloc_buffer, M_BUF_SIZE(PixelEdgeLoopAttribsBuffer,      B_pixel_edge_desc.num_pixel_edge_loops)));
+		B_pixel_edge_loop_segmentation = PixelEdgeLoopSegmentationBuffer(balloc_acquire(B_pixel_edge_balloc_buffer, M_BUF_SIZE(PixelEdgeLoopSegmentationBuffer, B_pixel_edge_desc.num_pixel_edge_loops)));
+
 		DispatchIndirectCommand command;
 		command.workgroups_x = udiv_ceil(B_pixel_edge_desc.num_pixel_edges, 64);
 		command.workgroups_y = 1;
