@@ -1,33 +1,11 @@
-#ifndef PEL_BUFFERS_GLSLI
-#define PEL_BUFFERS_GLSLI
+#ifndef COMMON_BUFFERS_GLSLI
+#define COMMON_BUFFERS_GLSLI
 
 #extension GL_ARB_shading_language_include : enable
 #include "common/mem.glsli"
 
-#define MAX_NUM_SPARSE_PIXEL_EDGES (MAX_NUM_CONTOUR_PIXELS * 4)
-#define MAX_NUM_FRAGMENTED_PIXEL_EDGES (MAX_NUM_SPARSE_PIXEL_EDGES / 2)
-#define MAX_NUM_COMPACTED_PIXEL_EDGES (MAX_NUM_FRAGMENTED_PIXEL_EDGES)
-#define MAX_NUM_PIXEL_EDGE_LOOPS (MAX_NUM_COMPACTED_PIXEL_EDGES / 4)
-#define MAX_NUM_SEGMENTS_PER_LOOP (1024)
-#define MAX_NUM_SEGMENTS (MAX_NUM_COMPACTED_PIXEL_EDGES / 8)
-#define MAX_NUM_SEGMENT_EDGES (MAX_NUM_SEGMENTS * 4)
-#define MAX_NUM_STROKE_VERTICES (MAX_NUM_SEGMENT_EDGES * 4)
 
-
-layout(BUFREF_LAYOUT) buffer PixelEdgeDescBuffer {
-	int buf_len_sparse_pixel_edge;
-	int num_pixel_edges;
-	int num_pixel_edge_loops;
-	int num_segments;
-	int num_segment_edges;
-	int num_stroke_vertices;
-};
-#define _BUF_SIZE_PixelEdgeDescBuffer(MP_array_len) ((_M_SIZEOF(int)()) * 6)
-
-
-struct PixelEdgeOrientation {
-	uint value;
-};
+struct PixelEdgeOrientation { uint value; };
 #define _SIZEOF_PixelEdgeOrientation() (_M_SIZEOF(int)() * 1)
 
 #define E_PixelEdgeOrientation_NORTH (0u)
@@ -36,9 +14,6 @@ struct PixelEdgeOrientation {
 #define E_PixelEdgeOrientation_WEST  (3u)
 #define E_PixelEdgeOrientation_MAX   (4u)
 
-#include "common/math.glsli"
-#include "common/contour_buffers.glsli"
-
 uint get_sparse_pixel_edge_contour_pixel_idx(in const uint i_sparse_pixel_edge_idx) {
 	return i_sparse_pixel_edge_idx / 4u;
 }
@@ -46,6 +21,74 @@ uint get_sparse_pixel_edge_contour_pixel_idx(in const uint i_sparse_pixel_edge_i
 PixelEdgeOrientation get_sparse_pixel_edge_orientation(in const uint i_sparse_pixel_edge_idx) {
 	return PixelEdgeOrientation(i_sparse_pixel_edge_idx % 4u);
 }
+
+#include "common/math.glsli"
+
+
+layout(BUFREF_LAYOUT) buffer CommonDescBuffer {
+	int num_contour_edges;
+	int num_contour_fragments;
+	int num_contour_pixels;
+	int buf_len_sparse_pixel_edge;
+	int num_pixel_edges;
+	int num_pixel_edge_loops;
+	int num_segments;
+	int num_segment_edges;
+	int num_stroke_vertices;
+	int pad;
+};
+#define _BUF_SIZE_CommonDescBuffer(MP_array_len) ((_M_SIZEOF(int)()) * 8)
+
+
+struct ContourEdgeAttribs {
+	int to_global_edge_idx;
+	int is_discarded;
+	Range contour_fragment_range;
+	float clip_t[2];
+};
+#define _SIZEOF_ContourEdgeAttribs() (_M_SIZEOF(int)() * 2 + _M_SIZEOF(Range)() + _M_SIZEOF(float)() * 2)
+
+layout(BUFREF_LAYOUT) buffer ContourEdgeAttribsBuffer {
+	ContourEdgeAttribs data[];
+};
+#define _BUF_SIZE_ContourEdgeAttribsBuffer(MP_array_len) ((_M_SIZEOF(ContourEdgeAttribs)()) * (MP_array_len))
+
+#define BYTES_PER_CONTOUR_EDGE (M_BUF_SIZE(ContourEdgeAttribsBuffer, 1))
+
+
+struct ContourFragmentAttribs {
+	ivec2 pixel_coord;
+	vec2 orientation;
+	vec4 normal_depth;
+	int to_contour_edge_idx;
+	bool is_pseudo_visible;
+	bool is_fragment_cluster_leader;
+	int to_contour_pixel_idx;
+};
+#define _SIZEOF_ContourFragmentAttribs() (_M_SIZEOF(ivec2)() + _M_SIZEOF(vec2)() + _M_SIZEOF(vec4)() + _M_SIZEOF(int)() * 4)
+
+layout(BUFREF_LAYOUT) buffer ContourFragmentAttribsBuffer {
+	ContourFragmentAttribs data[];
+};
+#define _BUF_SIZE_ContourFragmentAttribsBuffer(MP_array_len) ((_M_SIZEOF(ContourFragmentAttribs)()) * (MP_array_len))
+
+#define BYTES_PER_CONTOUR_FRAGMENT (M_BUF_SIZE(ContourFragmentAttribsBuffer, 1))
+
+
+struct ContourPixelAttribs {
+	ivec2 pixel_coord;
+	vec2 orientation;
+	vec4 normal_depth;
+};
+#define _SIZEOF_ContourPixelAttribs() (_M_SIZEOF(ivec2)() + _M_SIZEOF(vec2)() + _M_SIZEOF(vec4)())
+
+layout(BUFREF_LAYOUT) buffer ContourPixelAttribsBuffer {
+	ContourPixelAttribs data[];
+};
+#define _BUF_SIZE_ContourPixelAttribsBuffer(MP_array_len) ((_M_SIZEOF(ContourPixelAttribs)()) * (MP_array_len))
+
+#define BYTES_PER_CONTOUR_PIXEL (M_BUF_SIZE(ContourPixelAttribsBuffer, 1))
+
 
 struct SparsePixelEdgeAttribs {
 	int prev_idx;
@@ -130,6 +173,7 @@ layout(BUFREF_LAYOUT) buffer CompactedPixelEdgeAttribsBuffer {
 #define INSIDE_OUTSIDE_TEST_MAX_NUM_NEIGHBOURS (8)
 #define INSIDE_OUTSIDE_TEST_MAX_WINDOW_SIZE (INSIDE_OUTSIDE_TEST_MAX_NUM_NEIGHBOURS * 2 + 1)
 
+#define MAX_NUM_SEGMENTS_PER_LOOP (1024)
 
 struct PixelEdgeLoopSegmentationData {
 	int num_segments;
@@ -220,12 +264,16 @@ layout(BUFREF_LAYOUT) buffer StrokeVertexAttribsBuffer {
 #define _BUF_SIZE_StrokeVertexAttribsBuffer(MP_array_len) ((_M_SIZEOF(StrokeVertexAttribs)()) * (MP_array_len))
 
 
-#define PIXEL_EDGE_BALLOC_BUFFER_SIZE (128 * 1024 * 1024)
+#define COMMON_BALLOC_BUFFER_SIZE (192 * 1024 * 1024)
 
-layout(set = 4, binding = 0, scalar) buffer PixelEdgeBuffers {
-	BumpAllocatorBuffer                         B_pixel_edge_balloc_buffer;
+layout(set = 3, binding = 0, scalar) buffer CommonBuffers {
+	BumpAllocatorBuffer                         B_common_balloc_buffer;
 
-	PixelEdgeDescBuffer                         B_pixel_edge_desc;
+	CommonDescBuffer                            B_common_desc;
+
+	ContourEdgeAttribsBuffer                    B_contour_edge_attribs;
+	ContourFragmentAttribsBuffer                B_contour_fragment_attribs;
+	ContourPixelAttribsBuffer                   B_contour_pixel_attribs;
 	SparsePixelEdgeAttribsBuffer                B_sparse_pixel_edge_attribs;
 
 	FragmentedPixelEdgeAttribsBuffer            B_fragmented_pixel_edge_attribs;
@@ -243,10 +291,17 @@ layout(set = 4, binding = 0, scalar) buffer PixelEdgeBuffers {
 };
 
 
+#if !defined(STAGE_FRAG) && !defined(STAGE_VERT)
+layout(set = 3, binding = 1) uniform sampler2D U_screen_depth_texture;
+
+layout(set = 3, binding = 2, r32ui) uniform uimage2D U_foremost_fragment_bitmap;
+#endif // !defined(STAGE_FRAG) && !defined(STAGE_VERT)
+
+
 bool is_sparse_pixel_edge_idx_valid(in const int i_idx) {
 	return (
 		i_idx >= 0 &&
-		i_idx < B_pixel_edge_desc.buf_len_sparse_pixel_edge &&
+		i_idx < B_common_desc.buf_len_sparse_pixel_edge &&
 		B_sparse_pixel_edge_attribs.data[i_idx].is_valid
 	);
 }
@@ -254,15 +309,12 @@ bool is_sparse_pixel_edge_idx_valid(in const int i_idx) {
 bool is_fragmented_pixel_edge_idx_valid(in const int i_idx) {
 	return (
 		i_idx >= 0 &&
-		i_idx < B_pixel_edge_desc.num_pixel_edges
+		i_idx < B_common_desc.num_pixel_edges
 	);
 }
 
 bool is_compacted_pixel_edge_idx_valid(in const int i_idx) {
-	return (
-		i_idx >= 0 &&
-		i_idx < B_pixel_edge_desc.num_pixel_edges
-	);
+	return is_fragmented_pixel_edge_idx_valid(i_idx);
 }
 
-#endif // !PEL_BUFFERS_GLSLI
+#endif // !COMMON_BUFFERS_GLSLI

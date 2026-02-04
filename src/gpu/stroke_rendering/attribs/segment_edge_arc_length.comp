@@ -15,7 +15,7 @@ shared float running_reduction_value;
 // todo: make into function
 void main() {
 	running_reduction_value = 0;
-	const BlockPartitionDesc bpd = create_block_partition_desc2(gl_WorkGroupSize.x, B_pixel_edge_desc.num_segment_edges);
+	const BlockPartitionDesc bpd = create_block_partition_desc2(gl_WorkGroupSize.x, B_common_desc.num_segment_edges);
 	
 	for (uint bd_i = 0; bd_i < bpd.num_blocks; ++bd_i) {
 		BlockDesc bd = create_block_desc(bpd, bd_i);

@@ -9,7 +9,7 @@ layout(local_size_x = 64) in;
 
 void main() {
 	const int contour_edge_idx = int(gl_GlobalInvocationID.x);
-	if (contour_edge_idx < B_contour_desc.num_contour_edges) {
+	if (contour_edge_idx < B_common_desc.num_contour_edges) {
 		// init
 		B_contour_edge_attribs.data[contour_edge_idx].contour_fragment_range = Range(0, 0);
 

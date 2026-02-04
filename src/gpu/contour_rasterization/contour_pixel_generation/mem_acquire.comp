@@ -8,6 +8,6 @@ layout(local_size_x = 1) in;
 
 void main() {
 	if (gl_GlobalInvocationID.x == 0) {
-		B_contour_pixel_attribs = ContourPixelAttribsBuffer(balloc_acquire(B_contour_balloc_buffer, M_BUF_SIZE(ContourPixelAttribsBuffer, B_contour_desc.num_contour_pixels)));
+		B_contour_pixel_attribs = ContourPixelAttribsBuffer(balloc_acquire(B_common_balloc_buffer, M_BUF_SIZE(ContourPixelAttribsBuffer, B_common_desc.num_contour_pixels)));
 	}
 }

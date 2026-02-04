@@ -114,26 +114,20 @@ public:
 		inline virtual uint32_t get_slot() const override { return 2; }
 	};
 
-	struct ContourInterfaceSet : InterfaceSet {
+	struct CommonInterfaceSet : InterfaceSet {
 		enum Buffer : uint32_t {
-			BUFFER_CONTOUR_DESC_BUFFER = 0,
-			BUFFER_CONTOUR_BALLOC_BUFFER,
-			BUFFER_CONTOUR_EDGE_ATTRIBS_BUFFER,
-			BUFFER_CONTOUR_FRAGMENT_ATTRIBS_BUFFER,
-			BUFFER_CONTOUR_PIXEL_ATTRIBS_BUFFER,
+			BUFFER_COMMON_BALLOC_BUFFER = 0,
 			BUFFER_MAX,
 		};
 
 		enum Binding : uint32_t {
-			BINDING_CONTOUR_BUFFERS = 0,
+			BINDING_COMMON_BUFFERS = 0,
 			BINDING_SCREEN_DEPTH_TEXTURE,
 			BINDING_FOREMOST_FRAGMENT_BITMAP,
 			BINDING_MAX,
 		};
 
-		static constexpr uint32_t max_num_contour_fragments = 1u << 18u;
-		static constexpr uint32_t max_num_contour_pixels = 1u << 18u;
-		static constexpr uint32_t balloc_buffer_size = 16 * 1024 * 1024;
+		static constexpr uint32_t balloc_buffer_size = 192 * 1024 * 1024;
 
 		RID nearest_sampler;
 
@@ -144,43 +138,6 @@ public:
 		virtual void make_bindings() override;
 		inline virtual uint32_t get_slot() const override { return 3; }
 		virtual TypedArray<Ref<RDUniform>> get_draw_bindings() const override;
-	};
-
-	struct PixelEdgeInterfaceSet : InterfaceSet {
-		enum Buffer : uint32_t {
-			BUFFER_PIXEL_EDGE_BALLOC_BUFFER = 0,
-			BUFFER_PIXEL_EDGE_DESC_BUFFER,
-			BUFFER_SPARSE_PIXEL_EDGE_ATTRIBS_BUFFER,
-			BUFFER_FRAGMENTED_PIXEL_EDGE_ATTRIBS_BUFFER,
-			BUFFER_FRAGMENTED_PIXEL_EDGE_WYLLIE_BUFFER,
-			BUFFER_COMPACTED_PIXEL_EDGE_ATTRIBS_BUFFER,
-			BUFFER_COMPACTED_PIXEL_EDGE_SEGMENTATION_BUFFER,
-			BUFFER_PIXEL_EDGE_LOOP_ATTRIBS_BUFFER,
-			BUFFER_PIXEL_EDGE_LOOP_SEGMENTATION_BUFFER,
-			BUFFER_SEGMENT_ATTRIBS_BUFFER,
-			BUFFER_SEGMENT_EDGE_ATTRIBS_BUFFER,
-			BUFFER_STROKE_VERTEX_ATTRIBS_BUFFER,
-			BUFFER_MAX,
-		};
-
-		enum Binding : uint32_t {
-			BINDING_PIXEL_EDGE_BUFFERS = 0,
-			BINDING_MAX,
-		};
-
-		static constexpr uint32_t max_num_sparse_pixel_edges = ContourInterfaceSet::max_num_contour_pixels * 4;
-		static constexpr uint32_t max_num_fragmented_pixel_edges = max_num_sparse_pixel_edges / 2;
-		static constexpr uint32_t max_num_compacted_pixel_edges = max_num_fragmented_pixel_edges;
-		static constexpr uint32_t max_num_pixel_edge_loops = max_num_compacted_pixel_edges / 4;
-		static constexpr uint32_t max_num_segments = max_num_compacted_pixel_edges / 8;
-		static constexpr uint32_t max_num_segment_edges = max_num_segments * 4;
-		static constexpr uint32_t max_num_stroke_vertices = max_num_segment_edges * 4;
-		static constexpr uint32_t balloc_buffer_size = 128 * 1024 * 1024;
-
-		virtual Error create_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
-		virtual Error update_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
-		virtual void make_bindings() override;
-		inline virtual uint32_t get_slot() const override { return 4; }
 	};
 
 	struct ShaderAPIInterfaceSet : InterfaceSet {

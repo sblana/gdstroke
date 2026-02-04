@@ -20,5 +20,8 @@ void main() {
 		command.workgroups_y = 1;
 		command.workgroups_z = 1;
 		B_dispatch_indirect_commands.cmds[E_DispatchIndirectCommand_INVOCATION_TO_GLOBAL_FACES] = command;
+
+		init_balloc_buffer(B_common_balloc_buffer, COMMON_BALLOC_BUFFER_SIZE);
+		B_common_desc = CommonDescBuffer(balloc_acquire(B_common_balloc_buffer, M_BUF_SIZE(CommonDescBuffer, NULLPTR)));
 	}
 }

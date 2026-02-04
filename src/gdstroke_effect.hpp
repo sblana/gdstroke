@@ -34,8 +34,7 @@ private:
 	GdstrokeShaderInterface::SceneInterfaceSet _scene_interface_set = {};
 	GdstrokeShaderInterface::CommandInterfaceSet _command_interface_set = {};
 	GdstrokeShaderInterface::MeshInterfaceSet _mesh_interface_set = {};
-	GdstrokeShaderInterface::ContourInterfaceSet _contour_interface_set = {};
-	GdstrokeShaderInterface::PixelEdgeInterfaceSet _pixel_edge_interface_set = {};
+	GdstrokeShaderInterface::CommonInterfaceSet _common_interface_set = {};
 
 	GdstrokeShaderInterface::ShaderAPIInterfaceSet _shader_api_interface_set = {};
 

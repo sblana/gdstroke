@@ -15,10 +15,9 @@
 using namespace godot;
 
 void GdstrokeEffect::_bind_sets(RenderingDevice *p_rd, int64_t p_compute_list) const {
-	     _scene_interface_set.bind_to_compute_list(p_rd, p_compute_list, _compiled_shaders[Shader::SHADER_DUMMY]);
-	      _mesh_interface_set.bind_to_compute_list(p_rd, p_compute_list, _compiled_shaders[Shader::SHADER_DUMMY]);
-	   _contour_interface_set.bind_to_compute_list(p_rd, p_compute_list, _compiled_shaders[Shader::SHADER_DUMMY]);
-	_pixel_edge_interface_set.bind_to_compute_list(p_rd, p_compute_list, _compiled_shaders[Shader::SHADER_DUMMY]);
+	 _scene_interface_set.bind_to_compute_list(p_rd, p_compute_list, _compiled_shaders[Shader::SHADER_DUMMY]);
+	  _mesh_interface_set.bind_to_compute_list(p_rd, p_compute_list, _compiled_shaders[Shader::SHADER_DUMMY]);
+	_common_interface_set.bind_to_compute_list(p_rd, p_compute_list, _compiled_shaders[Shader::SHADER_DUMMY]);
 }
 
 void GdstrokeEffect::_bind_sets_commander(RenderingDevice *p_rd, int64_t p_compute_list) const {
@@ -123,8 +122,7 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		_scene_interface_set.create_resources(rd, p_render_data);
 		_command_interface_set.create_resources(rd, p_render_data);
 		_mesh_interface_set.create_resources(rd, p_render_data);
-		_contour_interface_set.create_resources(rd, p_render_data);
-		_pixel_edge_interface_set.create_resources(rd, p_render_data);
+		_common_interface_set.create_resources(rd, p_render_data);
 		_shader_api_interface_set.create_resources(rd, p_render_data);
 		_debug_interface_set.create_resources(rd, p_render_data);
 
@@ -157,14 +155,10 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 	_mesh_interface_set.make_bindings();
 	ERR_FAIL_COND(!_mesh_interface_set.get_uniform_set_rid(_compiled_shaders[Shader::SHADER_DUMMY]).is_valid());
 
-	_contour_interface_set.receive_hard_depth_test_attachments(_hard_depth_test_resources.get_attachments(rd, p_render_data));
-	_contour_interface_set.update_resources(rd, p_render_data);
-	_contour_interface_set.make_bindings();
-	ERR_FAIL_COND(!_contour_interface_set.get_uniform_set_rid(_compiled_shaders[Shader::SHADER_DUMMY]).is_valid());
-
-	_pixel_edge_interface_set.update_resources(rd, p_render_data);
-	_pixel_edge_interface_set.make_bindings();
-	ERR_FAIL_COND(!_pixel_edge_interface_set.get_uniform_set_rid(_compiled_shaders[Shader::SHADER_DUMMY]).is_valid());
+	_common_interface_set.receive_hard_depth_test_attachments(_hard_depth_test_resources.get_attachments(rd, p_render_data));
+	_common_interface_set.update_resources(rd, p_render_data);
+	_common_interface_set.make_bindings();
+	ERR_FAIL_COND(!_common_interface_set.get_uniform_set_rid(_compiled_shaders[Shader::SHADER_DUMMY]).is_valid());
 
 	_shader_api_interface_set.update_resources(rd, p_render_data);
 	_shader_api_interface_set.make_bindings();
@@ -176,15 +170,12 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 
 
 	// HACK: rethink abstractions to avoid this pls
-	using      MeshBuffers  = GdstrokeShaderInterface::     MeshInterfaceSet::Buffer;
-	using      MeshBindings = GdstrokeShaderInterface::     MeshInterfaceSet::Binding;
-	using   ContourBuffers  = GdstrokeShaderInterface::  ContourInterfaceSet::Buffer;
-	using   ContourBindings = GdstrokeShaderInterface::  ContourInterfaceSet::Binding;
-	using PixelEdgeBuffers  = GdstrokeShaderInterface::PixelEdgeInterfaceSet::Buffer;
-	using PixelEdgeBindings = GdstrokeShaderInterface::PixelEdgeInterfaceSet::Binding;
-	uint64_t       mesh_buffers_ptr = rd->buffer_get_device_address(      _mesh_interface_set.resources[int(     MeshBuffers::BUFFER_MAX) + int(     MeshBindings::BINDING_MESH_BUFFERS)]);
-	uint64_t    contour_buffers_ptr = rd->buffer_get_device_address(   _contour_interface_set.resources[int(  ContourBuffers::BUFFER_MAX) + int(  ContourBindings::BINDING_CONTOUR_BUFFERS)]);
-	uint64_t pixel_edge_buffers_ptr = rd->buffer_get_device_address(_pixel_edge_interface_set.resources[int(PixelEdgeBuffers::BUFFER_MAX) + int(PixelEdgeBindings::BINDING_PIXEL_EDGE_BUFFERS)]);
+	using   MeshBuffers  = GdstrokeShaderInterface::  MeshInterfaceSet::Buffer;
+	using   MeshBindings = GdstrokeShaderInterface::  MeshInterfaceSet::Binding;
+	using CommonBuffers  = GdstrokeShaderInterface::CommonInterfaceSet::Buffer;
+	using CommonBindings = GdstrokeShaderInterface::CommonInterfaceSet::Binding;
+	uint64_t   mesh_buffers_ptr = rd->buffer_get_device_address(  _mesh_interface_set.resources[int(  MeshBuffers::BUFFER_MAX) + int(  MeshBindings::BINDING_MESH_BUFFERS)]);
+	uint64_t common_buffers_ptr = rd->buffer_get_device_address(_common_interface_set.resources[int(CommonBuffers::BUFFER_MAX) + int(CommonBindings::BINDING_COMMON_BUFFERS)]);
 
 	int64_t list;
 	rd->draw_command_begin_label("dummy", Color(0.3, 0.3, 0.3));
@@ -256,7 +247,7 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 			int64_t(sizeof(uint64_t) * MeshBuffers::BUFFER_GEOMETRY_DESC_BUFFER + mesh_buffers_ptr),
 			int64_t(2 * sizeof(int32_t)),
 			// B_contour_desc.num_contour_edges,
-			int64_t(sizeof(uint64_t) * ContourBuffers::BUFFER_CONTOUR_DESC_BUFFER + contour_buffers_ptr),
+			int64_t(sizeof(uint64_t) * 1 + common_buffers_ptr),
 			int64_t(0 * sizeof(int32_t)),
 			// B_global_edges.data[idx].to_contour_edge,
 			int64_t(sizeof(uint64_t) * MeshBuffers::BUFFER_GLOBAL_EDGES_BUFFER + mesh_buffers_ptr),
@@ -432,8 +423,7 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		rd->draw_list_bind_render_pipeline(list, _pipelines[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST]);
 		_scene_interface_set.bind_to_draw_list(rd, list, _compiled_shaders[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST]);
 		_mesh_interface_set.bind_to_draw_list(rd, list, _compiled_shaders[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST]);
-		_contour_interface_set.bind_to_draw_list(rd, list, _compiled_shaders[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST]);
-		_pixel_edge_interface_set.bind_to_draw_list(rd, list, _compiled_shaders[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST]);
+		_common_interface_set.bind_to_draw_list(rd, list, _compiled_shaders[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST]);
 		_command_interface_set.draw_indirect(rd, list, DrawIndirectCommands::DRAW_INDIRECT_COMMANDS_HARD_DEPTH_TEST);
 		rd->draw_list_end();
 

@@ -30,7 +30,7 @@ shared int block_offsets[gl_WorkGroupSize.x];
 #define fn_add_set_intermediate_offsets(MP_idx_, MP_value_) B_allocation_column.column_offset[MP_idx_] += MP_value_
 
 void main() {
-	const uint level_0_num_workgroups = udiv_ceil(B_contour_desc.num_contour_fragments, L0_WORKGROUP_SIZE);
+	const uint level_0_num_workgroups = udiv_ceil(B_common_desc.num_contour_fragments, L0_WORKGROUP_SIZE);
 
 	#ifdef COMMANDER
 
@@ -59,9 +59,9 @@ void main() {
 		M_GLOBAL_ALLOCATION(
 			int,
 			block_offsets,
-			B_contour_desc.num_contour_fragments,
+			B_common_desc.num_contour_fragments,
 			fn_get_src_array,
-			B_contour_desc.num_contour_pixels,
+			B_common_desc.num_contour_pixels,
 			fn_get_intermediate_sums,
 			fn_set_intermediate_sums,
 			fn_get_intermediate_offsets,

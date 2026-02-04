@@ -8,7 +8,7 @@ layout(local_size_x = 64) in;
 
 void main() {
 	const uint segment_edge = gl_GlobalInvocationID.x;
-	if (segment_edge < B_pixel_edge_desc.num_segment_edges) {
+	if (segment_edge < B_common_desc.num_segment_edges) {
 		const int compacted_pixel_edge = B_segment_edge_attribs.data[segment_edge].to_compacted_pixel_edge_idx;
 		const int segment_key = B_compacted_pixel_edge_attribs.data[compacted_pixel_edge].segment_key;
 

@@ -10,7 +10,7 @@ layout(local_size_x = 64) in;
 
 void main() {
 	const uint contour_pixel_idx = gl_GlobalInvocationID.x;
-	if (contour_pixel_idx < B_contour_desc.num_contour_pixels) {
+	if (contour_pixel_idx < B_common_desc.num_contour_pixels) {
 		const ivec2 pixel_coord = B_contour_pixel_attribs.data[contour_pixel_idx].pixel_coord;
 		if (is_within_screen(pixel_coord, imageSize(U_screen_color_image))) {
 			vec2 orientation = B_contour_pixel_attribs.data[contour_pixel_idx].orientation;

@@ -10,7 +10,7 @@ layout(local_size_x = 64) in;
 void main() {
 	const uint pixel_edge_idx = gl_GlobalInvocationID.x;
 
-	if (pixel_edge_idx < B_pixel_edge_desc.num_pixel_edges) {
+	if (pixel_edge_idx < B_common_desc.num_pixel_edges) {
 
 		// init
 		B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].is_inside_initial = false;

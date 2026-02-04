@@ -10,13 +10,13 @@ layout(local_size_x = 1) in;
 
 void main() {
 	if (gl_GlobalInvocationID.x == 0) {
-		B_fragmented_pixel_edge_attribs     = FragmentedPixelEdgeAttribsBuffer    (balloc_acquire(B_pixel_edge_balloc_buffer, M_BUF_SIZE(FragmentedPixelEdgeAttribsBuffer,     B_pixel_edge_desc.num_pixel_edges)));
-		B_fragmented_pixel_edge_wyllie      = FragmentedPixelEdgeWyllieBuffer     (balloc_acquire(B_pixel_edge_balloc_buffer, M_BUF_SIZE(FragmentedPixelEdgeWyllieBuffer,      B_pixel_edge_desc.num_pixel_edges)));
-		B_compacted_pixel_edge_attribs      = CompactedPixelEdgeAttribsBuffer     (balloc_acquire(B_pixel_edge_balloc_buffer, M_BUF_SIZE(CompactedPixelEdgeAttribsBuffer,      B_pixel_edge_desc.num_pixel_edges)));
-		B_compacted_pixel_edge_segmentation = CompactedPixelEdgeSegmentationBuffer(balloc_acquire(B_pixel_edge_balloc_buffer, M_BUF_SIZE(CompactedPixelEdgeSegmentationBuffer, B_pixel_edge_desc.num_pixel_edges)));
+		B_fragmented_pixel_edge_attribs     = FragmentedPixelEdgeAttribsBuffer    (balloc_acquire(B_common_balloc_buffer, M_BUF_SIZE(FragmentedPixelEdgeAttribsBuffer,     B_common_desc.num_pixel_edges)));
+		B_fragmented_pixel_edge_wyllie      = FragmentedPixelEdgeWyllieBuffer     (balloc_acquire(B_common_balloc_buffer, M_BUF_SIZE(FragmentedPixelEdgeWyllieBuffer,      B_common_desc.num_pixel_edges)));
+		B_compacted_pixel_edge_attribs      = CompactedPixelEdgeAttribsBuffer     (balloc_acquire(B_common_balloc_buffer, M_BUF_SIZE(CompactedPixelEdgeAttribsBuffer,      B_common_desc.num_pixel_edges)));
+		B_compacted_pixel_edge_segmentation = CompactedPixelEdgeSegmentationBuffer(balloc_acquire(B_common_balloc_buffer, M_BUF_SIZE(CompactedPixelEdgeSegmentationBuffer, B_common_desc.num_pixel_edges)));
 
 		DispatchIndirectCommand command;
-		command.workgroups_x = udiv_ceil(B_pixel_edge_desc.num_pixel_edges, 64);
+		command.workgroups_x = udiv_ceil(B_common_desc.num_pixel_edges, 64);
 		command.workgroups_y = 1;
 		command.workgroups_z = 1;
 		B_dispatch_indirect_commands.cmds[E_DispatchIndirectCommand_INVOCATION_TO_FRAGMENTED_PIXEL_EDGES] = command;

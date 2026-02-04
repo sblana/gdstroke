@@ -26,18 +26,18 @@ void main() {
 	M_SINGLE_WORKGROUP_ALLOCATION(
 		int,
 		block_num_segments,
-		B_pixel_edge_desc.num_pixel_edge_loops,
+		B_common_desc.num_pixel_edge_loops,
 		p0_fn_get_src_array,
-		B_pixel_edge_desc.num_segments,
+		B_common_desc.num_segments,
 		p0_fn_set_src_to_dst_map,
 		p0_fn_add_set_src_to_dst_map
 	)
 	M_SINGLE_WORKGROUP_ALLOCATION(
 		int,
 		block_num_segment_edges,
-		B_pixel_edge_desc.num_pixel_edge_loops,
+		B_common_desc.num_pixel_edge_loops,
 		p1_fn_get_src_array,
-		B_pixel_edge_desc.num_segment_edges,
+		B_common_desc.num_segment_edges,
 		p1_fn_set_src_to_dst_map,
 		p1_fn_add_set_src_to_dst_map
 	)

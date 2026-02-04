@@ -8,7 +8,7 @@ layout(local_size_x = 64) in;
 
 void main() {
 	const uint segment_key = gl_GlobalInvocationID.x;
-	if (segment_key < B_pixel_edge_desc.num_segments) {
+	if (segment_key < B_common_desc.num_segments) {
 		B_segment_attribs.data[segment_key].stroke_vertices.count = max(B_segment_attribs.data[segment_key].segment_edges.count - 1, 1) * 2 * 3;
 	}
 }

@@ -14,7 +14,7 @@ layout(push_constant) RESTRICT uniform PushConstants {
 
 void main() {
 	const uint pixel_edge_idx = gl_GlobalInvocationID.x;
-	if (pixel_edge_idx < B_pixel_edge_desc.num_pixel_edges) {
+	if (pixel_edge_idx < B_common_desc.num_pixel_edges) {
 		const FragmentedPixelEdgeWyllieData curr_data = B_fragmented_pixel_edge_wyllie.data[pixel_edge_idx][U_push_constants.read_layer];
 		if (curr_data.prev_idx != -1) {
 			FragmentedPixelEdgeWyllieData next_data = curr_data;

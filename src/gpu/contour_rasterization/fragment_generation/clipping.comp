@@ -81,7 +81,7 @@ LineClipData clip_line(in const vec4 i_ndc_verts[2]) {
 
 void main() {
 	const int contour_edge_idx = int(gl_GlobalInvocationID.x);
-	if (contour_edge_idx < B_contour_desc.num_contour_edges) {
+	if (contour_edge_idx < B_common_desc.num_contour_edges) {
 		const int global_edge_idx = B_contour_edge_attribs.data[contour_edge_idx].to_global_edge_idx;
 		const vec4 ndc[2] = pre_raster_edge(global_edge_idx);
 		const LineClipData line_clip_data = clip_line(ndc);

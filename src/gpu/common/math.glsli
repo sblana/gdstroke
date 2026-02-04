@@ -38,7 +38,7 @@ bool is_within_screen(in ivec2 i_point, in uvec2 i_screen_size) {
 }
 
 #extension GL_ARB_shading_language_include : enable
-#include "common/pixel_edge_buffers.glsli"
+#include "common/common_buffers.glsli"
 
 PixelEdgeOrientation orientation_op_add(in const PixelEdgeOrientation i_a, in const int i_b) {
 	return PixelEdgeOrientation((int(i_a.value + E_PixelEdgeOrientation_MAX) + i_b) % E_PixelEdgeOrientation_MAX);

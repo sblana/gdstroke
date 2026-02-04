@@ -17,9 +17,9 @@ void main() {
 	M_SINGLE_WORKGROUP_ALLOCATION(
 		int,
 		block_offsets,
-		B_pixel_edge_desc.num_segments,
+		B_common_desc.num_segments,
 		fn_get_src_array,
-		B_pixel_edge_desc.num_stroke_vertices,
+		B_common_desc.num_stroke_vertices,
 		fn_set_src_to_dst_map,
 		fn_add_set_src_to_dst_map
 	)
