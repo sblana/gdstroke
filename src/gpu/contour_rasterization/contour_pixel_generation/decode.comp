@@ -12,6 +12,6 @@ void main() {
 		const int fragment_idx = int(imageLoad(U_foremost_fragment_bitmap, pixel_coord).x) - 1;
 		B_contour_pixel_attribs.data[contour_pixel_idx].orientation  = B_contour_fragment_attribs.data[fragment_idx].orientation;
 		B_contour_pixel_attribs.data[contour_pixel_idx].normal_depth = B_contour_fragment_attribs.data[fragment_idx].normal_depth;
-		B_foremost_contour_fragment_to_contour_pixel.contour_pixel_idx[fragment_idx] = contour_pixel_idx;
+		B_contour_fragment_attribs.data[fragment_idx].to_contour_pixel_idx = int(contour_pixel_idx);
 	}
 }

@@ -11,7 +11,7 @@
 	void main() {
 		gl_PointSize = 1.0;
 		AO_contour_fragment_idx = gl_InstanceIndex;
-		AO_is_pseudo_visible = uint(B_contour_fragment_pseudo_visible.pseudo_visible[AO_contour_fragment_idx]);
+		AO_is_pseudo_visible = uint(B_contour_fragment_attribs.data[AO_contour_fragment_idx].is_pseudo_visible);
 
 		ivec2 pixel_coord = B_contour_fragment_attribs.data[AO_contour_fragment_idx].pixel_coord;
 		vec2 frag_coord = (pixel_coord + 0.5) / U_scene_data.cur.viewport_size * 2.0 - 1.0;

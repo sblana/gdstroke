@@ -31,11 +31,11 @@ void main() {
 			PixelEdgeOrientation next_orientation;
 
 			if (ahead_left_contour_fragment_idx != -1) {
-				next_contour_pixel_idx = B_foremost_contour_fragment_to_contour_pixel.contour_pixel_idx[ahead_left_contour_fragment_idx];
+				next_contour_pixel_idx = B_contour_fragment_attribs.data[ahead_left_contour_fragment_idx].to_contour_pixel_idx;
 				next_orientation = get_prev_orientation(orientation);
 			}
 			else if (ahead_right_contour_fragment_idx != -1) {
-				next_contour_pixel_idx = B_foremost_contour_fragment_to_contour_pixel.contour_pixel_idx[ahead_right_contour_fragment_idx];
+				next_contour_pixel_idx = B_contour_fragment_attribs.data[ahead_right_contour_fragment_idx].to_contour_pixel_idx;
 				next_orientation = orientation;
 			}
 			else {
@@ -47,11 +47,11 @@ void main() {
 			PixelEdgeOrientation prev_orientation;
 
 			if (behind_left_contour_fragment_idx != -1) {
-				prev_contour_pixel_idx = B_foremost_contour_fragment_to_contour_pixel.contour_pixel_idx[behind_left_contour_fragment_idx];
+				prev_contour_pixel_idx = B_contour_fragment_attribs.data[behind_left_contour_fragment_idx].to_contour_pixel_idx;
 				prev_orientation = get_next_orientation(orientation);
 			}
 			else if (behind_right_contour_fragment_idx != -1) {
-				prev_contour_pixel_idx = B_foremost_contour_fragment_to_contour_pixel.contour_pixel_idx[behind_right_contour_fragment_idx];
+				prev_contour_pixel_idx = B_contour_fragment_attribs.data[behind_right_contour_fragment_idx].to_contour_pixel_idx;
 				prev_orientation = orientation;
 			}
 			else {
@@ -64,7 +64,7 @@ void main() {
 			B_sparse_pixel_edge_attribs.data[pixel_edge_idx].is_valid = true;
 		}
 		const int here_contour_fragment_idx = int(imageLoad(U_foremost_fragment_bitmap, pixel_coord).x) - 1;
-		if (here_contour_fragment_idx == -1 || contour_pixel_idx != B_foremost_contour_fragment_to_contour_pixel.contour_pixel_idx[here_contour_fragment_idx]) {
+		if (here_contour_fragment_idx == -1 || contour_pixel_idx != B_contour_fragment_attribs.data[here_contour_fragment_idx].to_contour_pixel_idx) {
 			B_sparse_pixel_edge_attribs.data[pixel_edge_idx].prev_idx = -1;
 			B_sparse_pixel_edge_attribs.data[pixel_edge_idx].next_idx = -1;
 			B_sparse_pixel_edge_attribs.data[pixel_edge_idx].is_valid = false;

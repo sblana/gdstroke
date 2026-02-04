@@ -1,0 +1,26 @@
+#version 450
+#extension GL_ARB_shading_language_include : enable
+
+layout(local_size_x = 1024) in;
+
+#include "common/buffers.glsli"
+#include "common/scans.glsli"
+
+
+shared int block_offsets[gl_WorkGroupSize.x];
+
+#define fn_get_src_array(MP_idx_)                     B_contour_edge_attribs.data[MP_idx_].contour_fragment_range.count
+#define fn_set_src_to_dst_map(MP_idx_, MP_value_)     B_contour_edge_attribs.data[MP_idx_].contour_fragment_range.first  = MP_value_
+#define fn_add_set_src_to_dst_map(MP_idx_, MP_value_) B_contour_edge_attribs.data[MP_idx_].contour_fragment_range.first += MP_value_
+
+void main() {
+	M_SINGLE_WORKGROUP_ALLOCATION(
+		int,
+		block_offsets,
+		B_contour_desc.num_contour_edges,
+		fn_get_src_array,
+		B_contour_desc.num_contour_fragments,
+		fn_set_src_to_dst_map,
+		fn_add_set_src_to_dst_map
+	)
+}

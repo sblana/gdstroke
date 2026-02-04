@@ -10,6 +10,6 @@ void main() {
 	const uint global_edge_idx = gl_GlobalInvocationID.x;
 	if (B_global_edges.data[global_edge_idx].is_contour) {
 		const int contour_edge_idx = B_global_edges.data[global_edge_idx].to_contour_edge;
-		B_contour_edge_maps.data[contour_edge_idx].to_global_edge_idx = int(global_edge_idx);
+		B_contour_edge_attribs.data[contour_edge_idx].to_global_edge_idx = int(global_edge_idx);
 	}
 }

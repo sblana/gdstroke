@@ -10,13 +10,14 @@ void main() {
 	uint fragment_idx = gl_GlobalInvocationID.x;
 	if (fragment_idx < B_contour_desc.num_contour_fragments) {
 		// clear only the relevant region of the buffer
-		B_allocation_contour_pixel.data[fragment_idx] = AllocationContourPixelData(0u, 0u);;
+		B_contour_fragment_attribs.data[fragment_idx].is_fragment_cluster_leader = false;
+		B_contour_fragment_attribs.data[fragment_idx].to_contour_pixel_idx = 0;
 
-		if (B_contour_fragment_pseudo_visible.pseudo_visible[fragment_idx]) {
+		if (B_contour_fragment_attribs.data[fragment_idx].is_pseudo_visible) {
 			ivec2 pixel_coord = B_contour_fragment_attribs.data[fragment_idx].pixel_coord;
 			uint prev_value = imageAtomicOr(U_foremost_fragment_bitmap, pixel_coord, 1u);
 			if (prev_value == 0u) {
-				B_allocation_contour_pixel.data[fragment_idx].is_fragment_cluster_leader = 1u;
+				B_contour_fragment_attribs.data[fragment_idx].is_fragment_cluster_leader = true;
 			}
 		}
 	}

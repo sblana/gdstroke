@@ -10,7 +10,6 @@ void main() {
 	if (gl_GlobalInvocationID.x == 0) {
 		init_balloc_buffer(B_contour_balloc_buffer, CONTOUR_BALLOC_BUFFER_SIZE);
 
-		B_contour_edge_maps   = ContourEdgeMapsBuffer (balloc_acquire(B_contour_balloc_buffer, M_BUF_SIZE(ContourEdgeMapsBuffer,  B_contour_desc.num_contour_edges)));
-		B_contour_edge_clip_t = ContourEdgeClipTBuffer(balloc_acquire(B_contour_balloc_buffer, M_BUF_SIZE(ContourEdgeClipTBuffer, B_contour_desc.num_contour_edges)));
+		B_contour_edge_attribs = ContourEdgeAttribsBuffer (balloc_acquire(B_contour_balloc_buffer, M_BUF_SIZE(ContourEdgeAttribsBuffer,  B_contour_desc.num_contour_edges)));
 	}
 }

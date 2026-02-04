@@ -14,13 +14,13 @@ void main() {
 		return;
 	}
 
-	const int contour_edge_idx = B_contour_fragment_to_contour_edge.idx[fragment_idx];
-	if (bool(B_contour_edge_maps.data[contour_edge_idx].is_discarded)) {
+	const int contour_edge_idx = B_contour_fragment_attribs.data[fragment_idx].to_contour_edge_idx;
+	if (bool(B_contour_edge_attribs.data[contour_edge_idx].is_discarded)) {
 		return;
 	}
-	const int global_edge_idx = B_contour_edge_maps.data[contour_edge_idx].to_global_edge_idx;
+	const int global_edge_idx = B_contour_edge_attribs.data[contour_edge_idx].to_global_edge_idx;
 	const vec4 verts_ndc[2] = pre_raster_edge(global_edge_idx);
-	const float clip_t[2] = B_contour_edge_clip_t.t[contour_edge_idx];
+	const float clip_t[2] = B_contour_edge_attribs.data[contour_edge_idx].clip_t;
 	const vec4 verts_clipped_ndc[2] = {
 		verts_ndc[0] + (verts_ndc[1] - verts_ndc[0]) * clip_t[0],
 		verts_ndc[0] + (verts_ndc[1] - verts_ndc[0]) * clip_t[1]
@@ -62,7 +62,7 @@ void main() {
 	const float f_non_dominant_intercept = verts_clipped_screen[0][int(!f_is_y_dominant)] - verts_clipped_screen[0][int(f_is_y_dominant)] * f_slope;
 #endif
 
-	const Range fragment_range = B_contour_edge_maps.data[contour_edge_idx].contour_fragment_range;
+	const Range fragment_range = B_contour_edge_attribs.data[contour_edge_idx].contour_fragment_range;
 	const int fragment_local_idx = int(fragment_idx) - fragment_range.first;
 	{
 		ivec2 pixel_coord = ivec2(0,0);

@@ -11,75 +11,44 @@
 
 layout(BUFREF_LAYOUT) buffer ContourDescBuffer {
 	int num_contour_edges;
-	int buf_len_contour_edges;
-
 	int num_contour_fragments;
-	int buf_len_contour_fragments;
-
 	int num_contour_pixels;
-	int buf_len_contour_pixels;
 };
 
 
-struct ContourEdgeMapsData {
+struct ContourEdgeAttribs {
 	int to_global_edge_idx;
 	int is_discarded;
 	Range contour_fragment_range;
+	float clip_t[2];
 };
-#define _SIZEOF_ContourEdgeMapsData() (_M_SIZEOF(int)() * 2 + _M_SIZEOF(Range)())
+#define _SIZEOF_ContourEdgeAttribs() (_M_SIZEOF(int)() * 2 + _M_SIZEOF(Range)() + _M_SIZEOF(float)() * 2)
 
-layout(BUFREF_LAYOUT) buffer ContourEdgeMapsBuffer {
-	ContourEdgeMapsData data[];
+layout(BUFREF_LAYOUT) buffer ContourEdgeAttribsBuffer {
+	ContourEdgeAttribs data[];
 };
-#define _BUF_SIZE_ContourEdgeMapsBuffer(MP_array_len) ((_M_SIZEOF(ContourEdgeMapsData)()) * (MP_array_len))
+#define _BUF_SIZE_ContourEdgeAttribsBuffer(MP_array_len) ((_M_SIZEOF(ContourEdgeAttribs)()) * (MP_array_len))
 
-layout(BUFREF_LAYOUT) buffer ContourEdgeClipTBuffer {
-	float t[][2];
-};
-#define _BUF_SIZE_ContourEdgeClipTBuffer(MP_array_len) ((_M_SIZEOF(float)()) * 2 * (MP_array_len))
-
-#define BYTES_PER_CONTOUR_EDGE (M_BUF_SIZE(ContourEdgeMapsBuffer, 1) + M_BUF_SIZE(ContourEdgeClipTBuffer, 1))
+#define BYTES_PER_CONTOUR_EDGE (M_BUF_SIZE(ContourEdgeAttribsBuffer, 1))
 
 
 struct ContourFragmentAttribs {
 	ivec2 pixel_coord;
 	vec2 orientation;
 	vec4 normal_depth;
+	int to_contour_edge_idx;
+	bool is_pseudo_visible;
+	bool is_fragment_cluster_leader;
+	int to_contour_pixel_idx;
 };
-#define _SIZEOF_ContourFragmentAttribs() (_M_SIZEOF(ivec2)() + _M_SIZEOF(vec2)() + _M_SIZEOF(vec4)())
+#define _SIZEOF_ContourFragmentAttribs() (_M_SIZEOF(ivec2)() + _M_SIZEOF(vec2)() + _M_SIZEOF(vec4)() + _M_SIZEOF(int)() * 4)
 
 layout(BUFREF_LAYOUT) buffer ContourFragmentAttribsBuffer {
 	ContourFragmentAttribs data[];
 };
 #define _BUF_SIZE_ContourFragmentAttribsBuffer(MP_array_len) ((_M_SIZEOF(ContourFragmentAttribs)()) * (MP_array_len))
 
-layout(BUFREF_LAYOUT) buffer ContourFragmentToContourEdgeBuffer {
-	int idx[];
-};
-#define _BUF_SIZE_ContourFragmentToContourEdgeBuffer(MP_array_len) ((_M_SIZEOF(int)()) * (MP_array_len))
-
-layout(BUFREF_LAYOUT) buffer ContourFragmentPseudoVisibleBuffer {
-	bool pseudo_visible[];
-};
-#define _BUF_SIZE_ContourFragmentPseudoVisibleBuffer(MP_array_len) ((_M_SIZEOF(bool)()) * (MP_array_len))
-
-struct AllocationContourPixelData {
-	uint is_fragment_cluster_leader;
-	uint contour_pixel_idx;
-};
-#define _SIZEOF_AllocationContourPixelData() (_M_SIZEOF(uint)() * 2)
-
-layout(BUFREF_LAYOUT) buffer AllocationContourPixelBuffer {
-	AllocationContourPixelData data[];
-};
-#define _BUF_SIZE_AllocationContourPixelBuffer(MP_array_len) ((_M_SIZEOF(AllocationContourPixelData)()) * (MP_array_len))
-
-layout(BUFREF_LAYOUT) buffer ForemostContourFragmentToContourPixelBuffer {
-	uint contour_pixel_idx[];
-};
-#define _BUF_SIZE_ForemostContourFragmentToContourPixelBuffer(MP_array_len) ((_M_SIZEOF(uint)()) * (MP_array_len))
-
-#define BYTES_PER_CONTOUR_FRAGMENT (M_BUF_SIZE(ContourFragmentAttribsBuffer, 1) + M_BUF_SIZE(ContourFragmentToContourEdgeBuffer, 1) + M_BUF_SIZE(ContourFragmentPseudoVisibleBuffer, 1)+ M_BUF_SIZE(AllocationContourPixelBuffer, 1) + M_BUF_SIZE(ForemostContourFragmentToContourPixelBuffer, 1))
+#define BYTES_PER_CONTOUR_FRAGMENT (M_BUF_SIZE(ContourFragmentAttribsBuffer, 1))
 
 
 struct ContourPixelAttribs {
@@ -102,13 +71,8 @@ layout(BUFREF_LAYOUT) buffer ContourPixelAttribsBuffer {
 layout(set = 3, binding = 0, scalar) buffer ContourBuffers {
 	ContourDescBuffer                           B_contour_desc;
 	BumpAllocatorBuffer                         B_contour_balloc_buffer;
-	ContourEdgeMapsBuffer                       B_contour_edge_maps;
-	ContourEdgeClipTBuffer                      B_contour_edge_clip_t;
+	ContourEdgeAttribsBuffer                    B_contour_edge_attribs;
 	ContourFragmentAttribsBuffer                B_contour_fragment_attribs;
-	ContourFragmentToContourEdgeBuffer          B_contour_fragment_to_contour_edge;
-	ContourFragmentPseudoVisibleBuffer          B_contour_fragment_pseudo_visible;
-	AllocationContourPixelBuffer                B_allocation_contour_pixel;
-	ForemostContourFragmentToContourPixelBuffer B_foremost_contour_fragment_to_contour_pixel;
 	ContourPixelAttribsBuffer                   B_contour_pixel_attribs;
 };
 

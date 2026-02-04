@@ -10,11 +10,11 @@ layout(local_size_x = 64) in;
 
 void main() {
 	const int contour_edge_idx = int(gl_WorkGroupID.x);
-	if (bool(B_contour_edge_maps.data[contour_edge_idx].is_discarded)) {
+	if (bool(B_contour_edge_attribs.data[contour_edge_idx].is_discarded)) {
 		return;
 	}
 
-	const Range fragment_range = B_contour_edge_maps.data[contour_edge_idx].contour_fragment_range;
+	const Range fragment_range = B_contour_edge_attribs.data[contour_edge_idx].contour_fragment_range;
 	uint num_blocks = gl_WorkGroupSize.x;
 	const uint fragments_per_block = udiv_ceil(fragment_range.count, num_blocks);
 	num_blocks = udiv_ceil(fragment_range.count, fragments_per_block);
@@ -24,7 +24,7 @@ void main() {
 		const int start_frag_idx = int(fragments_per_block * block_idx);
 		const int final_frag_idx = int(min(start_frag_idx + fragments_per_block, fragment_range.count)) - 1;
 		for (int frag_idx = start_frag_idx; frag_idx <= final_frag_idx; ++frag_idx) {
-			B_contour_fragment_to_contour_edge.idx[fragment_range.first + frag_idx] = contour_edge_idx;
+			B_contour_fragment_attribs.data[fragment_range.first + frag_idx].to_contour_edge_idx = contour_edge_idx;
 		}
 	}
 }

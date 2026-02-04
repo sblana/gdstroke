@@ -15,7 +15,7 @@ void main() {
 		if (is_within_screen(pixel_coord, imageSize(U_screen_color_image))) {
 			const vec4 output_data = vec4(
 				B_contour_fragment_attribs.data[fragment_idx].normal_depth.w,
-				B_contour_fragment_pseudo_visible.pseudo_visible[fragment_idx],
+				B_contour_fragment_attribs.data[fragment_idx].is_pseudo_visible,
 				0.0,
 				1.0
 			);

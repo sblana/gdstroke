@@ -9,9 +9,5 @@ layout(local_size_x = 1) in;
 void main() {
 	if (gl_GlobalInvocationID.x == 0) {
 		B_contour_fragment_attribs                   = ContourFragmentAttribsBuffer               (balloc_acquire(B_contour_balloc_buffer, M_BUF_SIZE(ContourFragmentAttribsBuffer,                B_contour_desc.num_contour_fragments)));
-		B_contour_fragment_to_contour_edge           = ContourFragmentToContourEdgeBuffer         (balloc_acquire(B_contour_balloc_buffer, M_BUF_SIZE(ContourFragmentToContourEdgeBuffer,          B_contour_desc.num_contour_fragments)));
-		B_contour_fragment_pseudo_visible            = ContourFragmentPseudoVisibleBuffer         (balloc_acquire(B_contour_balloc_buffer, M_BUF_SIZE(ContourFragmentPseudoVisibleBuffer,          B_contour_desc.num_contour_fragments)));
-		B_allocation_contour_pixel                   = AllocationContourPixelBuffer               (balloc_acquire(B_contour_balloc_buffer, M_BUF_SIZE(AllocationContourPixelBuffer,                B_contour_desc.num_contour_fragments)));
-		B_foremost_contour_fragment_to_contour_pixel = ForemostContourFragmentToContourPixelBuffer(balloc_acquire(B_contour_balloc_buffer, M_BUF_SIZE(ForemostContourFragmentToContourPixelBuffer, B_contour_desc.num_contour_fragments)));
 	}
 }
