@@ -118,41 +118,51 @@ void GdstrokeShaderInterface::CommandInterfaceSet::make_bindings() {
 }
 
 
-Error GdstrokeShaderInterface::MeshInterfaceSet::create_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
+void GdstrokeShaderInterface::CommonInterfaceSet::receive_hard_depth_test_attachments(TypedArray<RID> p_attachments) {
+	resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_FOREMOST_FRAGMENT_BITMAP)] = p_attachments[0];
+}
+
+Error GdstrokeShaderInterface::CommonInterfaceSet::create_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
+	ERR_FAIL_COND_V(p_render_data == nullptr, Error::FAILED);
+	Ref<RenderSceneBuffersRD> render_scene_buffers = (Ref<RenderSceneBuffersRD>)p_render_data->get_render_scene_buffers();
+
 	resources.clear();
 	resources.resize(int(Buffer::BUFFER_MAX) + int(Binding::BINDING_MAX));
-
-	resources[Buffer::BUFFER_GEOMETRY_DESC_BUFFER     ] = p_rd->storage_buffer_create(sizeof(int32_t) * 4,              {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_IN_GEOMETRY_DESC_BUFFER     ] = p_rd->storage_buffer_create(sizeof(int32_t) * 4,              {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 	// arbitrary limit
 	resources[Buffer::BUFFER_MESH_DESC_BUFFER         ] = p_rd->storage_buffer_create(sizeof(int32_t) * 10 * (1 << 16), {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 	resources[Buffer::BUFFER_MESH_INSTANCE_DESC_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 18 * (1 << 16), {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
-	resources[Buffer::BUFFER_MESH_INSTANCE_MAPS_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 2 * (1 << 16), {},  0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
-
 	resources[Buffer::BUFFER_ALLOCATION_COLUMN_BUFFER] = p_rd->storage_buffer_create(sizeof(uint32_t) * 2 * 8192, {},  0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
-	// arbitrary limit
-	resources[Buffer::BUFFER_GLOBAL_EDGES_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 4 * (1 << 22), {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
-	resources[Buffer::BUFFER_GLOBAL_FACES_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 2 * (1 << 22), {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_COMMON_BALLOC_BUFFER] = p_rd->storage_buffer_create(balloc_buffer_size, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+
+	resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_SCREEN_DEPTH_TEXTURE)] = render_scene_buffers->get_depth_texture();
 
 	PackedByteArray buffers_addresses_data;
-	buffers_addresses_data.resize(Buffer::BUFFER_MAX * 8);
+	buffers_addresses_data.resize((Buffer::BUFFER_MAX + 64) * 8);
 	for (int i = 0; i < Buffer::BUFFER_MAX; ++i) {
 		buffers_addresses_data.encode_u64(i * 8, p_rd->buffer_get_device_address(resources[i]));
 	}
 
-	resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_MESH_BUFFERS)] = p_rd->storage_buffer_create(Buffer::BUFFER_MAX * 8, buffers_addresses_data, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_COMMON_BUFFERS)] = p_rd->storage_buffer_create(buffers_addresses_data.size(), buffers_addresses_data, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
+	Ref<RDSamplerState> nearest_sampler_state = Ref(memnew(RDSamplerState));
+	nearest_sampler = p_rd->sampler_create(nearest_sampler_state);
 	return Error::OK;
 }
 
-Error GdstrokeShaderInterface::MeshInterfaceSet::update_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
+Error GdstrokeShaderInterface::CommonInterfaceSet::update_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
+	ERR_FAIL_COND_V(resources.size() == 0, Error::FAILED);
+	ERR_FAIL_COND_V(p_render_data == nullptr, Error::FAILED);
+	Ref<RenderSceneBuffersRD> render_scene_buffers = (Ref<RenderSceneBuffersRD>)p_render_data->get_render_scene_buffers();
+
 	PackedByteArray geometry_desc_buffer_data = PackedByteArray();
 	geometry_desc_buffer_data.resize(sizeof(int32_t) * 2);
 	geometry_desc_buffer_data.encode_s32(0, GdstrokeServer::get_num_contour_meshes());
 	geometry_desc_buffer_data.encode_s32(4, GdstrokeServer::get_num_contour_instances());
 
-	p_rd->buffer_update(resources[Buffer::BUFFER_GEOMETRY_DESC_BUFFER], 0, geometry_desc_buffer_data.size(), geometry_desc_buffer_data);
+	p_rd->buffer_update(resources[Buffer::BUFFER_IN_GEOMETRY_DESC_BUFFER], 0, geometry_desc_buffer_data.size(), geometry_desc_buffer_data);
 
 
 	PackedByteArray mesh_desc_buffer_data = PackedByteArray();
@@ -207,47 +217,6 @@ Error GdstrokeShaderInterface::MeshInterfaceSet::update_resources(RenderingDevic
 
 	p_rd->buffer_update(resources[Buffer::BUFFER_MESH_INSTANCE_DESC_BUFFER], 0, mesh_instance_desc_buffer_data.size(), mesh_instance_desc_buffer_data);
 
-	return Error::OK;
-}
-
-void GdstrokeShaderInterface::MeshInterfaceSet::make_bindings() {
-	bindings.clear();
-	ERR_FAIL_COND(resources.size() != int(Buffer::BUFFER_MAX) + int(Binding::BINDING_MAX));
-	bindings.append(new_uniform(Binding::BINDING_MESH_BUFFERS, RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER, resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_MESH_BUFFERS)]));
-}
-
-
-void GdstrokeShaderInterface::CommonInterfaceSet::receive_hard_depth_test_attachments(TypedArray<RID> p_attachments) {
-	resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_FOREMOST_FRAGMENT_BITMAP)] = p_attachments[0];
-}
-
-Error GdstrokeShaderInterface::CommonInterfaceSet::create_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
-	ERR_FAIL_COND_V(p_render_data == nullptr, Error::FAILED);
-	Ref<RenderSceneBuffersRD> render_scene_buffers = (Ref<RenderSceneBuffersRD>)p_render_data->get_render_scene_buffers();
-
-	resources.clear();
-	resources.resize(int(Buffer::BUFFER_MAX) + int(Binding::BINDING_MAX));
-	resources[Buffer::BUFFER_COMMON_BALLOC_BUFFER] = p_rd->storage_buffer_create(balloc_buffer_size, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
-
-	resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_SCREEN_DEPTH_TEXTURE)] = render_scene_buffers->get_depth_texture();
-
-	PackedByteArray buffers_addresses_data;
-	buffers_addresses_data.resize((Buffer::BUFFER_MAX + 64) * 8);
-	for (int i = 0; i < Buffer::BUFFER_MAX; ++i) {
-		buffers_addresses_data.encode_u64(i * 8, p_rd->buffer_get_device_address(resources[i]));
-	}
-
-	resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_COMMON_BUFFERS)] = p_rd->storage_buffer_create(buffers_addresses_data.size(), buffers_addresses_data, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
-
-	Ref<RDSamplerState> nearest_sampler_state = Ref(memnew(RDSamplerState));
-	nearest_sampler = p_rd->sampler_create(nearest_sampler_state);
-	return Error::OK;
-}
-
-Error GdstrokeShaderInterface::CommonInterfaceSet::update_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
-	ERR_FAIL_COND_V(resources.size() == 0, Error::FAILED);
-	ERR_FAIL_COND_V(p_render_data == nullptr, Error::FAILED);
-	Ref<RenderSceneBuffersRD> render_scene_buffers = (Ref<RenderSceneBuffersRD>)p_render_data->get_render_scene_buffers();
 
 	resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_SCREEN_DEPTH_TEXTURE)] = render_scene_buffers->get_depth_texture();
 

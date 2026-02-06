@@ -8,6 +8,6 @@ layout(local_size_x = 1) in;
 
 void main() {
 	if (gl_GlobalInvocationID.x == 0) {
-		B_contour_fragment_attribs                   = ContourFragmentAttribsBuffer               (balloc_acquire(B_common_balloc_buffer, M_BUF_SIZE(ContourFragmentAttribsBuffer,                B_common_desc.num_contour_fragments)));
+		B_contour_fragment_attribs = ContourFragmentAttribsBuffer (balloc_acquire(B_common_balloc_buffer, M_BUF_SIZE(ContourFragmentAttribsBuffer, B_common_desc.num_contour_fragments)));
 	}
 }

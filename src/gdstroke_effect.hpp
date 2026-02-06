@@ -35,7 +35,6 @@ private:
 	RID _pipelines[Shader::SHADER_MAX];
 	GdstrokeShaderInterface::SceneInterfaceSet _scene_interface_set = {};
 	GdstrokeShaderInterface::CommandInterfaceSet _command_interface_set = {};
-	GdstrokeShaderInterface::MeshInterfaceSet _mesh_interface_set = {};
 	GdstrokeShaderInterface::CommonInterfaceSet _common_interface_set = {};
 
 	GdstrokeShaderInterface::ShaderAPIInterfaceSet _shader_api_interface_set = {};

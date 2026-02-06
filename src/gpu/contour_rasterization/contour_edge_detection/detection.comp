@@ -9,7 +9,7 @@ layout(local_size_x = 64) in;
 void main() {
 	const uint global_edge_idx = gl_GlobalInvocationID.x;
 
-	if (global_edge_idx < B_geometry_desc.num_global_edges) {
+	if (global_edge_idx < B_common_desc.num_global_edges) {
 		const int mesh_instance_idx = B_global_edges.data[global_edge_idx].to_mesh_instance_idx;
 		const MeshInstanceMapsData mesh_instance_maps = B_mesh_instance_maps.data[mesh_instance_idx];
 

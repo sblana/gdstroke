@@ -21,18 +21,18 @@ void main() {
 	M_SINGLE_WORKGROUP_ALLOCATION(
 		int,
 		block_offsets,
-		B_geometry_desc.num_mesh_instances,
+		B_in_geometry_desc.num_mesh_instances,
 		p0_fn_get_src_array,
-		B_geometry_desc.num_global_edges,
+		B_common_desc.num_global_edges,
 		p0_fn_set_src_to_dst_map,
 		p0_fn_add_set_src_to_dst_map
 	)
 	M_SINGLE_WORKGROUP_ALLOCATION(
 		int,
 		block_offsets,
-		B_geometry_desc.num_mesh_instances,
+		B_in_geometry_desc.num_mesh_instances,
 		p1_fn_get_src_array,
-		B_geometry_desc.num_global_faces,
+		B_common_desc.num_global_faces,
 		p1_fn_set_src_to_dst_map,
 		p1_fn_add_set_src_to_dst_map
 	)

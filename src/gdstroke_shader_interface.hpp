@@ -91,32 +91,13 @@ public:
 		inline virtual uint32_t get_slot() const override { return 1; }
 	};
 
-	struct MeshInterfaceSet : InterfaceSet {
-		enum Buffer : uint32_t {
-			BUFFER_GEOMETRY_DESC_BUFFER = 0,
-			BUFFER_MESH_DESC_BUFFER,
-			BUFFER_MESH_INSTANCE_DESC_BUFFER,
-			BUFFER_MESH_INSTANCE_MAPS_BUFFER,
-			BUFFER_ALLOCATION_COLUMN_BUFFER,
-			BUFFER_GLOBAL_EDGES_BUFFER,
-			BUFFER_GLOBAL_FACES_BUFFER,
-			BUFFER_MAX,
-		};
-
-		enum Binding : uint32_t {
-			BINDING_MESH_BUFFERS = 0,
-			BINDING_MAX,
-		};
-
-		virtual Error create_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
-		virtual Error update_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
-		virtual void make_bindings() override;
-		inline virtual uint32_t get_slot() const override { return 2; }
-	};
-
 	struct CommonInterfaceSet : InterfaceSet {
 		enum Buffer : uint32_t {
-			BUFFER_COMMON_BALLOC_BUFFER = 0,
+			BUFFER_IN_GEOMETRY_DESC_BUFFER = 0,
+			BUFFER_MESH_DESC_BUFFER,
+			BUFFER_MESH_INSTANCE_DESC_BUFFER,
+			BUFFER_ALLOCATION_COLUMN_BUFFER,
+			BUFFER_COMMON_BALLOC_BUFFER,
 			BUFFER_MAX,
 		};
 
@@ -127,7 +108,7 @@ public:
 			BINDING_MAX,
 		};
 
-		static constexpr uint32_t balloc_buffer_size = 192 * 1024 * 1024;
+		static constexpr uint32_t balloc_buffer_size = 256 * 1024 * 1024;
 
 		RID nearest_sampler;
 

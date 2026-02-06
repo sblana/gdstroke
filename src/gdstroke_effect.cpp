@@ -16,7 +16,6 @@ using namespace godot;
 
 void GdstrokeEffect::_bind_sets(RenderingDevice *p_rd, int64_t p_compute_list) const {
 	 _scene_interface_set.bind_to_compute_list(p_rd, p_compute_list, _compiled_shaders[Shader::SHADER_DUMMY]);
-	  _mesh_interface_set.bind_to_compute_list(p_rd, p_compute_list, _compiled_shaders[Shader::SHADER_DUMMY]);
 	_common_interface_set.bind_to_compute_list(p_rd, p_compute_list, _compiled_shaders[Shader::SHADER_DUMMY]);
 }
 
@@ -121,7 +120,6 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 	if (!_ready) {
 		_scene_interface_set.create_resources(rd, p_render_data);
 		_command_interface_set.create_resources(rd, p_render_data);
-		_mesh_interface_set.create_resources(rd, p_render_data);
 		_common_interface_set.create_resources(rd, p_render_data);
 		_shader_api_interface_set.create_resources(rd, p_render_data);
 		_debug_interface_set.create_resources(rd, p_render_data);
@@ -151,10 +149,6 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 	_command_interface_set.make_bindings();
 	ERR_FAIL_COND(!_command_interface_set.get_uniform_set_rid(_compiled_shaders[Shader::SHADER_DUMMY_COMMANDER]).is_valid());
 
-	_mesh_interface_set.update_resources(rd, p_render_data);
-	_mesh_interface_set.make_bindings();
-	ERR_FAIL_COND(!_mesh_interface_set.get_uniform_set_rid(_compiled_shaders[Shader::SHADER_DUMMY]).is_valid());
-
 	_common_interface_set.receive_hard_depth_test_attachments(_hard_depth_test_resources.get_attachments(rd, p_render_data));
 	_common_interface_set.update_resources(rd, p_render_data);
 	_common_interface_set.make_bindings();
@@ -168,14 +162,6 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 	_debug_interface_set.make_bindings();
 	ERR_FAIL_COND(!_debug_interface_set.get_uniform_set_rid(_compiled_shaders[Shader::SHADER_DUMMY_DEBUG]).is_valid());
 
-
-	// HACK: rethink abstractions to avoid this pls
-	using   MeshBuffers  = GdstrokeShaderInterface::  MeshInterfaceSet::Buffer;
-	using   MeshBindings = GdstrokeShaderInterface::  MeshInterfaceSet::Binding;
-	using CommonBuffers  = GdstrokeShaderInterface::CommonInterfaceSet::Buffer;
-	using CommonBindings = GdstrokeShaderInterface::CommonInterfaceSet::Binding;
-	uint64_t   mesh_buffers_ptr = rd->buffer_get_device_address(  _mesh_interface_set.resources[int(  MeshBuffers::BUFFER_MAX) + int(  MeshBindings::BINDING_MESH_BUFFERS)]);
-	uint64_t common_buffers_ptr = rd->buffer_get_device_address(_common_interface_set.resources[int(CommonBuffers::BUFFER_MAX) + int(CommonBindings::BINDING_COMMON_BUFFERS)]);
 
 	int64_t list;
 	rd->draw_command_begin_label("dummy", Color(0.3, 0.3, 0.3));
@@ -198,13 +184,20 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 	rd->draw_command_begin_label("Mesh Processing", Color(1.0, 0.3, 1.0));
 	{
 		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CR_MP_FIRST_COMMANDER]);
+		_bind_sets(rd, list);
+		_bind_sets_commander(rd, list);
+		rd->compute_list_dispatch(list, 1, 1, 1);
+		rd->compute_list_end();
+
+		list = rd->compute_list_begin();
 		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CR_MP_GLOBAL_GEOMETRY_ALLOCATION]);
 		_bind_sets(rd, list);
 		rd->compute_list_dispatch(list, 1, 1, 1);
 		rd->compute_list_end();
 
 		list = rd->compute_list_begin();
-		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CR_MP_FIRST_COMMANDER]);
+		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CR_MP_SECOND_COMMANDER]);
 		_bind_sets(rd, list);
 		_bind_sets_commander(rd, list);
 		rd->compute_list_dispatch(list, 1, 1, 1);
@@ -238,48 +231,27 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_GLOBAL_EDGES);
 		rd->compute_list_end();
 
-		PackedByteArray push = PackedInt64Array({
-			// B_global_edges.data[idx].is_contour,
-			int64_t(sizeof(uint64_t) * MeshBuffers::BUFFER_GLOBAL_EDGES_BUFFER + mesh_buffers_ptr),
-			int64_t(1 * sizeof(int32_t)),
-			int64_t(4 * sizeof(int32_t)),
-			// B_geometry_desc.num_global_edges,
-			int64_t(sizeof(uint64_t) * MeshBuffers::BUFFER_GEOMETRY_DESC_BUFFER + mesh_buffers_ptr),
-			int64_t(2 * sizeof(int32_t)),
-			// B_contour_desc.num_contour_edges,
-			int64_t(sizeof(uint64_t) * 1 + common_buffers_ptr),
-			int64_t(0 * sizeof(int32_t)),
-			// B_global_edges.data[idx].to_contour_edge,
-			int64_t(sizeof(uint64_t) * MeshBuffers::BUFFER_GLOBAL_EDGES_BUFFER + mesh_buffers_ptr),
-			int64_t(2 * sizeof(int32_t)),
-			int64_t(4 * sizeof(int32_t)),
-		}).to_byte_array();
-
 		list = rd->compute_list_begin();
-		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_REUSABLE_ALLOCATION_COMMANDER]);
-		rd->compute_list_set_push_constant(list, push, 80);
+		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CR_CED_ALLOCATION_COMMANDER]);
 		_bind_sets(rd, list);
 		_bind_sets_commander(rd, list);
 		rd->compute_list_dispatch(list, 1, 1, 1);
 		rd->compute_list_end();
 
 		list = rd->compute_list_begin();
-		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_REUSABLE_ALLOCATION_L0_UP]);
-		rd->compute_list_set_push_constant(list, push, 80);
+		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CR_CED_ALLOCATION_L0_UP]);
 		_bind_sets(rd, list);
 		_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_REUSABLE_ALLOCATION_L0);
 		rd->compute_list_end();
 
 		list = rd->compute_list_begin();
-		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_REUSABLE_ALLOCATION_L1_UP]);
-		rd->compute_list_set_push_constant(list, push, 80);
+		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CR_CED_ALLOCATION_L1_UP]);
 		_bind_sets(rd, list);
 		rd->compute_list_dispatch(list, 1, 1, 1);
 		rd->compute_list_end();
 
 		list = rd->compute_list_begin();
-		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_REUSABLE_ALLOCATION_L0_DOWN]);
-		rd->compute_list_set_push_constant(list, push, 80);
+		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_CR_CED_ALLOCATION_L0_DOWN]);
 		_bind_sets(rd, list);
 		_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_REUSABLE_ALLOCATION_L0);
 		rd->compute_list_end();
@@ -422,7 +394,6 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		list = rd->draw_list_begin(_hard_depth_test_resources.get_framebuffer(rd, p_render_data), RenderingDevice::DrawFlags::DRAW_CLEAR_ALL, {Color(0, 0, 0, 0)}, 0.0);
 		rd->draw_list_bind_render_pipeline(list, _pipelines[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST]);
 		_scene_interface_set.bind_to_draw_list(rd, list, _compiled_shaders[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST]);
-		_mesh_interface_set.bind_to_draw_list(rd, list, _compiled_shaders[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST]);
 		_common_interface_set.bind_to_draw_list(rd, list, _compiled_shaders[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST]);
 		_command_interface_set.draw_indirect(rd, list, DrawIndirectCommands::DRAW_INDIRECT_COMMANDS_HARD_DEPTH_TEST);
 		rd->draw_list_end();
