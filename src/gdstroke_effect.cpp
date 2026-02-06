@@ -101,7 +101,7 @@ void GdstrokeEffect::_bind_methods() {
 	ADD_PROPERTY(
 		PropertyInfo(
 			Variant::INT, "debug_view",
-			PropertyHint::PROPERTY_HINT_ENUM, "Disabled,Contour Pixels"
+			PropertyHint::PROPERTY_HINT_ENUM, "Disabled,Contour Pixel Orientation,Contour Pixel Is Head"
 		),
 		"set_debug_view",
 		"get_debug_view"
@@ -721,16 +721,14 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 
 	rd->draw_command_begin_label("debug", Color(0.2, 0.2, 0.2));
 	{
-		switch (_debug_view) {
-			case DebugView::DEBUG_VIEW_CONTOUR_PIXELS: {
-				list = rd->compute_list_begin();
-				rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_DEBUG_DISPLAY_CONTOUR_PIXELS]);
-				_bind_sets(rd, list);
-				_bind_sets_debug(rd, list);
-				_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_PIXELS);
-				rd->compute_list_end();
-				break;
-			}
+		if (_debug_view == DebugView::DEBUG_VIEW_CONTOUR_PIXEL_ORIENTATION || _debug_view == DebugView::DEBUG_VIEW_CONTOUR_PIXEL_IS_HEAD) {
+			list = rd->compute_list_begin();
+			rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_DEBUG_DISPLAY_CONTOUR_PIXELS]);
+			rd->compute_list_set_push_constant(list, PackedInt32Array({int32_t(_debug_view), 0, 0, 0}).to_byte_array(), 16);
+			_bind_sets(rd, list);
+			_bind_sets_debug(rd, list);
+			_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_CONTOUR_PIXELS);
+			rd->compute_list_end();
 		}
 	}
 	rd->draw_command_end_label();

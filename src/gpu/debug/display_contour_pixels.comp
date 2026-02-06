@@ -7,20 +7,38 @@ layout(local_size_x = 64) in;
 #include "common/debug_buffers.glsli"
 #include "common/math.glsli"
 
+layout(push_constant) uniform PushConstants {
+	DebugView debug_view;
+} P_push;
 
 void main() {
 	const uint contour_pixel_idx = gl_GlobalInvocationID.x;
 	if (contour_pixel_idx < B_common_desc.num_contour_pixels) {
 		const ivec2 pixel_coord = B_contour_pixel_attribs.data[contour_pixel_idx].pixel_coord;
 		if (is_within_screen(pixel_coord, imageSize(U_screen_color_image))) {
-			vec2 orientation = B_contour_pixel_attribs.data[contour_pixel_idx].orientation;
-			float depth = B_contour_pixel_attribs.data[contour_pixel_idx].normal_depth.w;
-			const vec4 output_data = vec4(
-				orientation.x * 0.5 + 0.5,
-				orientation.y * 0.5 + 0.5,
-				depth,
-				1.0
-			);
+			vec4 output_data;
+			const vec2 orientation = B_contour_pixel_attribs.data[contour_pixel_idx].orientation;
+			const float depth = B_contour_pixel_attribs.data[contour_pixel_idx].normal_depth.w;
+			if (P_push.debug_view == DEBUG_VIEW_CONTOUR_PIXEL_ORIENTATION) {
+				output_data = vec4(
+					orientation.x * 0.5 + 0.5,
+					orientation.y * 0.5 + 0.5,
+					depth,
+					1.0
+				);
+			}
+			const int contour_fragment_idx = int(imageLoad(U_foremost_fragment_bitmap, pixel_coord).x) - 1;
+			const int contour_edge_idx = B_contour_fragment_attribs.data[contour_fragment_idx].to_contour_edge_idx;
+			const ContourEdgeAttribs contour_edge_attribs = B_contour_edge_attribs.data[contour_edge_idx];
+			if (P_push.debug_view == DEBUG_VIEW_CONTOUR_PIXEL_IS_HEAD) {
+				output_data = vec4(
+					((contour_edge_attribs.contour_fragment_range.first == contour_fragment_idx)
+						? (vec3(0, 1, 0))
+						: (vec3(1, 0, 0))
+					),
+					1.0
+				);
+			}
 			imageStore(U_screen_color_image, pixel_coord, output_data);
 		}
 	}

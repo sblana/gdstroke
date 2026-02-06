@@ -3,4 +3,10 @@
 
 layout(set = 15, binding = 0, rgba32f) restrict uniform image2D U_screen_color_image;
 
-#endif // ! TEST_BUFFERS_GLSLI
+#define DebugView int
+#define DEBUG_VIEW_DISABLED                  (0)
+#define DEBUG_VIEW_CONTOUR_PIXEL_ORIENTATION (1)
+#define DEBUG_VIEW_CONTOUR_PIXEL_IS_HEAD     (2)
+#define DEBUG_VIEW_MAX                       (3)
+
+#endif // !TEST_BUFFERS_GLSLI

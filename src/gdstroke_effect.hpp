@@ -20,7 +20,9 @@ public:
 
 	enum DebugView : int64_t {
 		DEBUG_VIEW_DISABLED = 0,
-		DEBUG_VIEW_CONTOUR_PIXELS,
+		DEBUG_VIEW_CONTOUR_PIXEL_ORIENTATION,
+		// Shows whether a contour pixel is the first fragment of its corresponding contour edge
+		DEBUG_VIEW_CONTOUR_PIXEL_IS_HEAD,
 		DEBUG_VIEW_MAX
 	};
 
