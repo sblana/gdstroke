@@ -16,6 +16,7 @@ layout(set = 0, binding = 0, std140) readonly uniform SceneDataUniform {
 layout(set = 0, binding = 1, scalar) readonly uniform ConfigUniform {
 	float depth_bias;
 	uint use_soft_depth_test_modification;
+	float laplacian_factor;
 	float orientation_threshold;
 	uint min_segment_length;
 } U_config;

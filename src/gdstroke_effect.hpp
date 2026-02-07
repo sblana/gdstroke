@@ -70,6 +70,8 @@ public:
 	void  set_config_depth_bias(float p_value);
 	bool get_config_use_soft_depth_test_modification() const;
 	void set_config_use_soft_depth_test_modification(bool p_value);
+	float get_config_laplacian_factor() const;
+	void  set_config_laplacian_factor(float p_value);
 	float get_config_orientation_threshold() const;
 	void  set_config_orientation_threshold(float p_value);
 	uint32_t get_config_min_segment_length() const;

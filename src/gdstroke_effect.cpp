@@ -47,6 +47,8 @@ void GdstrokeEffect::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_config_depth_bias"),            &GdstrokeEffect::get_config_depth_bias);
 	ClassDB::bind_method(D_METHOD("set_config_use_soft_depth_test_modification", "p_value"), &GdstrokeEffect::set_config_use_soft_depth_test_modification);
 	ClassDB::bind_method(D_METHOD("get_config_use_soft_depth_test_modification"),            &GdstrokeEffect::get_config_use_soft_depth_test_modification);
+	ClassDB::bind_method(D_METHOD("set_config_laplacian_factor", "p_value"), &GdstrokeEffect::set_config_laplacian_factor);
+	ClassDB::bind_method(D_METHOD("get_config_laplacian_factor"),            &GdstrokeEffect::get_config_laplacian_factor);
 	ClassDB::bind_method(D_METHOD("set_config_orientation_threshold", "p_value"), &GdstrokeEffect::set_config_orientation_threshold);
 	ClassDB::bind_method(D_METHOD("get_config_orientation_threshold"),            &GdstrokeEffect::get_config_orientation_threshold);
 	ClassDB::bind_method(D_METHOD("set_config_min_segment_length", "p_value"), &GdstrokeEffect::set_config_min_segment_length);
@@ -89,6 +91,14 @@ void GdstrokeEffect::_bind_methods() {
 		),
 		"set_config_use_soft_depth_test_modification",
 		"get_config_use_soft_depth_test_modification"
+	);
+	ADD_PROPERTY(
+		PropertyInfo(
+			Variant::FLOAT, "laplacian_factor",
+			PropertyHint::PROPERTY_HINT_RANGE, "-1.0,1.0"
+		),
+		"set_config_laplacian_factor",
+		"get_config_laplacian_factor"
 	);
 	ADD_PROPERTY(
 		PropertyInfo(
@@ -739,6 +749,14 @@ bool GdstrokeEffect::get_config_use_soft_depth_test_modification() const {
 
 void GdstrokeEffect::set_config_use_soft_depth_test_modification(bool p_value) {
 	_common_interface_set.config_data.use_soft_depth_test_modification = uint32_t(p_value);
+}
+
+float GdstrokeEffect::get_config_laplacian_factor() const {
+	return _common_interface_set.config_data.laplacian_factor;
+}
+
+void  GdstrokeEffect::set_config_laplacian_factor(float p_value) {
+	_common_interface_set.config_data.laplacian_factor = p_value;
 }
 
 float GdstrokeEffect::get_config_orientation_threshold() const {

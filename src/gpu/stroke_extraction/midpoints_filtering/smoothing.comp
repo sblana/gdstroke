@@ -20,9 +20,10 @@ void main() {
 
 	if (is_compacted_pixel_edge_idx_valid(int(pixel_edge_idx))) {
 
-		B_compacted_pixel_edge_attribs.data[pixel_edge_idx].filtered_midpoint = laplacian(
-			calc_midpoint(int(pixel_edge_idx)),
+		B_compacted_pixel_edge_attribs.data[pixel_edge_idx].filtered_midpoint = laplacian_filtering(
+			U_config.laplacian_factor,
 			calc_midpoint(B_compacted_pixel_edge_attribs.data[pixel_edge_idx].prev_idx),
+			calc_midpoint(int(pixel_edge_idx)),
 			calc_midpoint(B_compacted_pixel_edge_attribs.data[pixel_edge_idx].next_idx)
 		);
 	}

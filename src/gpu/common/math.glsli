@@ -16,11 +16,19 @@ float sqr(in const float i_a) { return i_a * i_a; }
 uint  sqr(in const uint  i_a) { return i_a * i_a; }
 
 float laplacian(in const float i_a, in const float i_b, in const float i_c) {
-	return 0.5 * i_b + 0.25 * i_a + 0.25 * i_c;
+	return i_a + i_c - 2 * i_b;
 }
 
-vec2 laplacian(in const vec2 i_a, in const vec2 i_b, in const vec2 i_c) {
+vec2  laplacian(in const vec2  i_a, in const vec2  i_b, in const vec2  i_c) {
 	return vec2(laplacian(i_a[0], i_b[0], i_c[0]), laplacian(i_a[1], i_b[1], i_c[1]));
+}
+
+float laplacian_filtering(in const float i_factor, in const float i_a, in const float i_b, in const float i_c) {
+	return i_b + i_factor * laplacian(i_a, i_b, i_c);
+}
+
+vec2  laplacian_filtering(in const float i_factor, in const vec2  i_a, in const vec2  i_b, in const vec2  i_c) {
+	return i_b + i_factor * laplacian(i_a, i_b, i_c);
 }
 
 // upper limit is exclusive

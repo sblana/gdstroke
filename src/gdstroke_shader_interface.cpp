@@ -130,8 +130,9 @@ Error GdstrokeShaderInterface::CommonInterfaceSet::update_resources(RenderingDev
 	config_data_bytes.resize(sizeof(ConfigData));
 	config_data_bytes.encode_float(0, config_data.depth_bias);
 	config_data_bytes.encode_u32(4, config_data.use_soft_depth_test_modification);
-	config_data_bytes.encode_float(8, config_data.orientation_threshold);
-	config_data_bytes.encode_u32(12, config_data.min_segment_length);
+	config_data_bytes.encode_float(8, config_data.laplacian_factor);
+	config_data_bytes.encode_float(12, config_data.orientation_threshold);
+	config_data_bytes.encode_u32(16, config_data.min_segment_length);
 
 	p_rd->buffer_update(resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_CONFIG_UNIFORM)], 0, sizeof(ConfigData), config_data_bytes);
 
