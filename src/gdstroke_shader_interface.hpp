@@ -89,6 +89,7 @@ public:
 		struct ConfigData {
 			float depth_bias = 0.0;
 			uint32_t use_soft_depth_test_modification = false;
+			float orientation_threshold = 0.5;
 			uint32_t min_segment_length = 32;
 		};
 

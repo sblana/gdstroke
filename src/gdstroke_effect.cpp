@@ -47,6 +47,8 @@ void GdstrokeEffect::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_config_depth_bias"),            &GdstrokeEffect::get_config_depth_bias);
 	ClassDB::bind_method(D_METHOD("set_config_use_soft_depth_test_modification", "p_value"), &GdstrokeEffect::set_config_use_soft_depth_test_modification);
 	ClassDB::bind_method(D_METHOD("get_config_use_soft_depth_test_modification"),            &GdstrokeEffect::get_config_use_soft_depth_test_modification);
+	ClassDB::bind_method(D_METHOD("set_config_orientation_threshold", "p_value"), &GdstrokeEffect::set_config_orientation_threshold);
+	ClassDB::bind_method(D_METHOD("get_config_orientation_threshold"),            &GdstrokeEffect::get_config_orientation_threshold);
 	ClassDB::bind_method(D_METHOD("set_config_min_segment_length", "p_value"), &GdstrokeEffect::set_config_min_segment_length);
 	ClassDB::bind_method(D_METHOD("get_config_min_segment_length"),            &GdstrokeEffect::get_config_min_segment_length);
 	ClassDB::bind_method(D_METHOD("set_debug_view", "p_value"), &GdstrokeEffect::set_debug_view);
@@ -90,8 +92,16 @@ void GdstrokeEffect::_bind_methods() {
 	);
 	ADD_PROPERTY(
 		PropertyInfo(
+			Variant::FLOAT, "orientation_threshold",
+			PropertyHint::PROPERTY_HINT_RANGE, "-1.0,1.0"
+		),
+		"set_config_orientation_threshold",
+		"get_config_orientation_threshold"
+	);
+	ADD_PROPERTY(
+		PropertyInfo(
 			Variant::INT, "min_segment_length",
-			PROPERTY_HINT_RANGE, "0,8192"
+			PropertyHint::PROPERTY_HINT_RANGE, "0,8192"
 		),
 		"set_config_min_segment_length",
 		"get_config_min_segment_length"
@@ -729,6 +739,14 @@ bool GdstrokeEffect::get_config_use_soft_depth_test_modification() const {
 
 void GdstrokeEffect::set_config_use_soft_depth_test_modification(bool p_value) {
 	_common_interface_set.config_data.use_soft_depth_test_modification = uint32_t(p_value);
+}
+
+float GdstrokeEffect::get_config_orientation_threshold() const {
+	return _common_interface_set.config_data.orientation_threshold;
+}
+
+void  GdstrokeEffect::set_config_orientation_threshold(float p_value) {
+	_common_interface_set.config_data.orientation_threshold = p_value;
 }
 
 uint32_t GdstrokeEffect::get_config_min_segment_length() const {

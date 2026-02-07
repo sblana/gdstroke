@@ -41,7 +41,7 @@ void main() {
 			}
 
 			const vec2 pixel_edge_orientation = B_compacted_pixel_edge_attribs.data[pixel_edge_idx].filtered_orientation;
-			const float orientation_threshold = 0.6;
+			const float orientation_threshold = U_config.orientation_threshold;
 			int times_passed = 0;
 			for (int k = -num_neighbours; k <= num_neighbours; ++k) {
 				const float orientation_product = dot(pixel_edge_orientation, contour_pixel_orientations_stack[num_neighbours + k]);
