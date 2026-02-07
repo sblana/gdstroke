@@ -1,7 +1,0 @@
-#ifndef SANITY_GLSLI
-#define SANITY_GLSLI
-
-// my LSP breaks when "restrict" immediately precedes the type
-#define RESTRICT restrict
-
-#endif // !SANITY_GLSLI

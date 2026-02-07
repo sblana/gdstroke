@@ -1,9 +1,6 @@
 #ifndef COMMAND_BUFFERS_GLSLI
 #define COMMAND_BUFFERS_GLSLI
 
-#extension GL_ARB_shading_language_include : enable
-#include "common/sanity.glsli"
-
 
 struct DispatchIndirectCommand {
 	uint workgroups_x;
@@ -27,7 +24,7 @@ struct DispatchIndirectCommand {
 #define E_DispatchIndirectCommand_INVOCATION_TO_SEGMENT_EDGES            (12)
 #define E_DispatchIndirectCommand_MAX                                    (13)
 
-layout(set = 1, binding = 0, std430) RESTRICT buffer DispatchIndirectCommandsBuffer {
+layout(set = 1, binding = 0, std430) buffer DispatchIndirectCommandsBuffer {
 	DispatchIndirectCommand cmds[E_DispatchIndirectCommand_MAX];
 } B_dispatch_indirect_commands;
 
@@ -43,7 +40,7 @@ struct DrawIndirectCommand {
 #define E_DrawIndirectCommand_STROKE_RENDERING (1)
 #define E_DrawIndirectCommand_MAX              (2)
 
-layout(set = 1, binding = 1, std430) RESTRICT buffer DrawIndirectCommandsBuffer {
+layout(set = 1, binding = 1, std430) buffer DrawIndirectCommandsBuffer {
 	DrawIndirectCommand cmds[E_DrawIndirectCommand_MAX];
 } B_draw_indirect_commands;
 

@@ -7,7 +7,7 @@ layout(local_size_x = 64) in;
 #include "common/math.glsli"
 
 
-layout(push_constant) RESTRICT uniform PushConstants {
+layout(push_constant) uniform PushConstants {
 	int  read_layer;
 	int write_layer;
 } U_push_constants;

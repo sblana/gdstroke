@@ -33,7 +33,6 @@ private:
 	DebugView _debug_view = DebugView::DEBUG_VIEW_DISABLED;
 	RID _compiled_shaders[Shader::SHADER_MAX];
 	RID _pipelines[Shader::SHADER_MAX];
-	GdstrokeShaderInterface::SceneInterfaceSet _scene_interface_set = {};
 	GdstrokeShaderInterface::CommandInterfaceSet _command_interface_set = {};
 	GdstrokeShaderInterface::CommonInterfaceSet _common_interface_set = {};
 

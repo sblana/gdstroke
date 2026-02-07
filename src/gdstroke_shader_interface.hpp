@@ -26,30 +26,6 @@ public:
 		void bind_to_draw_list(RenderingDevice *p_rd, int64_t p_draw_list, RID const &p_shader) const;
 	};
 
-	struct SceneInterfaceSet : InterfaceSet {
-		enum Binding : uint32_t {
-			BINDING_SCENE_DATA_UNIFORM = 0,
-			BINDING_CONFIG_UNIFORM,
-			BINDING_MAX,
-		};
-
-		struct ConfigData {
-			float depth_bias = 0.0;
-			uint32_t use_soft_depth_test_modification = false;
-			uint32_t min_segment_length = 32;
-			float stroke_width = 1.0;
-			float stroke_width_factor_start = 1.0;
-			float stroke_width_factor_end = 0.5;
-		};
-
-		ConfigData config_data = {};
-
-		virtual Error create_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
-		virtual Error update_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
-		virtual void make_bindings() override;
-		inline virtual uint32_t get_slot() const override { return 0; }
-	};
-
 	struct CommandInterfaceSet : InterfaceSet {
 		enum Binding : uint32_t {
 			BINDING_DISPATCH_INDIRECT_COMMANDS_BUFFER = 0,
@@ -102,11 +78,21 @@ public:
 		};
 
 		enum Binding : uint32_t {
-			BINDING_COMMON_BUFFERS = 0,
+			BINDING_SCENE_DATA_UNIFORM = 0,
+			BINDING_CONFIG_UNIFORM,
+			BINDING_COMMON_BUFFERS,
 			BINDING_SCREEN_DEPTH_TEXTURE,
 			BINDING_FOREMOST_FRAGMENT_BITMAP,
 			BINDING_MAX,
 		};
+
+		struct ConfigData {
+			float depth_bias = 0.0;
+			uint32_t use_soft_depth_test_modification = false;
+			uint32_t min_segment_length = 32;
+		};
+
+		ConfigData config_data = {};
 
 		static constexpr uint32_t balloc_buffer_size = 256 * 1024 * 1024;
 
@@ -117,7 +103,7 @@ public:
 		virtual Error create_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
 		virtual Error update_resources(RenderingDevice *p_rd, RenderData *p_render_data) override;
 		virtual void make_bindings() override;
-		inline virtual uint32_t get_slot() const override { return 3; }
+		inline virtual uint32_t get_slot() const override { return 0; }
 		virtual TypedArray<Ref<RDUniform>> get_draw_bindings() const override;
 	};
 

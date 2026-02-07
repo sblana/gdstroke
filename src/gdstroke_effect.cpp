@@ -15,7 +15,6 @@
 using namespace godot;
 
 void GdstrokeEffect::_bind_sets(RenderingDevice *p_rd, int64_t p_compute_list) const {
-	 _scene_interface_set.bind_to_compute_list(p_rd, p_compute_list, _compiled_shaders[Shader::SHADER_DUMMY]);
 	_common_interface_set.bind_to_compute_list(p_rd, p_compute_list, _compiled_shaders[Shader::SHADER_DUMMY]);
 }
 
@@ -118,7 +117,6 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		return;
 
 	if (!_ready) {
-		_scene_interface_set.create_resources(rd, p_render_data);
 		_command_interface_set.create_resources(rd, p_render_data);
 		_common_interface_set.create_resources(rd, p_render_data);
 		_shader_api_interface_set.create_resources(rd, p_render_data);
@@ -140,10 +138,6 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 	}
 
 	_hard_depth_test_resources.clear_color_attachments(rd, p_render_data);
-
-	_scene_interface_set.update_resources(rd, p_render_data);
-	_scene_interface_set.make_bindings();
-	ERR_FAIL_COND(!_scene_interface_set.get_uniform_set_rid(_compiled_shaders[Shader::SHADER_DUMMY]).is_valid());
 
 	_command_interface_set.update_resources(rd, p_render_data);
 	_command_interface_set.make_bindings();
@@ -393,7 +387,6 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 
 		list = rd->draw_list_begin(_hard_depth_test_resources.get_framebuffer(rd, p_render_data), RenderingDevice::DrawFlags::DRAW_CLEAR_ALL, {Color(0, 0, 0, 0)}, 0.0);
 		rd->draw_list_bind_render_pipeline(list, _pipelines[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST]);
-		_scene_interface_set.bind_to_draw_list(rd, list, _compiled_shaders[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST]);
 		_common_interface_set.bind_to_draw_list(rd, list, _compiled_shaders[Shader::SHADER_CR_CPG_HARD_DEPTH_TEST]);
 		_command_interface_set.draw_indirect(rd, list, DrawIndirectCommands::DRAW_INDIRECT_COMMANDS_HARD_DEPTH_TEST);
 		rd->draw_list_end();
@@ -723,27 +716,27 @@ void                         GdstrokeEffect::set_raster_method(RasterMethod p_va
 }
 
 float GdstrokeEffect::get_config_depth_bias() const {
-	return _scene_interface_set.config_data.depth_bias;
+	return _common_interface_set.config_data.depth_bias;
 }
 
 void  GdstrokeEffect::set_config_depth_bias(float p_value) {
-	_scene_interface_set.config_data.depth_bias = p_value;
+	_common_interface_set.config_data.depth_bias = p_value;
 }
 
 bool GdstrokeEffect::get_config_use_soft_depth_test_modification() const {
-	return _scene_interface_set.config_data.use_soft_depth_test_modification;
+	return _common_interface_set.config_data.use_soft_depth_test_modification;
 }
 
 void GdstrokeEffect::set_config_use_soft_depth_test_modification(bool p_value) {
-	_scene_interface_set.config_data.use_soft_depth_test_modification = uint32_t(p_value);
+	_common_interface_set.config_data.use_soft_depth_test_modification = uint32_t(p_value);
 }
 
 uint32_t GdstrokeEffect::get_config_min_segment_length() const {
-	return _scene_interface_set.config_data.min_segment_length;
+	return _common_interface_set.config_data.min_segment_length;
 }
 
 void GdstrokeEffect::set_config_min_segment_length(uint32_t p_value) {
-	_scene_interface_set.config_data.min_segment_length = uint32_t(p_value);
+	_common_interface_set.config_data.min_segment_length = uint32_t(p_value);
 }
 
 GdstrokeEffect::DebugView GdstrokeEffect::get_debug_view() const {

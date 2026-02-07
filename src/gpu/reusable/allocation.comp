@@ -16,7 +16,7 @@ layout(local_size_x = WORKGROUP_SIZE) in;
 #include "common/scans.glsli"
 
 
-layout(push_constant) RESTRICT uniform PushConstants {
+layout(push_constant) uniform PushConstants {
 	AllocationPushData U_push;
 };
 

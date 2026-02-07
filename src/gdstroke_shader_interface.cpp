@@ -43,43 +43,6 @@ void GdstrokeShaderInterface::InterfaceSet::bind_to_draw_list(RenderingDevice *p
 }
 
 
-Error GdstrokeShaderInterface::SceneInterfaceSet::create_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
-	ERR_FAIL_COND_V(p_render_data == nullptr, Error::FAILED);
-	ERR_FAIL_COND_V(!p_render_data->get_render_scene_data()->get_uniform_buffer().is_valid(), Error::FAILED);
-	resources.clear();
-	resources.resize(Binding::BINDING_MAX);
-	resources[Binding::BINDING_SCENE_DATA_UNIFORM] = p_render_data->get_render_scene_data()->get_uniform_buffer();
-	resources[Binding::BINDING_CONFIG_UNIFORM] = p_rd->uniform_buffer_create(sizeof(float) * 8);
-	return Error::OK;
-}
-
-Error GdstrokeShaderInterface::SceneInterfaceSet::update_resources(RenderingDevice *p_rd, RenderData *p_render_data) {
-	ERR_FAIL_COND_V(resources.size() == 0, Error::FAILED);
-	ERR_FAIL_COND_V(p_render_data == nullptr, Error::FAILED);
-	ERR_FAIL_COND_V(!p_render_data->get_render_scene_data()->get_uniform_buffer().is_valid(), Error::FAILED);
-	resources[Binding::BINDING_SCENE_DATA_UNIFORM] = p_render_data->get_render_scene_data()->get_uniform_buffer();
-
-	PackedByteArray config_data_bytes;
-	config_data_bytes.resize(sizeof(ConfigData));
-	config_data_bytes.encode_float(0, config_data.depth_bias);
-	config_data_bytes.encode_u32(4, config_data.use_soft_depth_test_modification);
-	config_data_bytes.encode_u32(8, config_data.min_segment_length);
-	config_data_bytes.encode_float(12, config_data.stroke_width);
-	config_data_bytes.encode_float(16, config_data.stroke_width_factor_start);
-	config_data_bytes.encode_float(20, config_data.stroke_width_factor_end);
-
-	p_rd->buffer_update((RID const&)resources[Binding::BINDING_CONFIG_UNIFORM], 0, sizeof(ConfigData), config_data_bytes);
-	return Error::OK;
-}
-
-void GdstrokeShaderInterface::SceneInterfaceSet::make_bindings() {
-	bindings.clear();
-	ERR_FAIL_COND(resources.size() != Binding::BINDING_MAX);
-	bindings.append(new_uniform(Binding::BINDING_SCENE_DATA_UNIFORM, RenderingDevice::UniformType::UNIFORM_TYPE_UNIFORM_BUFFER, resources[Binding::BINDING_SCENE_DATA_UNIFORM]));
-	bindings.append(new_uniform(Binding::BINDING_CONFIG_UNIFORM,     RenderingDevice::UniformType::UNIFORM_TYPE_UNIFORM_BUFFER, resources[Binding::BINDING_CONFIG_UNIFORM    ]));
-}
-
-
 RID GdstrokeShaderInterface::CommandInterfaceSet::get_dispatch_indirect_commands_buffer() const {
 	ERR_FAIL_COND_V(resources.size() == 0, RID());
 	return resources[Binding::BINDING_DISPATCH_INDIRECT_COMMANDS_BUFFER];
@@ -128,7 +91,8 @@ Error GdstrokeShaderInterface::CommonInterfaceSet::create_resources(RenderingDev
 
 	resources.clear();
 	resources.resize(int(Buffer::BUFFER_MAX) + int(Binding::BINDING_MAX));
-	resources[Buffer::BUFFER_IN_GEOMETRY_DESC_BUFFER     ] = p_rd->storage_buffer_create(sizeof(int32_t) * 4,              {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+
+	resources[Buffer::BUFFER_IN_GEOMETRY_DESC_BUFFER     ] = p_rd->storage_buffer_create(sizeof(int32_t) * 2,              {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 	// arbitrary limit
 	resources[Buffer::BUFFER_MESH_DESC_BUFFER         ] = p_rd->storage_buffer_create(sizeof(int32_t) * 10 * (1 << 16), {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 	resources[Buffer::BUFFER_MESH_INSTANCE_DESC_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 18 * (1 << 16), {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
@@ -137,7 +101,8 @@ Error GdstrokeShaderInterface::CommonInterfaceSet::create_resources(RenderingDev
 
 	resources[Buffer::BUFFER_COMMON_BALLOC_BUFFER] = p_rd->storage_buffer_create(balloc_buffer_size, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
-	resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_SCREEN_DEPTH_TEXTURE)] = render_scene_buffers->get_depth_texture();
+	resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_SCENE_DATA_UNIFORM)] = p_render_data->get_render_scene_data()->get_uniform_buffer();
+	resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_CONFIG_UNIFORM)] = p_rd->uniform_buffer_create(idiv_ceil(sizeof(ConfigData), 16) * 16);
 
 	PackedByteArray buffers_addresses_data;
 	buffers_addresses_data.resize((Buffer::BUFFER_MAX + 64) * 8);
@@ -146,6 +111,8 @@ Error GdstrokeShaderInterface::CommonInterfaceSet::create_resources(RenderingDev
 	}
 
 	resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_COMMON_BUFFERS)] = p_rd->storage_buffer_create(buffers_addresses_data.size(), buffers_addresses_data, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+
+	resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_SCREEN_DEPTH_TEXTURE)] = render_scene_buffers->get_depth_texture();
 
 	Ref<RDSamplerState> nearest_sampler_state = Ref(memnew(RDSamplerState));
 	nearest_sampler = p_rd->sampler_create(nearest_sampler_state);
@@ -156,6 +123,17 @@ Error GdstrokeShaderInterface::CommonInterfaceSet::update_resources(RenderingDev
 	ERR_FAIL_COND_V(resources.size() == 0, Error::FAILED);
 	ERR_FAIL_COND_V(p_render_data == nullptr, Error::FAILED);
 	Ref<RenderSceneBuffersRD> render_scene_buffers = (Ref<RenderSceneBuffersRD>)p_render_data->get_render_scene_buffers();
+
+	resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_SCENE_DATA_UNIFORM)] = p_render_data->get_render_scene_data()->get_uniform_buffer();
+
+	PackedByteArray config_data_bytes;
+	config_data_bytes.resize(sizeof(ConfigData));
+	config_data_bytes.encode_float(0, config_data.depth_bias);
+	config_data_bytes.encode_u32(4, config_data.use_soft_depth_test_modification);
+	config_data_bytes.encode_u32(8, config_data.min_segment_length);
+	// config_data_bytes.encode_float(12, config_data.tau);
+
+	p_rd->buffer_update(resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_CONFIG_UNIFORM)], 0, sizeof(ConfigData), config_data_bytes);
 
 	PackedByteArray geometry_desc_buffer_data = PackedByteArray();
 	geometry_desc_buffer_data.resize(sizeof(int32_t) * 2);
@@ -228,6 +206,8 @@ void GdstrokeShaderInterface::CommonInterfaceSet::make_bindings() {
 	ERR_FAIL_COND(resources.size() != int(Buffer::BUFFER_MAX) + int(Binding::BINDING_MAX));
 
 	ERR_FAIL_COND(!nearest_sampler.is_valid());
+	bindings.append(new_uniform(Binding::BINDING_SCENE_DATA_UNIFORM,       RenderingDevice::UniformType::UNIFORM_TYPE_UNIFORM_BUFFER,                        resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_SCENE_DATA_UNIFORM)]));
+	bindings.append(new_uniform(Binding::BINDING_CONFIG_UNIFORM,           RenderingDevice::UniformType::UNIFORM_TYPE_UNIFORM_BUFFER,                        resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_CONFIG_UNIFORM    )]));
 	bindings.append(new_uniform(Binding::BINDING_COMMON_BUFFERS,           RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER,                        resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_COMMON_BUFFERS)]));
 	bindings.append(new_uniform(Binding::BINDING_SCREEN_DEPTH_TEXTURE,     RenderingDevice::UniformType::UNIFORM_TYPE_SAMPLER_WITH_TEXTURE, nearest_sampler, resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_SCREEN_DEPTH_TEXTURE)]));
 	bindings.append(new_uniform(Binding::BINDING_FOREMOST_FRAGMENT_BITMAP, RenderingDevice::UniformType::UNIFORM_TYPE_IMAGE,                                 resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_FOREMOST_FRAGMENT_BITMAP)]));
