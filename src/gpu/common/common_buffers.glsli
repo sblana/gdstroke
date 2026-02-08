@@ -16,6 +16,7 @@ layout(set = 0, binding = 0, std140) readonly uniform SceneDataUniform {
 layout(set = 0, binding = 1, scalar) readonly uniform ConfigUniform {
 	float depth_bias;
 	uint use_soft_depth_test_modification;
+	uint laplacian_iterations;
 	float laplacian_factor;
 	float orientation_threshold;
 	uint min_segment_length;
@@ -291,6 +292,10 @@ layout(BUFREF_LAYOUT) buffer CompactedPixelEdgeAttribsBuffer {
 };
 #define _BUF_SIZE_CompactedPixelEdgeAttribsBuffer(MP_array_len) ((_M_SIZEOF(CompactedPixelEdgeAttribs)()) * (MP_array_len))
 
+
+#define LAPLACIAN_FILTERING_MAX_ITERATIONS (20)
+#define LAPLACIAN_FILTERING_MAX_NUM_NEIGHBOURS (LAPLACIAN_FILTERING_MAX_ITERATIONS)
+#define LAPLACIAN_FILTERING_MAX_WINDOW_SIZE (LAPLACIAN_FILTERING_MAX_NUM_NEIGHBOURS * 2 + 1)
 
 #define ORIENTATION_FILTERING_MAX_NUM_NEIGHBOURS (8)
 #define ORIENTATION_FILTERING_MAX_WINDOW_SIZE (ORIENTATION_FILTERING_MAX_NUM_NEIGHBOURS * 2 + 1)

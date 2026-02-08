@@ -7,7 +7,7 @@ layout(local_size_x = 64) in;
 #include "common/math.glsli"
 
 
-vec2 calc_midpoint(in const int i_compacted_pixel_edge_idx) {
+vec2 calc_midpoint(in const uint i_compacted_pixel_edge_idx) {
 	const ivec2 contour_pixel_coord = B_contour_pixel_attribs.data[B_compacted_pixel_edge_attribs.data[i_compacted_pixel_edge_idx].to_contour_pixel_idx].pixel_coord;
 	const ivec2 left_pixel_coord = contour_pixel_coord + mult_axes(get_orientation_local_axes(B_compacted_pixel_edge_attribs.data[i_compacted_pixel_edge_idx].orientation), ivec2(-1, 0));
 	const vec2 midpoint = vec2(contour_pixel_coord + left_pixel_coord) / 2.0 + 0.5;
@@ -19,12 +19,43 @@ void main() {
 	const uint pixel_edge_idx = gl_GlobalInvocationID.x;
 
 	if (is_compacted_pixel_edge_idx_valid(int(pixel_edge_idx))) {
+		const int loop_len = B_pixel_edge_loop_attribs.data[B_compacted_pixel_edge_attribs.data[pixel_edge_idx].to_pixel_edge_loop_idx].loop_len;
+		const int num_iterations = clamp(min(int(U_config.laplacian_iterations), loop_len / 2), 1, LAPLACIAN_FILTERING_MAX_ITERATIONS);
 
-		B_compacted_pixel_edge_attribs.data[pixel_edge_idx].filtered_midpoint = laplacian_filtering(
-			U_config.laplacian_factor,
-			calc_midpoint(B_compacted_pixel_edge_attribs.data[pixel_edge_idx].prev_idx),
-			calc_midpoint(int(pixel_edge_idx)),
-			calc_midpoint(B_compacted_pixel_edge_attribs.data[pixel_edge_idx].next_idx)
-		);
+		// load midpoints
+		vec2 laplacian_temps[LAPLACIAN_FILTERING_MAX_WINDOW_SIZE];
+		laplacian_temps[num_iterations] = calc_midpoint(pixel_edge_idx);
+
+		for (int forward = 0; forward < 2; ++forward) {
+			int direction = (forward * 2 - 1);
+			uint prev_idx = pixel_edge_idx;
+			for (int i = 1; i <= num_iterations; ++i) {
+				uint cur_idx = ((forward > 0)
+					? (B_compacted_pixel_edge_attribs.data[prev_idx].next_idx)
+					: (B_compacted_pixel_edge_attribs.data[prev_idx].prev_idx)
+				);
+				int k = i * direction;
+				laplacian_temps[num_iterations + k] = calc_midpoint(cur_idx);
+				prev_idx = cur_idx;
+			}
+		}
+
+		// filtering
+		for (int iteration = num_iterations; iteration > 0; --iteration) {
+			vec2 prev_laplacian_temp = laplacian_temps[num_iterations - iteration];
+			for (int k = num_iterations - iteration + 1; k < num_iterations + iteration; ++k) {
+				vec2 laplacian_temp = laplacian_filtering(
+					U_config.laplacian_factor,
+					prev_laplacian_temp,
+					laplacian_temps[k],
+					laplacian_temps[k + 1]
+				);
+				prev_laplacian_temp = laplacian_temps[k];
+				laplacian_temps[k] = laplacian_temp;
+			}
+		}
+		vec2 filtered_midpoint = laplacian_temps[num_iterations];
+
+		B_compacted_pixel_edge_attribs.data[pixel_edge_idx].filtered_midpoint = filtered_midpoint;
 	}
 }

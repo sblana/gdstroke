@@ -47,6 +47,8 @@ void GdstrokeEffect::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_config_depth_bias"),            &GdstrokeEffect::get_config_depth_bias);
 	ClassDB::bind_method(D_METHOD("set_config_use_soft_depth_test_modification", "p_value"), &GdstrokeEffect::set_config_use_soft_depth_test_modification);
 	ClassDB::bind_method(D_METHOD("get_config_use_soft_depth_test_modification"),            &GdstrokeEffect::get_config_use_soft_depth_test_modification);
+	ClassDB::bind_method(D_METHOD("set_config_laplacian_iterations", "p_value"), &GdstrokeEffect::set_config_laplacian_iterations);
+	ClassDB::bind_method(D_METHOD("get_config_laplacian_iterations"),            &GdstrokeEffect::get_config_laplacian_iterations);
 	ClassDB::bind_method(D_METHOD("set_config_laplacian_factor", "p_value"), &GdstrokeEffect::set_config_laplacian_factor);
 	ClassDB::bind_method(D_METHOD("get_config_laplacian_factor"),            &GdstrokeEffect::get_config_laplacian_factor);
 	ClassDB::bind_method(D_METHOD("set_config_orientation_threshold", "p_value"), &GdstrokeEffect::set_config_orientation_threshold);
@@ -91,6 +93,14 @@ void GdstrokeEffect::_bind_methods() {
 		),
 		"set_config_use_soft_depth_test_modification",
 		"get_config_use_soft_depth_test_modification"
+	);
+	ADD_PROPERTY(
+		PropertyInfo(
+			Variant::INT, "laplacian_iterations",
+			PropertyHint::PROPERTY_HINT_RANGE, "1,20"
+		),
+		"set_config_laplacian_iterations",
+		"get_config_laplacian_iterations"
 	);
 	ADD_PROPERTY(
 		PropertyInfo(
@@ -757,6 +767,14 @@ float GdstrokeEffect::get_config_laplacian_factor() const {
 
 void  GdstrokeEffect::set_config_laplacian_factor(float p_value) {
 	_common_interface_set.config_data.laplacian_factor = p_value;
+}
+
+uint32_t GdstrokeEffect::get_config_laplacian_iterations() const {
+	return _common_interface_set.config_data.laplacian_iterations;
+}
+
+void GdstrokeEffect::set_config_laplacian_iterations(uint32_t p_value) {
+	_common_interface_set.config_data.laplacian_iterations = uint32_t(p_value);
 }
 
 float GdstrokeEffect::get_config_orientation_threshold() const {

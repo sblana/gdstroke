@@ -70,12 +70,14 @@ public:
 	void  set_config_depth_bias(float p_value);
 	bool get_config_use_soft_depth_test_modification() const;
 	void set_config_use_soft_depth_test_modification(bool p_value);
+	uint32_t get_config_laplacian_iterations() const;
+	void     set_config_laplacian_iterations(uint32_t p_value);
 	float get_config_laplacian_factor() const;
 	void  set_config_laplacian_factor(float p_value);
 	float get_config_orientation_threshold() const;
 	void  set_config_orientation_threshold(float p_value);
 	uint32_t get_config_min_segment_length() const;
-	void set_config_min_segment_length(uint32_t p_value);
+	void     set_config_min_segment_length(uint32_t p_value);
 	DebugView get_debug_view() const;
 	void      set_debug_view(DebugView p_value);
 
