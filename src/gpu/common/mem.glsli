@@ -9,7 +9,8 @@
 #define NULLPTR (0ul)
 #define DEFAULT_ALIGNMENT (8)
 #define BUFREF_FORWARD_LAYOUT buffer_reference
-#define BUFREF_LAYOUT buffer_reference, buffer_reference_align = DEFAULT_ALIGNMENT, scalar
+#define BUFREF_LAYOUT_ALIGN buffer_reference, std430, buffer_reference_align
+#define BUFREF_LAYOUT BUFREF_LAYOUT_ALIGN = DEFAULT_ALIGNMENT
 
 #define M_BUF_SIZE(MP_type, MP_array_len) (_M_BUF_SIZE(MP_type)(MP_array_len))
 #define _M_BUF_SIZE(MP_type) _BUF_SIZE_##MP_type

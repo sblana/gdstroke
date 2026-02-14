@@ -13,7 +13,7 @@ layout(set = 0, binding = 0, std140) readonly uniform SceneDataUniform {
 } U_scene_data;
 
 
-layout(set = 0, binding = 1, scalar) readonly uniform ConfigUniform {
+layout(set = 0, binding = 1, std430) readonly buffer ConfigUniform {
 	float depth_bias;
 	uint use_soft_depth_test_modification;
 	uint laplacian_iterations;
@@ -79,7 +79,9 @@ layout(BUFREF_LAYOUT) readonly buffer MeshDescBuffer {
 struct MeshInstanceDescData {
 	mat4 model_to_world;
 	int to_mesh_idx;
-	int pad;
+	int pad0;
+	int pad1;
+	int pad2;
 };
 
 struct MeshInstanceMapsData {
@@ -102,9 +104,8 @@ struct GlobalEdgeData {
 	int to_mesh_instance_idx;
 	bool is_contour;
 	int to_contour_edge;
-	int pad;
 };
-#define _SIZEOF_GlobalEdgeData() (_M_SIZEOF(int)() * 4)
+#define _SIZEOF_GlobalEdgeData() (_M_SIZEOF(int)() * 3)
 
 struct GlobalFaceData {
 	int to_mesh_instance_idx;
@@ -161,9 +162,8 @@ layout(BUFREF_LAYOUT) buffer CommonDescBuffer {
 	int num_segments;
 	int num_segment_edges;
 	int num_stroke_vertices;
-	int pad;
 };
-#define _BUF_SIZE_CommonDescBuffer(MP_array_len) ((_M_SIZEOF(int)()) * 10)
+#define _BUF_SIZE_CommonDescBuffer(MP_array_len) ((_M_SIZEOF(int)()) * 11)
 
 
 struct ContourEdgeAttribs {
@@ -261,9 +261,8 @@ struct PixelEdgeLoopAttribs {
 	int fragmented_head_idx;
 	int compacted_head_idx;
 	int loop_len;
-	int pad;
 };
-#define _SIZEOF_PixelEdgeLoopAttribs() (_M_SIZEOF(int)() * 4)
+#define _SIZEOF_PixelEdgeLoopAttribs() (_M_SIZEOF(int)() * 3)
 
 layout(BUFREF_LAYOUT) buffer PixelEdgeLoopAttribsBuffer {
 	PixelEdgeLoopAttribs data[];
@@ -311,9 +310,8 @@ struct PixelEdgeLoopSegmentationData {
 	int num_segment_edges;
 	int loop_segment_key_offset;
 	int loop_num_segment_edges_offset;
-	int pad;
 };
-#define _SIZEOF_PixelEdgeLoopSegmentationData() (_M_SIZEOF(int)() * 6)
+#define _SIZEOF_PixelEdgeLoopSegmentationData() (_M_SIZEOF(int)() * 5)
 
 layout(BUFREF_LAYOUT) buffer PixelEdgeLoopSegmentationBuffer {
 	PixelEdgeLoopSegmentationData data[];
@@ -349,9 +347,8 @@ struct SegmentAttribs {
 	Range segment_edges;
 	Range stroke_vertices;
 	float arc_length;
-	int pad;
 };
-#define _SIZEOF_SegmentAttribs() (_M_SIZEOF(Range)() * 2 + _M_SIZEOF(int)() * 2)
+#define _SIZEOF_SegmentAttribs() (_M_SIZEOF(Range)() * 2 + _M_SIZEOF(int)() * 1)
 
 layout(BUFREF_LAYOUT) buffer SegmentAttribsBuffer {
 	SegmentAttribs data[];
@@ -363,9 +360,8 @@ struct SegmentEdgeAttribs {
 	int to_compacted_pixel_edge_idx;
 	bool is_head;
 	float arc_length;
-	int pad;
 };
-#define _SIZEOF_SegmentEdgeAttribs() (_M_SIZEOF(int)() * 4)
+#define _SIZEOF_SegmentEdgeAttribs() (_M_SIZEOF(int)() * 3)
 
 layout(BUFREF_LAYOUT) buffer SegmentEdgeAttribsBuffer {
 	SegmentEdgeAttribs data[];
@@ -396,7 +392,7 @@ layout(BUFREF_LAYOUT) buffer StrokeVertexAttribsBuffer {
 
 #define COMMON_BALLOC_BUFFER_SIZE (256 * 1024 * 1024)
 
-layout(set = 0, binding = 2, scalar) buffer CommonBuffers {
+layout(set = 0, binding = 2, std430) buffer CommonBuffers {
 	readonly InGeometryDescBuffer        B_in_geometry_desc;
 	readonly MeshDescBuffer              B_mesh_desc;
 	readonly MeshInstanceDescBuffer      B_mesh_instance_desc;

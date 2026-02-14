@@ -1,7 +1,6 @@
 #ifndef GDSTROKE_STROKE_GLSLI
 #define GDSTROKE_STROKE_GLSLI
 
-#extension GL_EXT_scalar_block_layout : require
 #extension GL_EXT_buffer_reference : require
 #extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
 #extension GL_EXT_shader_explicit_arithmetic_types_int32 : require
@@ -23,11 +22,11 @@ float gdstroke_get_stroke_arc_length(uint stroke_id);
 
 // IMPLEMENTATION
 
-layout(buffer_reference, buffer_reference_align = 4, scalar) buffer _GdstrokeAPI_UInt32Reference {
+layout(buffer_reference, buffer_reference_align = 4, std430) buffer _GdstrokeAPI_UInt32Reference {
 	uint32_t value;
 };
 
-layout(set = 7, binding = 0, scalar) buffer _GdstrokeAPI_BufferPtrTable {
+layout(set = 7, binding = 0, std430) buffer _GdstrokeAPI_BufferPtrTable {
 	uint64_t stroke_vertex_to_stroke_vertex_kind_map_buffer_ptr;
 	uint64_t stroke_vertex_to_stroke_vertex_kind_map_buffer_stride;
 	uint64_t stroke_vertex_to_segment_edge_map_buffer_ptr;

@@ -95,14 +95,14 @@ Error GdstrokeShaderInterface::CommonInterfaceSet::create_resources(RenderingDev
 	resources[Buffer::BUFFER_IN_GEOMETRY_DESC_BUFFER     ] = p_rd->storage_buffer_create(sizeof(int32_t) * 2,              {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 	// arbitrary limit
 	resources[Buffer::BUFFER_MESH_DESC_BUFFER         ] = p_rd->storage_buffer_create(sizeof(int32_t) * 10 * (1 << 16), {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
-	resources[Buffer::BUFFER_MESH_INSTANCE_DESC_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 18 * (1 << 16), {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_MESH_INSTANCE_DESC_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 20 * (1 << 16), {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
 	resources[Buffer::BUFFER_ALLOCATION_COLUMN_BUFFER] = p_rd->storage_buffer_create(sizeof(uint32_t) * 2 * 8192, {},  0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
 	resources[Buffer::BUFFER_COMMON_BALLOC_BUFFER] = p_rd->storage_buffer_create(balloc_buffer_size, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
 	resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_SCENE_DATA_UNIFORM)] = p_render_data->get_render_scene_data()->get_uniform_buffer();
-	resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_CONFIG_UNIFORM)] = p_rd->uniform_buffer_create(idiv_ceil(sizeof(ConfigData), 16) * 16);
+	resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_CONFIG_UNIFORM)] = p_rd->storage_buffer_create(sizeof(int32_t) * 6);
 
 	PackedByteArray buffers_addresses_data;
 	buffers_addresses_data.resize((Buffer::BUFFER_MAX + 64) * 8);
@@ -163,7 +163,7 @@ Error GdstrokeShaderInterface::CommonInterfaceSet::update_resources(RenderingDev
 
 
 	PackedByteArray mesh_instance_desc_buffer_data = PackedByteArray();
-	mesh_instance_desc_buffer_data.resize(sizeof(int32_t) * 18 * GdstrokeServer::get_num_contour_instances());
+	mesh_instance_desc_buffer_data.resize(sizeof(int32_t) * 20 * GdstrokeServer::get_num_contour_instances());
 	bytes_written = 0;
 	for (auto object_id : GdstrokeServer::get_contour_instances()) {
 		MeshInstance3D *contour_instance = cast_to<MeshInstance3D>(ObjectDB::get_instance(ObjectID(object_id)));
@@ -192,7 +192,9 @@ Error GdstrokeShaderInterface::CommonInterfaceSet::update_resources(RenderingDev
 
 		mesh_instance_desc_buffer_data.encode_s32(bytes_written + 64, GdstrokeServer::get_contour_meshes_mesh_idx().at(contour_instance->get_mesh()->get_rid().get_id()));
 		mesh_instance_desc_buffer_data.encode_s32(bytes_written + 68, 0);
-		bytes_written += 72;
+		mesh_instance_desc_buffer_data.encode_s32(bytes_written + 72, 0);
+		mesh_instance_desc_buffer_data.encode_s32(bytes_written + 76, 0);
+		bytes_written += 80;
 	}
 
 	p_rd->buffer_update(resources[Buffer::BUFFER_MESH_INSTANCE_DESC_BUFFER], 0, mesh_instance_desc_buffer_data.size(), mesh_instance_desc_buffer_data);
@@ -209,7 +211,7 @@ void GdstrokeShaderInterface::CommonInterfaceSet::make_bindings() {
 
 	ERR_FAIL_COND(!nearest_sampler.is_valid());
 	bindings.append(new_uniform(Binding::BINDING_SCENE_DATA_UNIFORM,       RenderingDevice::UniformType::UNIFORM_TYPE_UNIFORM_BUFFER,                        resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_SCENE_DATA_UNIFORM)]));
-	bindings.append(new_uniform(Binding::BINDING_CONFIG_UNIFORM,           RenderingDevice::UniformType::UNIFORM_TYPE_UNIFORM_BUFFER,                        resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_CONFIG_UNIFORM    )]));
+	bindings.append(new_uniform(Binding::BINDING_CONFIG_UNIFORM,           RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER,                        resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_CONFIG_UNIFORM    )]));
 	bindings.append(new_uniform(Binding::BINDING_COMMON_BUFFERS,           RenderingDevice::UniformType::UNIFORM_TYPE_STORAGE_BUFFER,                        resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_COMMON_BUFFERS)]));
 	bindings.append(new_uniform(Binding::BINDING_SCREEN_DEPTH_TEXTURE,     RenderingDevice::UniformType::UNIFORM_TYPE_SAMPLER_WITH_TEXTURE, nearest_sampler, resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_SCREEN_DEPTH_TEXTURE)]));
 	bindings.append(new_uniform(Binding::BINDING_FOREMOST_FRAGMENT_BITMAP, RenderingDevice::UniformType::UNIFORM_TYPE_IMAGE,                                 resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_FOREMOST_FRAGMENT_BITMAP)]));
