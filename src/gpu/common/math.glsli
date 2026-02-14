@@ -45,7 +45,7 @@ bool is_within_screen(in ivec2 i_point, in uvec2 i_screen_size) {
 	return is_within_aabb(i_point, ivec2(0, 0), i_screen_size);
 }
 
-#extension GL_ARB_shading_language_include : enable
+#extension GL_ARB_shading_language_include : require
 #include "common/common_buffers.glsli"
 
 PixelEdgeOrientation orientation_op_add(in const PixelEdgeOrientation i_a, in const int i_b) {

@@ -1,11 +1,11 @@
 #ifndef IMPL_SUBGROUP_GLSL
 #define IMPL_SUBGROUP_GLSL
 
-#extension GL_ARB_shading_language_include : enable
+#extension GL_ARB_shading_language_include : require
 #include "common/ext/subgroup.glsli"
 
 #include "common/ext/explicit_arithmetic_types.glsli"
-#extension GL_EXT_shader_subgroup_extended_types_int64 : enable
+#extension GL_EXT_shader_subgroup_extended_types_int64 : require
 
 
 #define M_DEFINITION_GENTYPE(					\

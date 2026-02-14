@@ -1,5 +1,5 @@
-#version 450
-#extension GL_ARB_shading_language_include : enable
+#version 460
+#extension GL_ARB_shading_language_include : require
 
 layout(local_size_x = 64) in;
 
@@ -42,7 +42,7 @@ void main() {
 
 	const vec2 contour_orientation = normalize(verts_clipped_screen[1] - verts_clipped_screen[0]);
 
-	#ifdef RASTER_METHOD_BRESENHAM
+#ifdef RASTER_METHOD_BRESENHAM
 	const bool is_y_dominant = line_determine_axis_dominance(ivec2(verts_clipped_screen[0]), ivec2(verts_clipped_screen[1]));
 	const bool is_first_point_smallest = (
 		int(verts_clipped_screen[0][int(is_y_dominant)]) <
@@ -67,7 +67,7 @@ void main() {
 	{
 		ivec2 pixel_coord = ivec2(0,0);
 
-		#ifdef RASTER_METHOD_BRESENHAM
+	#ifdef RASTER_METHOD_BRESENHAM
 		if (!is_y_dominant) {
 			pixel_coord.x = smallest_point.x + fragment_local_idx;
 			if (!is_non_dominant_axis_negative) {
@@ -87,13 +87,13 @@ void main() {
 			}
 		}
 		const float interpolation_weight = (fragment_local_idx + 0.5) / float(fragment_range.count) * (int(is_first_point_smallest) * 2 - 1) + int(!is_first_point_smallest);
-		#endif
+	#endif
 
-		#ifdef RASTER_METHOD_DDA
+	#ifdef RASTER_METHOD_DDA
 		pixel_coord[int( f_is_y_dominant)] = int(verts_clipped_screen[0][int( f_is_y_dominant)] + fragment_local_idx * f_sign);
 		pixel_coord[int(!f_is_y_dominant)] = int((verts_clipped_screen[0][int(f_is_y_dominant)] + fragment_local_idx * f_sign) * f_slope + f_non_dominant_intercept);
 		const float interpolation_weight = (fragment_local_idx + 0.5) / float(fragment_range.count);
-		#endif
+	#endif
 
 		const vec4 interpolated_ndc = perspective_interpolate_edge(verts_clipped_ndc, interpolation_weight);
 		const float godot_depth = interpolated_ndc.z;

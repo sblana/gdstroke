@@ -1,12 +1,12 @@
 #ifndef EXT_SUBGROUP_GLSLI
 #define EXT_SUBGROUP_GLSLI
 
-#extension GL_KHR_shader_subgroup_basic : enable
-#extension GL_KHR_shader_subgroup_vote : enable
-#extension GL_KHR_shader_subgroup_ballot : enable
-#extension GL_KHR_shader_subgroup_shuffle : enable
-#extension GL_KHR_shader_subgroup_shuffle_relative  : enable
-#extension GL_KHR_shader_subgroup_arithmetic : enable
+#extension GL_KHR_shader_subgroup_basic : require
+#extension GL_KHR_shader_subgroup_vote : require
+#extension GL_KHR_shader_subgroup_ballot : require
+#extension GL_KHR_shader_subgroup_shuffle : require
+#extension GL_KHR_shader_subgroup_shuffle_relative : require
+#extension GL_KHR_shader_subgroup_arithmetic : require
 
 
 #define gl_NumSubgroups gl_NumSubgroups
@@ -87,7 +87,7 @@
 #define subgroupSegmentedInclusiveAdd(/* T */ _value_, /* bool */ _is_head_, /* out bool */ _o_invocation_or_head_flag_) subgroupSegmentedInclusiveAdd(_value_, _is_head_, _o_invocation_or_head_flag_)
 #define subgroupSegmentedExclusiveAdd(/* T */ _value_, /* bool */ _is_head_, /* out bool */ _o_invocation_or_head_flag_, /* out T */ _o_subgroup_reduction_) subgroupSegmentedExclusiveAdd(_value_, _is_head_, _o_invocation_or_head_flag_, _o_subgroup_reduction_)
 
-#extension GL_ARB_shading_language_include : enable
+#extension GL_ARB_shading_language_include : require
 #include "common/impl/subgroup.glsl"
 
 #endif // !EXT_SUBGROUP_GLSLI

@@ -1,4 +1,4 @@
-#extension GL_ARB_shading_language_include : enable
+#extension GL_ARB_shading_language_include : require
 #include "common/buffers.glsli"
 
 vec3 model_norm_to_view_norm(mat4 model_to_world, vec3 model_norm) {

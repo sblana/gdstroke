@@ -1,7 +1,7 @@
 #ifndef SCANS_GLSLI
 #define SCANS_GLSLI
 
-#extension GL_ARB_shading_language_include : enable
+#extension GL_ARB_shading_language_include : require
 #include "common/math.glsli"
 #include "common/mem.glsli"
 #include "common/ext/explicit_arithmetic_types.glsli"

@@ -1,5 +1,5 @@
-#version 450
-#extension GL_ARB_shading_language_include : enable
+#version 460
+#extension GL_ARB_shading_language_include : require
 
 #include "common/buffers.glsli"
 #include "common/debug_buffers.glsli"

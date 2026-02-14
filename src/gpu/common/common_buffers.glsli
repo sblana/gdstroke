@@ -1,7 +1,7 @@
 #ifndef COMMON_BUFFERS_GLSLI
 #define COMMON_BUFFERS_GLSLI
 
-#extension GL_ARB_shading_language_include : enable
+#extension GL_ARB_shading_language_include : require
 #include "common/mem.glsli"
 
 

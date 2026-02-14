@@ -1,9 +1,9 @@
 #ifndef MEM_GLSLI
 #define MEM_GLSLI
 
-#extension GL_EXT_buffer_reference : enable
-#extension GL_EXT_scalar_block_layout : enable
-#extension GL_ARB_shading_language_include : enable
+#extension GL_EXT_buffer_reference : require
+#extension GL_EXT_scalar_block_layout : require
+#extension GL_ARB_shading_language_include : require
 #include "common/ext/explicit_arithmetic_types.glsli"
 
 #define NULLPTR (0ul)
