@@ -44,6 +44,6 @@ void main() {
 		if (!is_within_screen(B_contour_fragment_attribs.data[fragment_idx].pixel_coord, imageSize(U_foremost_fragment_bitmap))) {
 			is_pseudo_visible = false;
 		}
-		B_contour_fragment_attribs.data[fragment_idx].is_pseudo_visible = is_pseudo_visible;
+		B_contour_fragment_attribs.data[fragment_idx].is_pseudo_visible = store_bool(is_pseudo_visible);
 	}
 }

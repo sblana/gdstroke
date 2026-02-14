@@ -34,12 +34,12 @@ void main() {
 			block_segment_key_offsets[loop_bd.block_idx] = 0;
 			for (uint element_idx = loop_bd.first_element_idx; element_idx <= loop_bd.final_element_idx; ++element_idx) {
 				const uint pixel_edge_idx = loop_attribs.compacted_head_idx + element_idx;
-				const bool is_inside = B_compacted_pixel_edge_attribs.data[pixel_edge_idx].is_inside;
+				const bool is_inside = load_bool(B_compacted_pixel_edge_attribs.data[pixel_edge_idx].is_inside);
 
-				B_compacted_pixel_edge_attribs.data[pixel_edge_idx].is_discarded = !is_inside;
+				B_compacted_pixel_edge_attribs.data[pixel_edge_idx].is_discarded = store_bool(!is_inside);
 				block_num_inside_edges[loop_bd.block_idx] += int(is_inside);
 
-				block_segment_key_offsets[loop_bd.block_idx] += int(B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].is_segment_head_initial);
+				block_segment_key_offsets[loop_bd.block_idx] += int(load_bool(B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].is_segment_head_initial));
 				B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].loop_local_segment_key = block_segment_key_offsets[loop_bd.block_idx] - 1;
 			}
 		}
@@ -57,7 +57,7 @@ void main() {
 
 			if (total_num_inside_edges == loop_attribs.loop_len) {
 				total_num_segments = 1;
-				B_compacted_pixel_edge_segmentation.data[loop_attribs.compacted_head_idx].is_segment_head_initial = true;
+				B_compacted_pixel_edge_segmentation.data[loop_attribs.compacted_head_idx].is_segment_head_initial = store_bool(true);
 			}
 
 			B_pixel_edge_loop_segmentation.data[loop_idx].num_segments = total_num_segments;
@@ -97,7 +97,7 @@ void main() {
 			for (uint element_idx = loop_bd.first_element_idx; element_idx <= loop_bd.final_element_idx; ++element_idx) {
 				const uint pixel_edge_idx = loop_attribs.compacted_head_idx + element_idx;
 				const int segment_key = B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].loop_local_segment_key;
-				if (B_compacted_pixel_edge_attribs.data[pixel_edge_idx].is_inside) {
+				if (load_bool(B_compacted_pixel_edge_attribs.data[pixel_edge_idx].is_inside)) {
 					atomicAdd(segment_length[segment_key], 1);
 				}
 			}
@@ -109,7 +109,7 @@ void main() {
 			for (uint element_idx = loop_bd.first_element_idx; element_idx <= loop_bd.final_element_idx; ++element_idx) {
 				const uint pixel_edge_idx = loop_attribs.compacted_head_idx + element_idx;
 				const int segment_key = B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].loop_local_segment_key;
-				if (B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].is_segment_head_initial) {
+				if (load_bool(B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].is_segment_head_initial)) {
 					segment_head_idx[segment_key] = int(pixel_edge_idx);
 				}
 			}
@@ -223,7 +223,7 @@ void main() {
 				B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].loop_local_segment_key = segment_passed_key[old_segment_key];
 
 				if (segment_is_discarded[old_segment_key]) {
-					B_compacted_pixel_edge_attribs.data[pixel_edge_idx].is_discarded = true;
+					B_compacted_pixel_edge_attribs.data[pixel_edge_idx].is_discarded = store_bool(true);
 				}
 			}
 		}

@@ -16,7 +16,7 @@ void main() {
 		// initialize buffer
 		B_sparse_pixel_edge_attribs.data[pixel_edge_idx].prev_idx = -1;
 		B_sparse_pixel_edge_attribs.data[pixel_edge_idx].next_idx = -1;
-		B_sparse_pixel_edge_attribs.data[pixel_edge_idx].is_valid = false;
+		B_sparse_pixel_edge_attribs.data[pixel_edge_idx].is_valid = store_bool(false);
 
 		const ivec4 local_axes = get_orientation_local_axes(orientation);
 		const ivec2 pixel_coord = B_contour_pixel_attribs.data[contour_pixel_idx].pixel_coord;
@@ -61,13 +61,13 @@ void main() {
 
 			B_sparse_pixel_edge_attribs.data[pixel_edge_idx].prev_idx = int(prev_contour_pixel_idx * 4 + prev_orientation.value);
 			B_sparse_pixel_edge_attribs.data[pixel_edge_idx].next_idx = int(next_contour_pixel_idx * 4 + next_orientation.value);
-			B_sparse_pixel_edge_attribs.data[pixel_edge_idx].is_valid = true;
+			B_sparse_pixel_edge_attribs.data[pixel_edge_idx].is_valid = store_bool(true);
 		}
 		const int here_contour_fragment_idx = int(imageLoad(U_foremost_fragment_bitmap, pixel_coord).x) - 1;
 		if (here_contour_fragment_idx == -1 || contour_pixel_idx != B_contour_fragment_attribs.data[here_contour_fragment_idx].to_contour_pixel_idx) {
 			B_sparse_pixel_edge_attribs.data[pixel_edge_idx].prev_idx = -1;
 			B_sparse_pixel_edge_attribs.data[pixel_edge_idx].next_idx = -1;
-			B_sparse_pixel_edge_attribs.data[pixel_edge_idx].is_valid = false;
+			B_sparse_pixel_edge_attribs.data[pixel_edge_idx].is_valid = store_bool(false);
 		}
 	}
 }

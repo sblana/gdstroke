@@ -14,10 +14,10 @@ void main() {
 		const int next_idx = B_compacted_pixel_edge_attribs.data[pixel_edge_idx].next_idx;
 
 		const bool smoothed_is_inside = (
-			B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].is_inside_initial ||
-			B_compacted_pixel_edge_segmentation.data[      prev_idx].is_inside_initial &&
-			B_compacted_pixel_edge_segmentation.data[      next_idx].is_inside_initial
+			load_bool(B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].is_inside_initial) ||
+			load_bool(B_compacted_pixel_edge_segmentation.data[      prev_idx].is_inside_initial) &&
+			load_bool(B_compacted_pixel_edge_segmentation.data[      next_idx].is_inside_initial)
 		);
-		B_compacted_pixel_edge_attribs.data[pixel_edge_idx].is_inside = smoothed_is_inside;
+		B_compacted_pixel_edge_attribs.data[pixel_edge_idx].is_inside = store_bool(smoothed_is_inside);
 	}
 }

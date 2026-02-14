@@ -28,6 +28,6 @@ void main() {
 		);
 		// see doi.org/10.1561/0600000075 Appendix C.2.1: Front-facing
 		const bool is_backfacing = dot(view_space_normal, -vert_0_view_pos) <= 0.0;
-		B_global_faces.data[global_face_idx].is_backfacing = is_backfacing;
+		B_global_faces.data[global_face_idx].is_backfacing = store_bool(is_backfacing);
 	}
 }

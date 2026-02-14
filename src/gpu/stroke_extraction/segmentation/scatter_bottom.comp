@@ -10,7 +10,7 @@ void main() {
 	const uint pixel_edge_idx = gl_GlobalInvocationID.x;
 
 	if (is_compacted_pixel_edge_idx_valid(int(pixel_edge_idx))) {
-		const bool is_discarded = B_compacted_pixel_edge_attribs.data[pixel_edge_idx].is_discarded;
+		const bool is_discarded = load_bool(B_compacted_pixel_edge_attribs.data[pixel_edge_idx].is_discarded);
 		const int segment_key = B_compacted_pixel_edge_attribs.data[pixel_edge_idx].segment_key;
 		const int segment_edge_idx = B_compacted_pixel_edge_attribs.data[pixel_edge_idx].to_segment_edge_idx;
 		const bool is_segment_head = B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].segment_head_idx == pixel_edge_idx;

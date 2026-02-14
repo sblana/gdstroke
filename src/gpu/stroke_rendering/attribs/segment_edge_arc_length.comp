@@ -23,7 +23,7 @@ void main() {
 		bool i_head = true;
 		if (bd.first_element_idx + gl_LocalInvocationID.x <= bd.final_element_idx) {
 			i_value = B_segment_edge_attribs.data[bd.first_element_idx + gl_LocalInvocationID.x].arc_length;
-			i_head = B_segment_edge_attribs.data[bd.first_element_idx + gl_LocalInvocationID.x].is_head;
+			i_head = load_bool(B_segment_edge_attribs.data[bd.first_element_idx + gl_LocalInvocationID.x].is_head);
 		}
 		float o_invocation_scan_value;
 		bool o_invocation_or_head_flag;

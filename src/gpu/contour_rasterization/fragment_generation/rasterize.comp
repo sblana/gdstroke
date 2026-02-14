@@ -33,7 +33,7 @@ void main() {
 	const int local_edge_idx = int(global_edge_idx) - mesh_instance_maps.first_global_edge_idx;
 	const LocalEdgeData local_edge_data = mesh_desc.local_edge_buffer.data[local_edge_idx];
 
-	const bool is_first_face_frontfacing = !B_global_faces.data[local_edge_data.to_local_face_idxs[0] + mesh_instance_maps.first_global_face_idx].is_backfacing;
+	const bool is_first_face_frontfacing = !load_bool(B_global_faces.data[local_edge_data.to_local_face_idxs[0] + mesh_instance_maps.first_global_face_idx].is_backfacing);
 	const int front_face_idx = local_edge_data.to_local_face_idxs[int(is_first_face_frontfacing)];
 	const vec3 front_face_view_normal = model_norm_to_view_norm(
 		B_mesh_instance_desc.data[mesh_instance_idx].model_to_world,

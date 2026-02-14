@@ -13,7 +13,7 @@ void main() {
 	if (pixel_edge_idx < B_common_desc.num_pixel_edges) {
 
 		// init
-		B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].is_inside_initial = false;
+		B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].is_inside_initial = store_bool(false);
 
 		if (is_compacted_pixel_edge_idx_valid(int(pixel_edge_idx))) {
 			const int contour_pixel_idx = B_compacted_pixel_edge_attribs.data[pixel_edge_idx].to_contour_pixel_idx;
@@ -51,7 +51,7 @@ void main() {
 			}
 
 			const bool is_inside = times_passed > (num_neighbours * 2 + 1) / 2;
-			B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].is_inside_initial = is_inside;
+			B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].is_inside_initial = store_bool(is_inside);
 		}
 	}
 }

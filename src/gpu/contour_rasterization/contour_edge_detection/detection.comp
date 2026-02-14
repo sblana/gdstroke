@@ -18,16 +18,16 @@ void main() {
 		const int local_edge_idx = int(global_edge_idx) - mesh_instance_maps.first_global_edge_idx;
 		const LocalEdgeData local_edge_data = mesh_desc.local_edge_buffer.data[local_edge_idx];
 
-		const bool face_0_backfacing = B_global_faces.data[local_edge_data.to_local_face_idxs[0] + mesh_instance_maps.first_global_face_idx].is_backfacing;
-		const bool face_1_backfacing = B_global_faces.data[local_edge_data.to_local_face_idxs[1] + mesh_instance_maps.first_global_face_idx].is_backfacing;
+		const bool face_0_backfacing = load_bool(B_global_faces.data[local_edge_data.to_local_face_idxs[0] + mesh_instance_maps.first_global_face_idx].is_backfacing);
+		const bool face_1_backfacing = load_bool(B_global_faces.data[local_edge_data.to_local_face_idxs[1] + mesh_instance_maps.first_global_face_idx].is_backfacing);
 
 		const bool is_contour_edge = (
-			(!local_edge_data.is_concave) &&
+			(!load_bool(local_edge_data.is_concave)) &&
 			(
 				( face_0_backfacing && !face_1_backfacing) ||
 				(!face_0_backfacing &&  face_1_backfacing)
 			)
 		);
-		B_global_edges.data[global_edge_idx].is_contour = is_contour_edge;
+		B_global_edges.data[global_edge_idx].is_contour = store_bool(is_contour_edge);
 	}
 }

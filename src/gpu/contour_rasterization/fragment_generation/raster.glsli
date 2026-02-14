@@ -29,7 +29,7 @@ vec4[2] pre_raster_edge(int global_edge_idx) {
 	const LocalEdgeData local_edge_data = mesh_desc.local_edge_buffer.data[local_edge_idx];
 
 
-	bool reverse_vertex_order = B_global_faces.data[local_edge_data.to_local_face_idxs[0] + mesh_instance_maps.first_global_face_idx].is_backfacing;
+	bool reverse_vertex_order = load_bool(B_global_faces.data[local_edge_data.to_local_face_idxs[0] + mesh_instance_maps.first_global_face_idx].is_backfacing);
 	vec3 first_vert_view_pos = model_pos_to_view_pos(
 		B_mesh_instance_desc.data[mesh_instance_idx].model_to_world,
 		mesh_desc.local_vertex_buffer.data[ local_edge_data.to_local_vertex_idxs[0] ].position

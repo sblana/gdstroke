@@ -21,7 +21,7 @@ void main() {
 		}
 		const float local_arc_length = length(midpoint - midpoint_prev);
 
-		B_segment_edge_attribs.data[segment_edge].is_head = is_segment_head;
+		B_segment_edge_attribs.data[segment_edge].is_head = store_bool(is_segment_head);
 		B_segment_edge_attribs.data[segment_edge].arc_length = local_arc_length;
 	}
 }

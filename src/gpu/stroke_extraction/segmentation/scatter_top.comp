@@ -17,7 +17,7 @@ void main() {
 		const int loop_segment_key_offset = B_pixel_edge_loop_segmentation.data[loop_idx].loop_segment_key_offset;
 		const int loop_num_segment_edges_offset = B_pixel_edge_loop_segmentation.data[loop_idx].loop_num_segment_edges_offset;
 
-		const bool is_discarded = B_compacted_pixel_edge_attribs.data[pixel_edge_idx].is_discarded;
+		const bool is_discarded = load_bool(B_compacted_pixel_edge_attribs.data[pixel_edge_idx].is_discarded);
 
 		if (!is_discarded) {
 			B_compacted_pixel_edge_attribs.data[pixel_edge_idx].segment_key = loop_local_segment_key + loop_segment_key_offset;

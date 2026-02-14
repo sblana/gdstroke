@@ -18,7 +18,7 @@ layout(local_size_x = WORKGROUP_SIZE) in;
 
 shared int block_offsets[gl_WorkGroupSize.x];
 
-#define fn_get_src_array(MP_idx_)                     int(B_contour_fragment_attribs.data[MP_idx_].is_fragment_cluster_leader)
+#define fn_get_src_array(MP_idx_)                     int(load_bool(B_contour_fragment_attribs.data[MP_idx_].is_fragment_cluster_leader))
 #define fn_set_src_to_dst_map(MP_idx_, MP_value_)     B_contour_fragment_attribs.data[MP_idx_].to_contour_pixel_idx  = MP_value_
 #define fn_add_set_src_to_dst_map(MP_idx_, MP_value_) B_contour_fragment_attribs.data[MP_idx_].to_contour_pixel_idx += MP_value_
 

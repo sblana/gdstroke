@@ -82,4 +82,21 @@ UInt64 balloc_acquire(in const BumpAllocatorBuffer i_rw_balloc_buf, in const UIn
 	return balloc_acquire(i_rw_balloc_buf, i_size_bytes, DEFAULT_ALIGNMENT);
 }
 
+
+// Workaround for glslang alignment bug when
+// writing to a struct that has a bool member
+// and is a member of a buffer reference type.
+struct StorageUBool32 {
+	UInt32 x;
+};
+#define _SIZEOF_StorageUBool32() (_M_SIZEOF(UInt32)())
+
+bool load_bool(in const StorageUBool32 i_storage_bool) {
+	return bool(i_storage_bool.x);
+}
+
+StorageUBool32 store_bool(in const bool i_bool) {
+	return StorageUBool32(UInt32(i_bool));
+}
+
 #endif // !MEM_GLSLI

@@ -37,7 +37,7 @@ struct LocalVertexData {
 struct LocalEdgeData {
 	ivec2 to_local_vertex_idxs;
 	ivec2 to_local_face_idxs;
-	bool is_concave;
+	StorageUBool32 is_concave;
 	int pad;
 };
 
@@ -102,14 +102,14 @@ layout(BUFREF_LAYOUT) buffer MeshInstanceMapsBuffer {
 
 struct GlobalEdgeData {
 	int to_mesh_instance_idx;
-	bool is_contour;
+	StorageUBool32 is_contour;
 	int to_contour_edge;
 };
 #define _SIZEOF_GlobalEdgeData() (_M_SIZEOF(int)() * 3)
 
 struct GlobalFaceData {
 	int to_mesh_instance_idx;
-	bool is_backfacing;
+	StorageUBool32 is_backfacing;
 };
 #define _SIZEOF_GlobalFaceData() (_M_SIZEOF(int)() * 2)
 
@@ -187,8 +187,8 @@ struct ContourFragmentAttribs {
 	vec2 orientation;
 	vec4 normal_depth;
 	int to_contour_edge_idx;
-	bool is_pseudo_visible;
-	bool is_fragment_cluster_leader;
+	StorageUBool32 is_pseudo_visible;
+	StorageUBool32 is_fragment_cluster_leader;
 	int to_contour_pixel_idx;
 };
 #define _SIZEOF_ContourFragmentAttribs() (_M_SIZEOF(ivec2)() + _M_SIZEOF(vec2)() + _M_SIZEOF(vec4)() + _M_SIZEOF(int)() * 4)
@@ -219,7 +219,7 @@ layout(BUFREF_LAYOUT) buffer ContourPixelAttribsBuffer {
 struct SparsePixelEdgeAttribs {
 	int prev_idx;
 	int next_idx;
-	bool is_valid;
+	StorageUBool32 is_valid;
 	int to_fragmented_pixel_edge_idx;
 };
 #define _SIZEOF_SparsePixelEdgeAttribs() (_M_SIZEOF(int)() * 4)
@@ -279,8 +279,8 @@ struct CompactedPixelEdgeAttribs {
 	int to_pixel_edge_loop_idx;
 	vec2 filtered_midpoint;
 	vec2 filtered_orientation;
-	bool is_inside;
-	bool is_discarded;
+	StorageUBool32 is_inside;
+	StorageUBool32 is_discarded;
 	int segment_key;
 	int to_segment_edge_idx;
 };
@@ -320,8 +320,8 @@ layout(BUFREF_LAYOUT) buffer PixelEdgeLoopSegmentationBuffer {
 
 
 struct CompactedPixelEdgeSegmentationData {
-	bool is_inside_initial;
-	bool is_segment_head_initial;
+	StorageUBool32 is_inside_initial;
+	StorageUBool32 is_segment_head_initial;
 	int loop_local_segment_key;
 	int segment_head_idx;
 	int segment_length;
@@ -358,7 +358,7 @@ layout(BUFREF_LAYOUT) buffer SegmentAttribsBuffer {
 
 struct SegmentEdgeAttribs {
 	int to_compacted_pixel_edge_idx;
-	bool is_head;
+	StorageUBool32 is_head;
 	float arc_length;
 };
 #define _SIZEOF_SegmentEdgeAttribs() (_M_SIZEOF(int)() * 3)
@@ -437,7 +437,7 @@ bool is_sparse_pixel_edge_idx_valid(in const int i_idx) {
 	return (
 		i_idx >= 0 &&
 		i_idx < B_common_desc.buf_len_sparse_pixel_edge &&
-		B_sparse_pixel_edge_attribs.data[i_idx].is_valid
+		load_bool(B_sparse_pixel_edge_attribs.data[i_idx].is_valid)
 	);
 }
 
