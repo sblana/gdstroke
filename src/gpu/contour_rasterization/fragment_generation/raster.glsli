@@ -2,11 +2,21 @@
 #include "common/buffers.glsli"
 
 vec3 model_norm_to_view_norm(mat4 model_to_world, vec3 model_norm) {
-	return vec3(U_scene_data.cur.view_matrix * model_to_world * vec4(model_norm, 0.0));
+	return vec3(transpose(mat4(
+		U_scene_data.cur.view_matrix[0],
+		U_scene_data.cur.view_matrix[1],
+		U_scene_data.cur.view_matrix[2],
+		vec4(0, 0, 0, 1)
+	)) * model_to_world * vec4(model_norm, 0.0));
 }
 
 vec3 model_pos_to_view_pos(mat4 model_to_world, vec3 model_pos) {
-	return vec3(U_scene_data.cur.view_matrix * model_to_world * vec4(model_pos, 1.0));
+	return vec3(transpose(mat4(
+		U_scene_data.cur.view_matrix[0],
+		U_scene_data.cur.view_matrix[1],
+		U_scene_data.cur.view_matrix[2],
+		vec4(0, 0, 0, 1)
+	)) * model_to_world * vec4(model_pos, 1.0));
 }
 
 vec4 view_pos_to_ndc_pos(vec3 view_pos) {

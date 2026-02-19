@@ -82,6 +82,8 @@ void generate_header() {
 		std::fprintf(fp, "},\n");
 	}
 	std::fprintf(fp, "};\n");
+
+	fclose(fp);
 }
 
 
@@ -90,7 +92,7 @@ int main(int argc, char **argv) {
 	{
 		std::map<Shader, std::thread> shader_to_thread;
 		for (auto kvp : shader_to_shader_info_map) {
-			shader_to_thread.insert({ kvp.first, std::thread(build_shader, kvp.second, 5) });
+			shader_to_thread.insert({ kvp.first, std::thread(build_shader, kvp.second, 6) });
 		}
 		for (auto kvp : shader_to_shader_info_map) {
 			shader_to_thread.at(kvp.first).join();

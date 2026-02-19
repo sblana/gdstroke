@@ -12,5 +12,5 @@ config_version=5
 
 config/name="gdstroke demo"
 run/main_scene="uid://dh0oj81pufivs"
-config/features=PackedStringArray("4.5", "Forward Plus")
+config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
