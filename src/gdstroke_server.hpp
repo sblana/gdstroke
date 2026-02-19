@@ -16,6 +16,8 @@ class GdstrokeServer : public Object {
 
 public:
 	struct ContourMesh {
+		RID mesh_rid;
+
 		int num_vertices;
 		int num_edges;
 		int num_faces;

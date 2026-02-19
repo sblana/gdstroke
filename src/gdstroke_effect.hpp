@@ -78,6 +78,10 @@ public:
 	void  set_config_orientation_threshold(float p_value);
 	uint32_t get_config_min_segment_length() const;
 	void     set_config_min_segment_length(uint32_t p_value);
+	bool get_config_segment_by_mesh() const;
+	void set_config_segment_by_mesh(bool p_value);
+	bool get_config_segment_by_mesh_instance() const;
+	void set_config_segment_by_mesh_instance(bool p_value);
 	DebugView get_debug_view() const;
 	void      set_debug_view(DebugView p_value);
 

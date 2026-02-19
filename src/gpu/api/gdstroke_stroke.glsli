@@ -15,6 +15,8 @@ uint gdstroke_get_segment_edge_from_stroke_vertex(uint stroke_vertex);
 vec2 gdstroke_get_segment_edge_screen_position(uint segment_edge);
 uint gdstroke_get_segment_edge_stroke_local_idx(uint segment_edge);
 float gdstroke_get_segment_edge_arc_length(uint segment_edge);
+int64_t gdstroke_get_mesh_id_segment_edge(uint segment_edge);
+int64_t gdstroke_get_mesh_instance_id_segment_edge(uint segment_edge);
 uint gdstroke_get_stroke_id_from_segment_edge(uint segment_edge);
 uint gdstroke_get_stroke_num_segment_edges(uint stroke_id);
 float gdstroke_get_stroke_arc_length(uint stroke_id);
@@ -35,6 +37,10 @@ layout(set = 7, binding = 0, std430) buffer _GdstrokeAPI_BufferPtrTable {
 	uint64_t segment_edge_to_compacted_pixel_edge_map_buffer_stride;
 	uint64_t segment_edge_to_arc_length_map_buffer_ptr;
 	uint64_t segment_edge_to_arc_length_map_buffer_stride;
+	uint64_t segment_edge_to_mesh_id_map_buffer_ptr;
+	uint64_t segment_edge_to_mesh_id_map_buffer_stride;
+	uint64_t segment_edge_to_mesh_instance_id_map_buffer_ptr;
+	uint64_t segment_edge_to_mesh_instance_id_map_buffer_stride;
 	uint64_t compacted_pixel_edge_to_orientation_map_buffer_ptr;
 	uint64_t compacted_pixel_edge_to_orientation_map_buffer_stride;
 	uint64_t compacted_pixel_edge_to_filtered_midpoint_map_buffer_ptr;
@@ -154,6 +160,40 @@ float gdstroke_get_segment_edge_arc_length(uint segment_edge) {
 	).value);
 
 	return segment_edge_arc_length;
+}
+
+int64_t gdstroke_get_mesh_id_segment_edge(uint segment_edge) {
+	const int64_t mesh_id = int64_t(pack64(u32vec2(
+		_GdstrokeAPI_UInt32Reference(
+			_GdstrokeAPI_buffer_ptr_table.segment_edge_to_mesh_id_map_buffer_ptr +
+			_GdstrokeAPI_buffer_ptr_table.segment_edge_to_mesh_id_map_buffer_stride *
+			segment_edge
+		).value,
+		_GdstrokeAPI_UInt32Reference(
+			_GdstrokeAPI_buffer_ptr_table.segment_edge_to_mesh_id_map_buffer_ptr +
+			_GdstrokeAPI_buffer_ptr_table.segment_edge_to_mesh_id_map_buffer_stride *
+			segment_edge
+		).value
+	)));
+
+	return mesh_id;
+}
+
+int64_t gdstroke_get_mesh_instance_id_segment_edge(uint segment_edge) {
+	const int64_t mesh_instance_id = int64_t(pack64(u32vec2(
+		_GdstrokeAPI_UInt32Reference(
+			_GdstrokeAPI_buffer_ptr_table.segment_edge_to_mesh_instance_id_map_buffer_ptr +
+			_GdstrokeAPI_buffer_ptr_table.segment_edge_to_mesh_instance_id_map_buffer_stride *
+			segment_edge
+		).value,
+		_GdstrokeAPI_UInt32Reference(
+			_GdstrokeAPI_buffer_ptr_table.segment_edge_to_mesh_instance_id_map_buffer_ptr +
+			_GdstrokeAPI_buffer_ptr_table.segment_edge_to_mesh_instance_id_map_buffer_stride *
+			segment_edge
+		).value
+	)));
+
+	return mesh_instance_id;
 }
 
 uint gdstroke_get_stroke_id_from_segment_edge(uint segment_edge) {

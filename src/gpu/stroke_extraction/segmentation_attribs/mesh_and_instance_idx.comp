@@ -1,0 +1,22 @@
+#version 460
+#extension GL_ARB_shading_language_include : require
+
+layout(local_size_x = 64) in;
+
+#include "common/buffers.glsli"
+#include "common/scans.glsli"
+
+
+void main() {
+	const uint pixel_edge_idx = gl_GlobalInvocationID.x;
+	if (is_compacted_pixel_edge_idx_valid(int(pixel_edge_idx))) {
+		const int contour_pixel_idx = B_compacted_pixel_edge_attribs.data[pixel_edge_idx].to_contour_pixel_idx;
+		const int contour_fragment_idx = int(imageLoad(U_foremost_fragment_bitmap, B_contour_pixel_attribs.data[contour_pixel_idx].pixel_coord).x) - 1;
+		const int contour_edge_idx = B_contour_fragment_attribs.data[contour_fragment_idx].to_contour_edge_idx;
+		const int global_edge_idx = B_contour_edge_attribs.data[contour_edge_idx].to_global_edge_idx;
+		const int mesh_instance_idx = B_global_edges.data[global_edge_idx].to_mesh_instance_idx;
+
+		B_compacted_pixel_edge_attribs.data[pixel_edge_idx].to_mesh_idx = B_mesh_instance_desc.data[mesh_instance_idx].to_mesh_idx;
+		B_compacted_pixel_edge_attribs.data[pixel_edge_idx].to_mesh_instance_idx = mesh_instance_idx;
+	}
+}

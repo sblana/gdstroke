@@ -20,6 +20,8 @@ layout(set = 0, binding = 1, std430) readonly buffer ConfigUniform {
 	float laplacian_factor;
 	float orientation_threshold;
 	uint min_segment_length;
+	StorageUBool32 segment_by_mesh;
+	StorageUBool32 segment_by_mesh_instance;
 } U_config;
 
 
@@ -69,6 +71,7 @@ struct MeshDescData {
 	LocalVertexBuffer local_vertex_buffer;
 	LocalEdgeBuffer   local_edge_buffer;
 	LocalFaceBuffer   local_face_buffer;
+	Int64 id;
 };
 
 layout(BUFREF_LAYOUT) readonly buffer MeshDescBuffer {
@@ -79,9 +82,8 @@ layout(BUFREF_LAYOUT) readonly buffer MeshDescBuffer {
 struct MeshInstanceDescData {
 	mat4 model_to_world;
 	int to_mesh_idx;
-	int pad0;
-	int pad1;
-	int pad2;
+	int pad;
+	Int64 id;
 };
 
 struct MeshInstanceMapsData {
@@ -283,8 +285,10 @@ struct CompactedPixelEdgeAttribs {
 	StorageUBool32 is_discarded;
 	int segment_key;
 	int to_segment_edge_idx;
+	int to_mesh_idx;
+	int to_mesh_instance_idx;
 };
-#define _SIZEOF_CompactedPixelEdgeAttribs() (_M_SIZEOF(int)() * 9 + _M_SIZEOF(vec2)() * 2 + _M_SIZEOF(PixelEdgeOrientation)())
+#define _SIZEOF_CompactedPixelEdgeAttribs() (_M_SIZEOF(int)() * 11 + _M_SIZEOF(vec2)() * 2 + _M_SIZEOF(PixelEdgeOrientation)())
 
 layout(BUFREF_LAYOUT) buffer CompactedPixelEdgeAttribsBuffer {
 	CompactedPixelEdgeAttribs data[];
@@ -360,8 +364,11 @@ struct SegmentEdgeAttribs {
 	int to_compacted_pixel_edge_idx;
 	StorageUBool32 is_head;
 	float arc_length;
+	int pad;
+	Int64 mesh_id;
+	Int64 mesh_instance_id;
 };
-#define _SIZEOF_SegmentEdgeAttribs() (_M_SIZEOF(int)() * 3)
+#define _SIZEOF_SegmentEdgeAttribs() (_M_SIZEOF(int)() * 8)
 
 layout(BUFREF_LAYOUT) buffer SegmentEdgeAttribsBuffer {
 	SegmentEdgeAttribs data[];

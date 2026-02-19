@@ -161,6 +161,8 @@ GdstrokeServer::ContourMesh GdstrokeServer::_process_mesh(Ref<Mesh> p_mesh) {
 
 	ContourMesh contour_mesh = {};
 
+	contour_mesh.mesh_rid = p_mesh->get_rid();
+
 	contour_mesh.num_vertices = temp_contour_mesh.num_vertices;
 	contour_mesh.num_edges = temp_contour_mesh.num_edges;
 	contour_mesh.num_faces = temp_contour_mesh.num_faces;

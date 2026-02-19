@@ -83,6 +83,7 @@ enum Shader : int32_t {
 	SHADER_SE_OF_CURVE_FITTING,
 	SHADER_SE_IOT_TEST,
 	SHADER_SE_IOT_SMOOTHING,
+	SHADER_SE_SA_MESH_AND_INSTANCE_IDX,
 	SHADER_SE_S_SEGMENT_HEAD_ID,
 	SHADER_SE_S_LOOP_LOCAL_SEGMENTATION,
 	SHADER_SE_S_ALLOCATION,
@@ -97,6 +98,7 @@ enum Shader : int32_t {
 	SHADER_SR_A_SEGMENT_EDGE_ARC_LENGTH_INIT,
 	SHADER_SR_A_SEGMENT_EDGE_ARC_LENGTH,
 	SHADER_SR_A_SEGMENT_ARC_LENGTH,
+	SHADER_SR_A_MESH_AND_INSTANCE_ID,
 	SHADER_SR_UPDATE_API,
 	SHADER_SR_DEFAULT_SHADER,
 	SHADER_DEBUG_DISPLAY_CONTOUR_FRAGMENTS,
@@ -197,6 +199,8 @@ std::map<Shader, ShaderBuildInfo> shader_to_shader_info_map = {{
 	{ SHADER_SE_IOT_TEST,      ShaderBuildInfo{"se_iot_test",      "./stroke_extraction/inside_outside_test/test.comp",      M_SHADER_STAGE_COMPUTE_BIT} },
 	{ SHADER_SE_IOT_SMOOTHING, ShaderBuildInfo{"se_iot_smoothing", "./stroke_extraction/inside_outside_test/smoothing.comp", M_SHADER_STAGE_COMPUTE_BIT} },
 
+	{ SHADER_SE_SA_MESH_AND_INSTANCE_IDX, ShaderBuildInfo{"se_sa_mesh_and_instance_idx", "./stroke_extraction/segmentation_attribs/mesh_and_instance_idx.comp", M_SHADER_STAGE_COMPUTE_BIT} },
+
 	{ SHADER_SE_S_SEGMENT_HEAD_ID,         ShaderBuildInfo{"se_s_segment_head_id",         "./stroke_extraction/segmentation/segment_head_id.comp",         M_SHADER_STAGE_COMPUTE_BIT} },
 	{ SHADER_SE_S_LOOP_LOCAL_SEGMENTATION, ShaderBuildInfo{"se_s_loop_local_segmentation", "./stroke_extraction/segmentation/loop_local_segmentation.comp", M_SHADER_STAGE_COMPUTE_BIT} },
 	{ SHADER_SE_S_ALLOCATION,              ShaderBuildInfo{"se_s_allocation",              "./stroke_extraction/segmentation/allocation.comp",              M_SHADER_STAGE_COMPUTE_BIT} },
@@ -213,6 +217,7 @@ std::map<Shader, ShaderBuildInfo> shader_to_shader_info_map = {{
 	{ SHADER_SR_A_SEGMENT_EDGE_ARC_LENGTH_INIT, ShaderBuildInfo{"sr__a__segment_edge_arc_length_init", "./stroke_rendering/attribs/segment_edge_arc_length_init.comp", M_SHADER_STAGE_COMPUTE_BIT} },
 	{ SHADER_SR_A_SEGMENT_EDGE_ARC_LENGTH,      ShaderBuildInfo{"sr__a__segment_edge_arc_length",      "./stroke_rendering/attribs/segment_edge_arc_length.comp",      M_SHADER_STAGE_COMPUTE_BIT} },
 	{ SHADER_SR_A_SEGMENT_ARC_LENGTH,           ShaderBuildInfo{"sr__a__segment_arc_length",           "./stroke_rendering/attribs/segment_arc_length.comp",           M_SHADER_STAGE_COMPUTE_BIT} },
+	{ SHADER_SR_A_MESH_AND_INSTANCE_ID,         ShaderBuildInfo{"sr__a__mesh_and_instance_id",         "./stroke_rendering/attribs/mesh_and_instance_id.comp",         M_SHADER_STAGE_COMPUTE_BIT} },
 
 	{ SHADER_SR_UPDATE_API,     ShaderBuildInfo{"sr__update_api",     "./stroke_rendering/update_api.comp",     M_SHADER_STAGE_COMPUTE_BIT} },
 	{ SHADER_SR_DEFAULT_SHADER, ShaderBuildInfo{"sr__default_shader", "./stroke_rendering/default_shader.glsl", M_SHADER_STAGE_VERTEX_BIT | M_SHADER_STAGE_FRAGMENT_BIT} },

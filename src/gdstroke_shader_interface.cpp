@@ -94,7 +94,7 @@ Error GdstrokeShaderInterface::CommonInterfaceSet::create_resources(RenderingDev
 
 	resources[Buffer::BUFFER_IN_GEOMETRY_DESC_BUFFER     ] = p_rd->storage_buffer_create(sizeof(int32_t) * 2,              {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 	// arbitrary limit
-	resources[Buffer::BUFFER_MESH_DESC_BUFFER         ] = p_rd->storage_buffer_create(sizeof(int32_t) * 10 * (1 << 16), {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
+	resources[Buffer::BUFFER_MESH_DESC_BUFFER         ] = p_rd->storage_buffer_create(sizeof(int32_t) * 12 * (1 << 16), {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 	resources[Buffer::BUFFER_MESH_INSTANCE_DESC_BUFFER] = p_rd->storage_buffer_create(sizeof(int32_t) * 20 * (1 << 16), {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
 	resources[Buffer::BUFFER_ALLOCATION_COLUMN_BUFFER] = p_rd->storage_buffer_create(sizeof(uint32_t) * 2 * 8192, {},  0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
@@ -102,7 +102,7 @@ Error GdstrokeShaderInterface::CommonInterfaceSet::create_resources(RenderingDev
 	resources[Buffer::BUFFER_COMMON_BALLOC_BUFFER] = p_rd->storage_buffer_create(balloc_buffer_size, {}, 0, RenderingDevice::BufferCreationBits::BUFFER_CREATION_DEVICE_ADDRESS_BIT);
 
 	resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_SCENE_DATA_UNIFORM)] = p_render_data->get_render_scene_data()->get_uniform_buffer();
-	resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_CONFIG_UNIFORM)] = p_rd->storage_buffer_create(sizeof(int32_t) * 6);
+	resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_CONFIG_UNIFORM)] = p_rd->storage_buffer_create(sizeof(int32_t) * 8);
 
 	PackedByteArray buffers_addresses_data;
 	buffers_addresses_data.resize((Buffer::BUFFER_MAX + 64) * 8);
@@ -134,6 +134,8 @@ Error GdstrokeShaderInterface::CommonInterfaceSet::update_resources(RenderingDev
 	config_data_bytes.encode_float(12, config_data.laplacian_factor);
 	config_data_bytes.encode_float(16, config_data.orientation_threshold);
 	config_data_bytes.encode_u32(20, config_data.min_segment_length);
+	config_data_bytes.encode_u32(24, config_data.segment_by_mesh);
+	config_data_bytes.encode_u32(28, config_data.segment_by_mesh_instance);
 
 	p_rd->buffer_update(resources[int(Buffer::BUFFER_MAX) + int(Binding::BINDING_CONFIG_UNIFORM)], 0, sizeof(ConfigData), config_data_bytes);
 
@@ -146,7 +148,7 @@ Error GdstrokeShaderInterface::CommonInterfaceSet::update_resources(RenderingDev
 
 
 	PackedByteArray mesh_desc_buffer_data = PackedByteArray();
-	mesh_desc_buffer_data.resize(sizeof(int32_t) * 10 * GdstrokeServer::get_num_contour_meshes());
+	mesh_desc_buffer_data.resize(sizeof(int32_t) * 12 * GdstrokeServer::get_num_contour_meshes());
 	uint64_t bytes_written = 0;
 	for (auto const &kvp : GdstrokeServer::get_contour_meshes()) {
 		mesh_desc_buffer_data.encode_s32(bytes_written + 0, kvp.second.num_vertices);
@@ -156,7 +158,8 @@ Error GdstrokeShaderInterface::CommonInterfaceSet::update_resources(RenderingDev
 		mesh_desc_buffer_data.encode_u64(bytes_written + 16, p_rd->buffer_get_device_address(kvp.second.local_vertex_buffer));
 		mesh_desc_buffer_data.encode_u64(bytes_written + 24, p_rd->buffer_get_device_address(kvp.second.local_edge_buffer));
 		mesh_desc_buffer_data.encode_u64(bytes_written + 32, p_rd->buffer_get_device_address(kvp.second.local_face_buffer));
-		bytes_written += 40;
+		mesh_desc_buffer_data.encode_s64(bytes_written + 40, kvp.second.mesh_rid.get_id());
+		bytes_written += 48;
 	}
 
 	p_rd->buffer_update(resources[Buffer::BUFFER_MESH_DESC_BUFFER], 0, mesh_desc_buffer_data.size(), mesh_desc_buffer_data);
@@ -192,8 +195,7 @@ Error GdstrokeShaderInterface::CommonInterfaceSet::update_resources(RenderingDev
 
 		mesh_instance_desc_buffer_data.encode_s32(bytes_written + 64, GdstrokeServer::get_contour_meshes_mesh_idx().at(contour_instance->get_mesh()->get_rid().get_id()));
 		mesh_instance_desc_buffer_data.encode_s32(bytes_written + 68, 0);
-		mesh_instance_desc_buffer_data.encode_s32(bytes_written + 72, 0);
-		mesh_instance_desc_buffer_data.encode_s32(bytes_written + 76, 0);
+		mesh_instance_desc_buffer_data.encode_s64(bytes_written + 72, contour_instance->get_instance_id());
 		bytes_written += 80;
 	}
 

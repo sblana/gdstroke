@@ -93,6 +93,8 @@ public:
 			float laplacian_factor = 0.5;
 			float orientation_threshold = 0.5;
 			uint32_t min_segment_length = 32;
+			uint32_t segment_by_mesh = false;
+			uint32_t segment_by_mesh_instance = false;
 		};
 
 		ConfigData config_data = {};

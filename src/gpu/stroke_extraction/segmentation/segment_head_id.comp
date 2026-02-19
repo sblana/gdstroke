@@ -11,8 +11,26 @@ void main() {
 	const uint pixel_edge_idx = gl_GlobalInvocationID.x;
 
 	if (is_compacted_pixel_edge_idx_valid(int(pixel_edge_idx))) {
+		const int prev_pixel_edge_idx = B_compacted_pixel_edge_attribs.data[pixel_edge_idx].prev_idx;
+
+		bool is_segment_head = false;
+
 		const bool is_inside = load_bool(B_compacted_pixel_edge_attribs.data[pixel_edge_idx].is_inside);
-		const bool prev_is_inside = load_bool(B_compacted_pixel_edge_attribs.data[B_compacted_pixel_edge_attribs.data[pixel_edge_idx].prev_idx].is_inside);
-		B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].is_segment_head_initial = store_bool(is_inside && !prev_is_inside);
+		const bool prev_is_inside = load_bool(B_compacted_pixel_edge_attribs.data[prev_pixel_edge_idx].is_inside);
+		is_segment_head = is_segment_head || (is_inside && !prev_is_inside);
+
+		if (load_bool(U_config.segment_by_mesh)) {
+			const int mesh_idx = B_compacted_pixel_edge_attribs.data[pixel_edge_idx].to_mesh_idx;
+			const int prev_mesh_idx = B_compacted_pixel_edge_attribs.data[prev_pixel_edge_idx].to_mesh_idx;
+			is_segment_head = is_segment_head || (is_inside && mesh_idx != prev_mesh_idx);
+		}
+
+		if (load_bool(U_config.segment_by_mesh_instance)) {
+			const int mesh_instance_idx = B_compacted_pixel_edge_attribs.data[pixel_edge_idx].to_mesh_instance_idx;
+			const int prev_mesh_instance_idx = B_compacted_pixel_edge_attribs.data[prev_pixel_edge_idx].to_mesh_instance_idx;
+			is_segment_head = is_segment_head || (is_inside && mesh_instance_idx != prev_mesh_instance_idx);
+		}
+
+		B_compacted_pixel_edge_segmentation.data[pixel_edge_idx].is_segment_head_initial = store_bool(is_segment_head);
 	}
 }

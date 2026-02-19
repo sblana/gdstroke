@@ -1,0 +1,21 @@
+#version 460
+#extension GL_ARB_shading_language_include : require
+
+layout(local_size_x = 64) in;
+
+#include "common/buffers.glsli"
+#include "common/scans.glsli"
+
+
+void main() {
+	const uint segment_edge_idx = gl_GlobalInvocationID.x;
+	if (segment_edge_idx < B_common_desc.num_segment_edges) {
+		const int compacted_pixel_edge_idx = B_segment_edge_attribs.data[segment_edge_idx].to_compacted_pixel_edge_idx;
+
+		const int mesh_idx = B_compacted_pixel_edge_attribs.data[compacted_pixel_edge_idx].to_mesh_idx;
+		const int mesh_instance_idx = B_compacted_pixel_edge_attribs.data[compacted_pixel_edge_idx].to_mesh_instance_idx;
+
+		B_segment_edge_attribs.data[segment_edge_idx].mesh_id = B_mesh_desc.data[mesh_idx].id;
+		B_segment_edge_attribs.data[segment_edge_idx].mesh_instance_id = B_mesh_instance_desc.data[mesh_instance_idx].id;
+	}
+}

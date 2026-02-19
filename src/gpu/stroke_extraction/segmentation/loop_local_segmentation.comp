@@ -55,7 +55,7 @@ void main() {
 				total_num_segments += this_block_sum;
 			}
 
-			if (total_num_inside_edges == loop_attribs.loop_len) {
+			if (total_num_segments == 0) {
 				total_num_segments = 1;
 				B_compacted_pixel_edge_segmentation.data[loop_attribs.compacted_head_idx].is_segment_head_initial = store_bool(true);
 			}

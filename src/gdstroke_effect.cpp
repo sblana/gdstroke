@@ -55,6 +55,10 @@ void GdstrokeEffect::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_config_orientation_threshold"),            &GdstrokeEffect::get_config_orientation_threshold);
 	ClassDB::bind_method(D_METHOD("set_config_min_segment_length", "p_value"), &GdstrokeEffect::set_config_min_segment_length);
 	ClassDB::bind_method(D_METHOD("get_config_min_segment_length"),            &GdstrokeEffect::get_config_min_segment_length);
+	ClassDB::bind_method(D_METHOD("set_config_segment_by_mesh", "p_value"), &GdstrokeEffect::set_config_segment_by_mesh);
+	ClassDB::bind_method(D_METHOD("get_config_segment_by_mesh"),            &GdstrokeEffect::get_config_segment_by_mesh);
+	ClassDB::bind_method(D_METHOD("set_config_segment_by_mesh_instance", "p_value"), &GdstrokeEffect::set_config_segment_by_mesh_instance);
+	ClassDB::bind_method(D_METHOD("get_config_segment_by_mesh_instance"),            &GdstrokeEffect::get_config_segment_by_mesh_instance);
 	ClassDB::bind_method(D_METHOD("set_debug_view", "p_value"), &GdstrokeEffect::set_debug_view);
 	ClassDB::bind_method(D_METHOD("get_debug_view"),            &GdstrokeEffect::get_debug_view);
 	ClassDB::bind_method(D_METHOD("get_stroke_shader_uniform_set_rid"),  &GdstrokeEffect::get_stroke_shader_uniform_set_rid);
@@ -125,6 +129,20 @@ void GdstrokeEffect::_bind_methods() {
 		),
 		"set_config_min_segment_length",
 		"get_config_min_segment_length"
+	);
+	ADD_PROPERTY(
+		PropertyInfo(
+			Variant::BOOL, "segment_by_mesh"
+		),
+		"set_config_segment_by_mesh",
+		"get_config_segment_by_mesh"
+	);
+	ADD_PROPERTY(
+		PropertyInfo(
+			Variant::BOOL, "segment_by_mesh_instance"
+		),
+		"set_config_segment_by_mesh_instance",
+		"get_config_segment_by_mesh_instance"
 	);
 	ADD_PROPERTY(
 		PropertyInfo(
@@ -608,6 +626,16 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 	}
 	rd->draw_command_end_label();
 
+	rd->draw_command_begin_label("Segmentation Attribs", Color(1.0, 0.3, 1.0));
+	{
+		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_SE_SA_MESH_AND_INSTANCE_IDX]);
+		_bind_sets(rd, list);
+		_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_COMPACTED_PIXEL_EDGES);
+		rd->compute_list_end();
+	}
+	rd->draw_command_end_label();
+
 	rd->draw_command_begin_label("Segmentation", Color(1.0, 0.3, 1.0));
 	{
 		list = rd->compute_list_begin();
@@ -705,6 +733,12 @@ void GdstrokeEffect::_render_callback(int32_t p_effect_callback_type, RenderData
 		rd->compute_list_end();
 
 		list = rd->compute_list_begin();
+		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_SR_A_MESH_AND_INSTANCE_ID]);
+		_bind_sets(rd, list);
+		_command_interface_set.dispatch_indirect(rd, list, DispatchIndirectCommands::DISPATCH_INDIRECT_COMMANDS_INVOCATION_TO_SEGMENT_EDGES);
+		rd->compute_list_end();
+
+		list = rd->compute_list_begin();
 		rd->compute_list_bind_compute_pipeline(list, _pipelines[Shader::SHADER_SR_UPDATE_API]);
 		_bind_sets(rd, list);
 		_shader_api_interface_set.bind_to_compute_list(rd, list, _compiled_shaders[Shader::SHADER_SR_UPDATE_API]);
@@ -791,6 +825,22 @@ uint32_t GdstrokeEffect::get_config_min_segment_length() const {
 
 void GdstrokeEffect::set_config_min_segment_length(uint32_t p_value) {
 	_common_interface_set.config_data.min_segment_length = uint32_t(p_value);
+}
+
+bool GdstrokeEffect::get_config_segment_by_mesh() const {
+	return _common_interface_set.config_data.segment_by_mesh;
+}
+
+void GdstrokeEffect::set_config_segment_by_mesh(bool p_value) {
+	_common_interface_set.config_data.segment_by_mesh = uint32_t(p_value);
+}
+
+bool GdstrokeEffect::get_config_segment_by_mesh_instance() const {
+	return _common_interface_set.config_data.segment_by_mesh_instance;
+}
+
+void GdstrokeEffect::set_config_segment_by_mesh_instance(bool p_value) {
+	_common_interface_set.config_data.segment_by_mesh_instance = uint32_t(p_value);
 }
 
 GdstrokeEffect::DebugView GdstrokeEffect::get_debug_view() const {

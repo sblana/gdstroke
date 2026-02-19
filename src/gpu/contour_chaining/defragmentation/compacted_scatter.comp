@@ -36,6 +36,8 @@ void main() {
 			store_bool(false),
 			store_bool(false),
 			0,
+			0,
+			0,
 			0
 		);
 	}
